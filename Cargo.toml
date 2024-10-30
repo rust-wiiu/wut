@@ -1,0 +1,22 @@
+[package]
+name = "wut"
+version = "0.1.0"
+edition = "2021"
+build = "build.rs"
+
+[features]
+default = ["default_alloc_handler", "default_panic_handler"]
+ffi = []
+mmio = []
+default_alloc_handler = []
+default_panic_handler = []
+
+[lib]
+name = "wut"
+crate-type = ["lib"]
+
+[dependencies]
+
+[build-dependencies]
+bindgen = "0.70.1"
+cc = "1.1.31"
