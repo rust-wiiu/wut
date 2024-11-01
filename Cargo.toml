@@ -19,4 +19,7 @@ crate-type = ["lib"]
 
 [build-dependencies]
 bindgen = "0.70.1"
-cc = "1.1.31"
+
+[profile]
+dev.panic = "abort"
+release.panic = "abort"

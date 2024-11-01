@@ -1,24 +1,18 @@
 use std::env;
 
 extern crate bindgen;
-extern crate cc;
+// extern crate cc;
 
 fn main() {
     let link_search_path = "cargo:rustc-link-search=native";
     let link_lib = "cargo:rustc-link-lib=static";
 
-    println!(
-        "{link_search_path}={}/powerpc-eabi/lib",
-        env::var("DEVKITPPC").expect("Please provided DEVKITPPC via env variables")
-    );
-    println!(
-        "{link_search_path}={}/lib/gcc/powerpc-eabi/13.1.0",
-        env::var("DEVKITPPC").expect("Please provided DEVKITPPC via env variables")
-    );
-    println!(
-        "{link_search_path}={}/wut/lib/",
-        env::var("DEVKITPRO").expect("Please provided DEVKITPRO via env variables")
-    );
+    let dkp = env::var("DEVKITPRO").expect("Please provided DEVKITPRO via env variables");
+    let ppc = env::var("DEVKITPPC").expect("Please provided DEVKITPPC via env variables");
+
+    println!("{link_search_path}={ppc}/powerpc-eabi/lib",);
+    println!("{link_search_path}={ppc}/lib/gcc/powerpc-eabi/13.1.0");
+    println!("{link_search_path}={dkp}/wut/lib/");
 
     println!("{link_lib}=wut");
     // println!("{link_lib}=m");
@@ -28,13 +22,16 @@ fn main() {
     println!("{link_lib}=sysbase");
 
     println!("cargo:rerun-if-changed=wrapper.h");
+    println!("cargo:rerun-if-changed=build.rs");
     let bindings = bindgen::Builder::default()
         .use_core()
         .header("wrapper.h")
+        .layout_tests(false)
+        .trust_clang_mangling(false)
         .clang_args(vec![
             "--target=powerpc-none-eabi",
-            "--sysroot=/opt/devkitpro/devkitPPC/powerpc-eabi",
-            "-isystem/opt/devkitpro/devkitPPC/powerpc-eabi/include",
+            // "--sysroot=/opt/devkitpro/devkitPPC/powerpc-eabi",
+            // "-isystem/opt/devkitpro/devkitPPC/powerpc-eabi/include",
             // "-isystem/usr/lib/clang/18.1.3/include",
         ])
         .clang_args(vec![
@@ -46,10 +43,10 @@ fn main() {
             // "-Wno-incompatible-library-redeclaration",
         ])
         .generate()
-        .expect("Error");
+        .expect("Unable to generate bindings");
 
     let out = std::path::PathBuf::from("./src/");
     bindings
         .write_to_file(out.join("bindings.rs"))
-        .expect("Error");
+        .expect("Unable to write bindings to file");
 }
