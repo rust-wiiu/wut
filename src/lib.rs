@@ -2,24 +2,24 @@
 
 extern crate alloc;
 
-use core::{alloc::GlobalAlloc, ffi, panic::PanicInfo};
+use core::ffi;
 
 pub mod bindings;
-pub mod logging;
+pub mod macros;
 pub mod process;
 
 #[cfg(feature = "default_panic_handler")]
 #[panic_handler]
-fn panic_handler(_panic_info: &PanicInfo) -> ! {
+fn panic_handler(_panic_info: &core::panic::PanicInfo) -> ! {
     unsafe {
-        bindings::OSFatal("PANIC!".as_ptr() as *const i8);
+        bindings::OSFatal(c"PANIC!".as_ptr());
     }
     loop {}
 }
 
 pub struct WiiUAllocator;
 
-unsafe impl GlobalAlloc for WiiUAllocator {
+unsafe impl core::alloc::GlobalAlloc for WiiUAllocator {
     unsafe fn alloc(&self, layout: core::alloc::Layout) -> *mut u8 {
         bindings::memalign(
             layout.align().max(16) as ffi::c_ulong,
@@ -32,10 +32,9 @@ unsafe impl GlobalAlloc for WiiUAllocator {
     }
 }
 
+#[global_allocator]
+static GLOBAL_ALLOCATOR: WiiUAllocator = WiiUAllocator;
+
 pub mod prelude {
     pub use crate::{print, println};
-
-    use crate::WiiUAllocator;
-    #[global_allocator]
-    static GLOBAL_ALLOCATOR: WiiUAllocator = WiiUAllocator;
 }
