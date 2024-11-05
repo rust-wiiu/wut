@@ -23,25 +23,32 @@ fn main() {
 
     println!("cargo:rerun-if-changed=wrapper.h");
     println!("cargo:rerun-if-changed=build.rs");
+
+    /*
+     * These bindings will create many errors since the target cpu
+     * is a 32bit system and the host (the compilation PC) is likely
+     * a 64bit system. There are alignment and size checks which will
+     * fail, because pointers have different sizes.
+     */
     let bindings = bindgen::Builder::default()
         .use_core()
         .header("wrapper.h")
+        .emit_builtins()
+        .generate_cstr(true)
+        .generate_comments(false)
+        .default_enum_style(bindgen::EnumVariation::ModuleConsts)
         .layout_tests(false)
-        .trust_clang_mangling(false)
         .clang_args(vec![
             "--target=powerpc-none-eabi",
-            // "--sysroot=/opt/devkitpro/devkitPPC/powerpc-eabi",
-            // "-isystem/opt/devkitpro/devkitPPC/powerpc-eabi/include",
-            // "-isystem/usr/lib/clang/18.1.3/include",
-        ])
-        .clang_args(vec![
-            "-I/opt/devkitpro/wut/include",
-            "-I/opt/devkitpro/devkitPPC/powerpc-eabi/include",
+            "-m32",
             "-mfloat-abi=hard",
-            // "-nostdinc",
-            // "-Wno-macro-redefined",
-            // "-Wno-incompatible-library-redeclaration",
+            format!("-I{dkp}/wut/include").as_str(),
+            format!("-I{ppc}/powerpc-eabi/include").as_str(),
+            format!("-I{ppc}/lib/gcc/powerpc-eabi/13.1.0/include/").as_str(),
         ])
+        .raw_line("#![allow(non_upper_case_globals)]")
+        .raw_line("#![allow(non_camel_case_types)]")
+        .raw_line("#![allow(non_snake_case)]")
         .generate()
         .expect("Unable to generate bindings");
 
