@@ -1075,7 +1075,7 @@ extern "C" {
 pub type wchar_t = ::core::ffi::c_int;
 #[repr(C)]
 #[repr(align(16))]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct max_align_t {
     pub __max_align_ll: ::core::ffi::c_longlong,
     pub __bindgen_padding_0: u64,
@@ -1126,6 +1126,15 @@ pub struct OSThreadLink {
     pub next: *mut OSThread,
     pub prev: *mut OSThread,
 }
+impl Default for OSThreadLink {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct OSThreadQueue {
@@ -1134,11 +1143,29 @@ pub struct OSThreadQueue {
     pub parent: *mut ::core::ffi::c_void,
     pub __unk0: [::core::ffi::c_char; 4usize],
 }
+impl Default for OSThreadQueue {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct OSThreadSimpleQueue {
     pub head: *mut OSThread,
     pub tail: *mut OSThread,
+}
+impl Default for OSThreadSimpleQueue {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 extern "C" {
     pub fn OSInitThreadQueue(queue: *mut OSThreadQueue);
@@ -1146,31 +1173,36 @@ extern "C" {
 extern "C" {
     pub fn OSInitThreadQueueEx(queue: *mut OSThreadQueue, parent: *mut ::core::ffi::c_void);
 }
-pub mod OSMessageFlags {
-    pub type Type = ::core::ffi::c_uint;
-    pub const OS_MESSAGE_FLAGS_NONE: Type = 0;
-    pub const OS_MESSAGE_FLAGS_BLOCKING: Type = 1;
-    pub const OS_MESSAGE_FLAGS_HIGH_PRIORITY: Type = 2;
-}
-pub mod OSFunctionType {
-    pub type Type = ::core::ffi::c_uint;
-    pub const OS_FUNCTION_TYPE_HIO_OPEN: Type = 1;
-    pub const OS_FUNCTION_TYPE_HIO_READ_ASYNC: Type = 2;
-    pub const OS_FUNCTION_TYPE_HIO_WRITE_ASYNC: Type = 3;
-    pub const OS_FUNCTION_TYPE_FSA_CMD_ASYNC: Type = 4;
-    pub const OS_FUNCTION_TYPE_FSA_PR_CMD_ASYNC: Type = 5;
-    pub const OS_FUNCTION_TYPE_FSA_PR_CMD_ASYNC_NO_ALLOC: Type = 6;
-    pub const OS_FUNCTION_TYPE_FSA_ATTACH_EVENT: Type = 7;
-    pub const OS_FUNCTION_TYPE_FS_CMD_ASYNC: Type = 8;
-    pub const OS_FUNCTION_TYPE_FS_CMD_HANDLER: Type = 9;
-    pub const OS_FUNCTION_TYPE_FS_ATTACH_EVENT: Type = 10;
-    pub const OS_FUNCTION_TYPE_FS_STATE_CHANGE_EVENT: Type = 11;
-}
+pub const OS_MESSAGE_FLAGS_NONE: OSMessageFlags = 0;
+pub const OS_MESSAGE_FLAGS_BLOCKING: OSMessageFlags = 1;
+pub const OS_MESSAGE_FLAGS_HIGH_PRIORITY: OSMessageFlags = 2;
+pub type OSMessageFlags = ::core::ffi::c_uint;
+pub const OS_FUNCTION_TYPE_HIO_OPEN: OSFunctionType = 1;
+pub const OS_FUNCTION_TYPE_HIO_READ_ASYNC: OSFunctionType = 2;
+pub const OS_FUNCTION_TYPE_HIO_WRITE_ASYNC: OSFunctionType = 3;
+pub const OS_FUNCTION_TYPE_FSA_CMD_ASYNC: OSFunctionType = 4;
+pub const OS_FUNCTION_TYPE_FSA_PR_CMD_ASYNC: OSFunctionType = 5;
+pub const OS_FUNCTION_TYPE_FSA_PR_CMD_ASYNC_NO_ALLOC: OSFunctionType = 6;
+pub const OS_FUNCTION_TYPE_FSA_ATTACH_EVENT: OSFunctionType = 7;
+pub const OS_FUNCTION_TYPE_FS_CMD_ASYNC: OSFunctionType = 8;
+pub const OS_FUNCTION_TYPE_FS_CMD_HANDLER: OSFunctionType = 9;
+pub const OS_FUNCTION_TYPE_FS_ATTACH_EVENT: OSFunctionType = 10;
+pub const OS_FUNCTION_TYPE_FS_STATE_CHANGE_EVENT: OSFunctionType = 11;
+pub type OSFunctionType = ::core::ffi::c_uint;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct OSMessage {
     pub message: *mut ::core::ffi::c_void,
     pub args: [u32; 3usize],
+}
+impl Default for OSMessage {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -1184,6 +1216,15 @@ pub struct OSMessageQueue {
     pub size: u32,
     pub first: u32,
     pub used: u32,
+}
+impl Default for OSMessageQueue {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 extern "C" {
     pub fn OSInitMessageQueue(queue: *mut OSMessageQueue, messages: *mut OSMessage, size: i32);
@@ -1200,14 +1241,14 @@ extern "C" {
     pub fn OSSendMessage(
         queue: *mut OSMessageQueue,
         message: *mut OSMessage,
-        flags: OSMessageFlags::Type,
+        flags: OSMessageFlags,
     ) -> BOOL;
 }
 extern "C" {
     pub fn OSReceiveMessage(
         queue: *mut OSMessageQueue,
         message: *mut OSMessage,
-        flags: OSMessageFlags::Type,
+        flags: OSMessageFlags,
     ) -> BOOL;
 }
 extern "C" {
@@ -1220,7 +1261,7 @@ extern "C" {
     pub fn OSGetDefaultAppIOQueue() -> *mut OSMessageQueue;
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct OSSystemInfo {
     pub busClockSpeed: u32,
     pub coreClockSpeed: u32,
@@ -1245,7 +1286,7 @@ extern "C" {
 pub type OSTick = i32;
 pub type OSTime = i64;
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct OSCalendarTime {
     pub tm_sec: i32,
     pub tm_min: i32,
@@ -1280,58 +1321,54 @@ extern "C" {
     pub fn __OSSetAbsoluteSystemTime(time: OSTime) -> BOOL;
 }
 pub type IOSHandle = i32;
-pub mod IOSOpenMode {
-    pub type Type = ::core::ffi::c_uint;
-    pub const IOS_OPEN_READ: Type = 1;
-    pub const IOS_OPEN_WRITE: Type = 2;
-    pub const IOS_OPEN_READWRITE: Type = 3;
-}
-pub mod IOSError {
-    pub type Type = ::core::ffi::c_int;
-    pub const IOS_ERROR_OK: Type = 0;
-    pub const IOS_ERROR_ACCESS: Type = -1;
-    pub const IOS_ERROR_EXISTS: Type = -2;
-    pub const IOS_ERROR_INTR: Type = -3;
-    pub const IOS_ERROR_INVALID: Type = -4;
-    pub const IOS_ERROR_MAX: Type = -5;
-    pub const IOS_ERROR_NOEXISTS: Type = -6;
-    pub const IOS_ERROR_QEMPTY: Type = -7;
-    pub const IOS_ERROR_QFULL: Type = -8;
-    pub const IOS_ERROR_UNKNOWN: Type = -9;
-    pub const IOS_ERROR_NOTREADY: Type = -10;
-    pub const IOS_ERROR_ECC: Type = -11;
-    pub const IOS_ERROR_ECCCRIT: Type = -12;
-    pub const IOS_ERROR_BADBLOCK: Type = -13;
-    pub const IOS_ERROR_INVALIDOBJTYPE: Type = -14;
-    pub const IOS_ERROR_INVALIDRNG: Type = -15;
-    pub const IOS_ERROR_INVALIDFLAG: Type = -16;
-    pub const IOS_ERROR_INVALIDFORMAT: Type = -17;
-    pub const IOS_ERROR_INVALIDVERSION: Type = -18;
-    pub const IOS_ERROR_INVALIDSIGNER: Type = -19;
-    pub const IOS_ERROR_FAILCHECKVALUE: Type = -20;
-    pub const IOS_ERROR_FAILINTERNAL: Type = -21;
-    pub const IOS_ERROR_FAILALLOC: Type = -22;
-    pub const IOS_ERROR_INVALIDSIZE: Type = -23;
-    pub const IOS_ERROR_NOLINK: Type = -24;
-    pub const IOS_ERROR_ANFAILED: Type = -25;
-    pub const IOS_ERROR_MAXSEMCOUNT: Type = -26;
-    pub const IOS_ERROR_SEMUNAVAILABLE: Type = -27;
-    pub const IOS_ERROR_INVALIDHANDLE: Type = -28;
-    pub const IOS_ERROR_INVALIDARG: Type = -29;
-    pub const IOS_ERROR_NORESOURCE: Type = -30;
-    pub const IOS_ERROR_BUSY: Type = -31;
-    pub const IOS_ERROR_TIMEOUT: Type = -32;
-    pub const IOS_ERROR_ALIGNMENT: Type = -33;
-    pub const IOS_ERROR_BSP: Type = -34;
-    pub const IOS_ERROR_DATAPENDING: Type = -35;
-    pub const IOS_ERROR_EXPIRED: Type = -36;
-    pub const IOS_ERROR_NOREADACCESS: Type = -37;
-    pub const IOS_ERROR_NOWRITEACCESS: Type = -38;
-    pub const IOS_ERROR_NOREADWRITEACCESS: Type = -39;
-    pub const IOS_ERROR_CLIENTTXNLIMIT: Type = -40;
-    pub const IOS_ERROR_STALEHANDLE: Type = -41;
-    pub const IOS_ERROR_UNKNOWNVALUE: Type = -42;
-}
+pub const IOS_OPEN_READ: IOSOpenMode = 1;
+pub const IOS_OPEN_WRITE: IOSOpenMode = 2;
+pub const IOS_OPEN_READWRITE: IOSOpenMode = 3;
+pub type IOSOpenMode = ::core::ffi::c_uint;
+pub const IOS_ERROR_OK: IOSError = 0;
+pub const IOS_ERROR_ACCESS: IOSError = -1;
+pub const IOS_ERROR_EXISTS: IOSError = -2;
+pub const IOS_ERROR_INTR: IOSError = -3;
+pub const IOS_ERROR_INVALID: IOSError = -4;
+pub const IOS_ERROR_MAX: IOSError = -5;
+pub const IOS_ERROR_NOEXISTS: IOSError = -6;
+pub const IOS_ERROR_QEMPTY: IOSError = -7;
+pub const IOS_ERROR_QFULL: IOSError = -8;
+pub const IOS_ERROR_UNKNOWN: IOSError = -9;
+pub const IOS_ERROR_NOTREADY: IOSError = -10;
+pub const IOS_ERROR_ECC: IOSError = -11;
+pub const IOS_ERROR_ECCCRIT: IOSError = -12;
+pub const IOS_ERROR_BADBLOCK: IOSError = -13;
+pub const IOS_ERROR_INVALIDOBJTYPE: IOSError = -14;
+pub const IOS_ERROR_INVALIDRNG: IOSError = -15;
+pub const IOS_ERROR_INVALIDFLAG: IOSError = -16;
+pub const IOS_ERROR_INVALIDFORMAT: IOSError = -17;
+pub const IOS_ERROR_INVALIDVERSION: IOSError = -18;
+pub const IOS_ERROR_INVALIDSIGNER: IOSError = -19;
+pub const IOS_ERROR_FAILCHECKVALUE: IOSError = -20;
+pub const IOS_ERROR_FAILINTERNAL: IOSError = -21;
+pub const IOS_ERROR_FAILALLOC: IOSError = -22;
+pub const IOS_ERROR_INVALIDSIZE: IOSError = -23;
+pub const IOS_ERROR_NOLINK: IOSError = -24;
+pub const IOS_ERROR_ANFAILED: IOSError = -25;
+pub const IOS_ERROR_MAXSEMCOUNT: IOSError = -26;
+pub const IOS_ERROR_SEMUNAVAILABLE: IOSError = -27;
+pub const IOS_ERROR_INVALIDHANDLE: IOSError = -28;
+pub const IOS_ERROR_INVALIDARG: IOSError = -29;
+pub const IOS_ERROR_NORESOURCE: IOSError = -30;
+pub const IOS_ERROR_BUSY: IOSError = -31;
+pub const IOS_ERROR_TIMEOUT: IOSError = -32;
+pub const IOS_ERROR_ALIGNMENT: IOSError = -33;
+pub const IOS_ERROR_BSP: IOSError = -34;
+pub const IOS_ERROR_DATAPENDING: IOSError = -35;
+pub const IOS_ERROR_EXPIRED: IOSError = -36;
+pub const IOS_ERROR_NOREADACCESS: IOSError = -37;
+pub const IOS_ERROR_NOWRITEACCESS: IOSError = -38;
+pub const IOS_ERROR_NOREADWRITEACCESS: IOSError = -39;
+pub const IOS_ERROR_CLIENTTXNLIMIT: IOSError = -40;
+pub const IOS_ERROR_STALEHANDLE: IOSError = -41;
+pub const IOS_ERROR_UNKNOWNVALUE: IOSError = -42;
+pub type IOSError = ::core::ffi::c_int;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct IOSVec {
@@ -1339,29 +1376,37 @@ pub struct IOSVec {
     pub len: u32,
     pub paddr: *mut ::core::ffi::c_void,
 }
-pub type IOSAsyncCallbackFn = ::core::option::Option<
-    unsafe extern "C" fn(arg1: IOSError::Type, arg2: *mut ::core::ffi::c_void),
->;
+impl Default for IOSVec {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
+pub type IOSAsyncCallbackFn =
+    ::core::option::Option<unsafe extern "C" fn(arg1: IOSError, arg2: *mut ::core::ffi::c_void)>;
 extern "C" {
-    pub fn IOS_Open(device: *const ::core::ffi::c_char, mode: IOSOpenMode::Type) -> IOSError::Type;
+    pub fn IOS_Open(device: *const ::core::ffi::c_char, mode: IOSOpenMode) -> IOSError;
 }
 extern "C" {
     pub fn IOS_OpenAsync(
         device: *const ::core::ffi::c_char,
-        mode: IOSOpenMode::Type,
+        mode: IOSOpenMode,
         callback: IOSAsyncCallbackFn,
         context: *mut ::core::ffi::c_void,
-    ) -> IOSError::Type;
+    ) -> IOSError;
 }
 extern "C" {
-    pub fn IOS_Close(handle: IOSHandle) -> IOSError::Type;
+    pub fn IOS_Close(handle: IOSHandle) -> IOSError;
 }
 extern "C" {
     pub fn IOS_CloseAsync(
         handle: IOSHandle,
         callback: IOSAsyncCallbackFn,
         context: *mut ::core::ffi::c_void,
-    ) -> IOSError::Type;
+    ) -> IOSError;
 }
 extern "C" {
     pub fn IOS_Ioctl(
@@ -1371,7 +1416,7 @@ extern "C" {
         inLen: u32,
         outBuf: *mut ::core::ffi::c_void,
         outLen: u32,
-    ) -> IOSError::Type;
+    ) -> IOSError;
 }
 extern "C" {
     pub fn IOS_IoctlAsync(
@@ -1383,7 +1428,7 @@ extern "C" {
         outLen: u32,
         callback: IOSAsyncCallbackFn,
         context: *mut ::core::ffi::c_void,
-    ) -> IOSError::Type;
+    ) -> IOSError;
 }
 extern "C" {
     pub fn IOS_Ioctlv(
@@ -1392,7 +1437,7 @@ extern "C" {
         vecIn: u32,
         vecOut: u32,
         vec: *mut IOSVec,
-    ) -> IOSError::Type;
+    ) -> IOSError;
 }
 extern "C" {
     pub fn IOS_IoctlvAsync(
@@ -1403,13 +1448,22 @@ extern "C" {
         vec: *mut IOSVec,
         callback: IOSAsyncCallbackFn,
         context: *mut ::core::ffi::c_void,
-    ) -> IOSError::Type;
+    ) -> IOSError;
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct OSFastMutexLink {
     pub next: *mut OSFastMutex,
     pub prev: *mut OSFastMutex,
+}
+impl Default for OSFastMutexLink {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -1420,6 +1474,15 @@ pub struct OSFastMutex {
     pub queue: OSThreadSimpleQueue,
     pub link: OSFastMutexLink,
     pub __unk4: [::core::ffi::c_char; 16usize],
+}
+impl Default for OSFastMutex {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 extern "C" {
     pub fn OSFastMutex_Init(mutex: *mut OSFastMutex, name: *const ::core::ffi::c_char);
@@ -1434,13 +1497,11 @@ extern "C" {
     pub fn OSFastMutex_TryLock(mutex: *mut OSFastMutex) -> BOOL;
 }
 pub type OSContextState = u16;
-pub mod OS_CONTEXT_STATE {
-    pub type Type = ::core::ffi::c_uint;
-    pub const OS_CONTEXT_STATE_OSCALLBACK: Type = 8;
-    pub const OS_CONTEXT_STATE_USERMODE_SAVED: Type = 16;
-}
+pub const OS_CONTEXT_STATE_OSCALLBACK: OS_CONTEXT_STATE = 8;
+pub const OS_CONTEXT_STATE_USERMODE_SAVED: OS_CONTEXT_STATE = 16;
+pub type OS_CONTEXT_STATE = ::core::ffi::c_uint;
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct OSContext {
     pub tag: u64,
     pub gpr: [u32; 32usize],
@@ -1520,11 +1581,29 @@ pub struct OSAlarmQueue {
     pub head: *mut OSAlarm,
     pub tail: *mut OSAlarm,
 }
+impl Default for OSAlarmQueue {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct OSAlarmLink {
     pub prev: *mut OSAlarm,
     pub next: *mut OSAlarm,
+}
+impl Default for OSAlarmLink {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -1544,6 +1623,15 @@ pub struct OSAlarm {
     pub threadQueue: OSThreadQueue,
     pub alarmQueue: *mut OSAlarmQueue,
     pub context: *mut OSContext,
+}
+impl Default for OSAlarm {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 extern "C" {
     pub fn OSCancelAlarm(alarm: *mut OSAlarm) -> BOOL;
@@ -1591,177 +1679,186 @@ pub type FSFileHandle = u32;
 pub type FSPriority = u32;
 pub type FSTime = u64;
 pub type FSStateChangeInfo = FSStateChangeParams;
-pub mod FSErrorFlag {
-    pub type Type = ::core::ffi::c_uint;
-    pub const FS_ERROR_FLAG_NONE: Type = 0;
-    pub const FS_ERROR_FLAG_MAX: Type = 1;
-    pub const FS_ERROR_FLAG_ALREADY_OPEN: Type = 2;
-    pub const FS_ERROR_FLAG_EXISTS: Type = 4;
-    pub const FS_ERROR_FLAG_NOT_FOUND: Type = 8;
-    pub const FS_ERROR_FLAG_NOT_FILE: Type = 16;
-    pub const FS_ERROR_FLAG_NOT_DIR: Type = 32;
-    pub const FS_ERROR_FLAG_ACCESS_ERROR: Type = 64;
-    pub const FS_ERROR_FLAG_PERMISSION_ERROR: Type = 128;
-    pub const FS_ERROR_FLAG_FILE_TOO_BIG: Type = 256;
-    pub const FS_ERROR_FLAG_STORAGE_FULL: Type = 512;
-    pub const FS_ERROR_FLAG_UNSUPPORTED_CMD: Type = 1024;
-    pub const FS_ERROR_FLAG_JOURNAL_FULL: Type = 2048;
-    pub const FS_ERROR_FLAG_ALL: Type = 4294967295;
-}
-pub mod FSStatus {
-    pub type Type = ::core::ffi::c_int;
-    pub const FS_STATUS_OK: Type = 0;
-    pub const FS_STATUS_CANCELLED: Type = -1;
-    pub const FS_STATUS_END: Type = -2;
-    pub const FS_STATUS_MAX: Type = -3;
-    pub const FS_STATUS_ALREADY_OPEN: Type = -4;
-    pub const FS_STATUS_EXISTS: Type = -5;
-    pub const FS_STATUS_NOT_FOUND: Type = -6;
-    pub const FS_STATUS_NOT_FILE: Type = -7;
-    pub const FS_STATUS_NOT_DIR: Type = -8;
-    pub const FS_STATUS_ACCESS_ERROR: Type = -9;
-    pub const FS_STATUS_PERMISSION_ERROR: Type = -10;
-    pub const FS_STATUS_FILE_TOO_BIG: Type = -11;
-    pub const FS_STATUS_STORAGE_FULL: Type = -12;
-    pub const FS_STATUS_JOURNAL_FULL: Type = -13;
-    pub const FS_STATUS_UNSUPPORTED_CMD: Type = -14;
-    pub const FS_STATUS_MEDIA_NOT_READY: Type = -15;
-    pub const FS_STATUS_MEDIA_ERROR: Type = -17;
-    pub const FS_STATUS_CORRUPTED: Type = -18;
-    pub const FS_STATUS_FATAL_ERROR: Type = -1024;
-}
-pub mod FSError {
-    pub type Type = ::core::ffi::c_int;
-    pub const FS_ERROR_OK: Type = 0;
-    pub const FS_ERROR_NOT_INIT: Type = -196609;
-    pub const FS_ERROR_BUSY: Type = -196610;
-    pub const FS_ERROR_CANCELLED: Type = -196611;
-    pub const FS_ERROR_END_OF_DIR: Type = -196612;
-    pub const FS_ERROR_END_OF_FILE: Type = -196613;
-    pub const FS_ERROR_MAX_MOUNT_POINTS: Type = -196624;
-    pub const FS_ERROR_MAX_VOLUMES: Type = -196625;
-    pub const FS_ERROR_MAX_CLIENTS: Type = -196626;
-    pub const FS_ERROR_MAX_FILES: Type = -196627;
-    pub const FS_ERROR_MAX_DIRS: Type = -196628;
-    pub const FS_ERROR_ALREADY_OPEN: Type = -196629;
-    pub const FS_ERROR_ALREADY_EXISTS: Type = -196630;
-    pub const FS_ERROR_NOT_FOUND: Type = -196631;
-    pub const FS_ERROR_NOT_EMPTY: Type = -196632;
-    pub const FS_ERROR_ACCESS_ERROR: Type = -196633;
-    pub const FS_ERROR_PERMISSION_ERROR: Type = -196634;
-    pub const FS_ERROR_DATA_CORRUPTED: Type = -196635;
-    pub const FS_ERROR_STORAGE_FULL: Type = -196636;
-    pub const FS_ERROR_JOURNAL_FULL: Type = -196637;
-    pub const FS_ERROR_UNAVAILABLE_COMMAND: Type = -196639;
-    pub const FS_ERROR_UNSUPPORTED_COMMAND: Type = -196640;
-    pub const FS_ERROR_INVALID_PARAM: Type = -196641;
-    pub const FS_ERROR_INVALID_PATH: Type = -196642;
-    pub const FS_ERROR_INVALID_BUFFER: Type = -196643;
-    pub const FS_ERROR_INVALID_ALIGNMENT: Type = -196644;
-    pub const FS_ERROR_INVALID_CLIENTHANDLE: Type = -196645;
-    pub const FS_ERROR_INVALID_FILEHANDLE: Type = -196646;
-    pub const FS_ERROR_INVALID_DIRHANDLE: Type = -196647;
-    pub const FS_ERROR_NOT_FILE: Type = -196648;
-    pub const FS_ERROR_NOT_DIR: Type = -196649;
-    pub const FS_ERROR_FILE_TOO_BIG: Type = -196650;
-    pub const FS_ERROR_OUT_OF_RANGE: Type = -196651;
-    pub const FS_ERROR_OUT_OF_RESOURCES: Type = -196652;
-    pub const FS_ERROR_MEDIA_NOT_READY: Type = -196672;
-    pub const FS_ERROR_MEDIA_ERROR: Type = -196673;
-    pub const FS_ERROR_WRITE_PROTECTED: Type = -196674;
-    pub const FS_ERROR_INVALID_MEDIA: Type = -196675;
-}
-pub mod FSMode {
-    pub type Type = ::core::ffi::c_uint;
-    pub const FS_MODE_READ_OWNER: Type = 1024;
-    pub const FS_MODE_WRITE_OWNER: Type = 512;
-    pub const FS_MODE_EXEC_OWNER: Type = 256;
-    pub const FS_MODE_READ_GROUP: Type = 64;
-    pub const FS_MODE_WRITE_GROUP: Type = 32;
-    pub const FS_MODE_EXEC_GROUP: Type = 16;
-    pub const FS_MODE_READ_OTHER: Type = 4;
-    pub const FS_MODE_WRITE_OTHER: Type = 2;
-    pub const FS_MODE_EXEC_OTHER: Type = 1;
-}
-pub mod FSStatFlags {
-    pub type Type = ::core::ffi::c_uint;
-    pub const FS_STAT_DIRECTORY: Type = 2147483648;
-    pub const FS_STAT_QUOTA: Type = 1610612736;
-    pub const FS_STAT_FILE: Type = 16777216;
-    pub const FS_STAT_ENCRYPTED_FILE: Type = 8388608;
-    pub const FS_STAT_LINK: Type = 65536;
-}
-pub mod FSVolumeState {
-    pub type Type = ::core::ffi::c_uint;
-    pub const FS_VOLUME_STATE_INITIAL: Type = 0;
-    pub const FS_VOLUME_STATE_READY: Type = 1;
-    pub const FS_VOLUME_STATE_NO_MEDIA: Type = 2;
-    pub const FS_VOLUME_STATE_INVALID_MEDIA: Type = 3;
-    pub const FS_VOLUME_STATE_DIRTY_MEDIA: Type = 4;
-    pub const FS_VOLUME_STATE_WRONG_MEDIA: Type = 5;
-    pub const FS_VOLUME_STATE_MEDIA_ERROR: Type = 6;
-    pub const FS_VOLUME_STATE_DATA_CORRUPTED: Type = 7;
-    pub const FS_VOLUME_STATE_WRITE_PROTECTED: Type = 8;
-    pub const FS_VOLUME_STATE_JOURNAL_FULL: Type = 9;
-    pub const FS_VOLUME_STATE_FATAL: Type = 10;
-    pub const FS_VOLUME_STATE_INVALID: Type = 11;
-}
-pub mod FSMediaState {
-    pub type Type = ::core::ffi::c_uint;
-    pub const FS_MEDIA_STATE_READY: Type = 0;
-    pub const FS_MEDIA_STATE_NO_MEDIA: Type = 1;
-    pub const FS_MEDIA_STATE_INVALID_MEDIA: Type = 2;
-    pub const FS_MEDIA_STATE_DIRTY_MEDIA: Type = 3;
-    pub const FS_MEDIA_STATE_MEDIA_ERROR: Type = 4;
-}
-pub mod FSMountSourceType {
-    pub type Type = ::core::ffi::c_uint;
-    pub const FS_MOUNT_SOURCE_SD: Type = 0;
-    pub const FS_MOUNT_SOURCE_UNK: Type = 1;
-}
-pub mod FSOpenFileFlags {
-    pub type Type = ::core::ffi::c_uint;
-    pub const FS_OPEN_FLAG_NONE: Type = 0;
-    pub const FS_OPEN_FLAG_UNENCRYPTED: Type = 1;
-    pub const FS_OPEN_FLAG_PREALLOC_SIZE: Type = 2;
-}
+pub const FS_ERROR_FLAG_NONE: FSErrorFlag = 0;
+pub const FS_ERROR_FLAG_MAX: FSErrorFlag = 1;
+pub const FS_ERROR_FLAG_ALREADY_OPEN: FSErrorFlag = 2;
+pub const FS_ERROR_FLAG_EXISTS: FSErrorFlag = 4;
+pub const FS_ERROR_FLAG_NOT_FOUND: FSErrorFlag = 8;
+pub const FS_ERROR_FLAG_NOT_FILE: FSErrorFlag = 16;
+pub const FS_ERROR_FLAG_NOT_DIR: FSErrorFlag = 32;
+pub const FS_ERROR_FLAG_ACCESS_ERROR: FSErrorFlag = 64;
+pub const FS_ERROR_FLAG_PERMISSION_ERROR: FSErrorFlag = 128;
+pub const FS_ERROR_FLAG_FILE_TOO_BIG: FSErrorFlag = 256;
+pub const FS_ERROR_FLAG_STORAGE_FULL: FSErrorFlag = 512;
+pub const FS_ERROR_FLAG_UNSUPPORTED_CMD: FSErrorFlag = 1024;
+pub const FS_ERROR_FLAG_JOURNAL_FULL: FSErrorFlag = 2048;
+pub const FS_ERROR_FLAG_ALL: FSErrorFlag = 4294967295;
+pub type FSErrorFlag = ::core::ffi::c_uint;
+pub const FS_STATUS_OK: FSStatus = 0;
+pub const FS_STATUS_CANCELLED: FSStatus = -1;
+pub const FS_STATUS_END: FSStatus = -2;
+pub const FS_STATUS_MAX: FSStatus = -3;
+pub const FS_STATUS_ALREADY_OPEN: FSStatus = -4;
+pub const FS_STATUS_EXISTS: FSStatus = -5;
+pub const FS_STATUS_NOT_FOUND: FSStatus = -6;
+pub const FS_STATUS_NOT_FILE: FSStatus = -7;
+pub const FS_STATUS_NOT_DIR: FSStatus = -8;
+pub const FS_STATUS_ACCESS_ERROR: FSStatus = -9;
+pub const FS_STATUS_PERMISSION_ERROR: FSStatus = -10;
+pub const FS_STATUS_FILE_TOO_BIG: FSStatus = -11;
+pub const FS_STATUS_STORAGE_FULL: FSStatus = -12;
+pub const FS_STATUS_JOURNAL_FULL: FSStatus = -13;
+pub const FS_STATUS_UNSUPPORTED_CMD: FSStatus = -14;
+pub const FS_STATUS_MEDIA_NOT_READY: FSStatus = -15;
+pub const FS_STATUS_MEDIA_ERROR: FSStatus = -17;
+pub const FS_STATUS_CORRUPTED: FSStatus = -18;
+pub const FS_STATUS_FATAL_ERROR: FSStatus = -1024;
+pub type FSStatus = ::core::ffi::c_int;
+pub const FS_ERROR_OK: FSError = 0;
+pub const FS_ERROR_NOT_INIT: FSError = -196609;
+pub const FS_ERROR_BUSY: FSError = -196610;
+pub const FS_ERROR_CANCELLED: FSError = -196611;
+pub const FS_ERROR_END_OF_DIR: FSError = -196612;
+pub const FS_ERROR_END_OF_FILE: FSError = -196613;
+pub const FS_ERROR_MAX_MOUNT_POINTS: FSError = -196624;
+pub const FS_ERROR_MAX_VOLUMES: FSError = -196625;
+pub const FS_ERROR_MAX_CLIENTS: FSError = -196626;
+pub const FS_ERROR_MAX_FILES: FSError = -196627;
+pub const FS_ERROR_MAX_DIRS: FSError = -196628;
+pub const FS_ERROR_ALREADY_OPEN: FSError = -196629;
+pub const FS_ERROR_ALREADY_EXISTS: FSError = -196630;
+pub const FS_ERROR_NOT_FOUND: FSError = -196631;
+pub const FS_ERROR_NOT_EMPTY: FSError = -196632;
+pub const FS_ERROR_ACCESS_ERROR: FSError = -196633;
+pub const FS_ERROR_PERMISSION_ERROR: FSError = -196634;
+pub const FS_ERROR_DATA_CORRUPTED: FSError = -196635;
+pub const FS_ERROR_STORAGE_FULL: FSError = -196636;
+pub const FS_ERROR_JOURNAL_FULL: FSError = -196637;
+pub const FS_ERROR_UNAVAILABLE_COMMAND: FSError = -196639;
+pub const FS_ERROR_UNSUPPORTED_COMMAND: FSError = -196640;
+pub const FS_ERROR_INVALID_PARAM: FSError = -196641;
+pub const FS_ERROR_INVALID_PATH: FSError = -196642;
+pub const FS_ERROR_INVALID_BUFFER: FSError = -196643;
+pub const FS_ERROR_INVALID_ALIGNMENT: FSError = -196644;
+pub const FS_ERROR_INVALID_CLIENTHANDLE: FSError = -196645;
+pub const FS_ERROR_INVALID_FILEHANDLE: FSError = -196646;
+pub const FS_ERROR_INVALID_DIRHANDLE: FSError = -196647;
+pub const FS_ERROR_NOT_FILE: FSError = -196648;
+pub const FS_ERROR_NOT_DIR: FSError = -196649;
+pub const FS_ERROR_FILE_TOO_BIG: FSError = -196650;
+pub const FS_ERROR_OUT_OF_RANGE: FSError = -196651;
+pub const FS_ERROR_OUT_OF_RESOURCES: FSError = -196652;
+pub const FS_ERROR_MEDIA_NOT_READY: FSError = -196672;
+pub const FS_ERROR_MEDIA_ERROR: FSError = -196673;
+pub const FS_ERROR_WRITE_PROTECTED: FSError = -196674;
+pub const FS_ERROR_INVALID_MEDIA: FSError = -196675;
+pub type FSError = ::core::ffi::c_int;
+pub const FS_MODE_READ_OWNER: FSMode = 1024;
+pub const FS_MODE_WRITE_OWNER: FSMode = 512;
+pub const FS_MODE_EXEC_OWNER: FSMode = 256;
+pub const FS_MODE_READ_GROUP: FSMode = 64;
+pub const FS_MODE_WRITE_GROUP: FSMode = 32;
+pub const FS_MODE_EXEC_GROUP: FSMode = 16;
+pub const FS_MODE_READ_OTHER: FSMode = 4;
+pub const FS_MODE_WRITE_OTHER: FSMode = 2;
+pub const FS_MODE_EXEC_OTHER: FSMode = 1;
+pub type FSMode = ::core::ffi::c_uint;
+pub const FS_STAT_DIRECTORY: FSStatFlags = 2147483648;
+pub const FS_STAT_QUOTA: FSStatFlags = 1610612736;
+pub const FS_STAT_FILE: FSStatFlags = 16777216;
+pub const FS_STAT_ENCRYPTED_FILE: FSStatFlags = 8388608;
+pub const FS_STAT_LINK: FSStatFlags = 65536;
+pub type FSStatFlags = ::core::ffi::c_uint;
+pub const FS_VOLUME_STATE_INITIAL: FSVolumeState = 0;
+pub const FS_VOLUME_STATE_READY: FSVolumeState = 1;
+pub const FS_VOLUME_STATE_NO_MEDIA: FSVolumeState = 2;
+pub const FS_VOLUME_STATE_INVALID_MEDIA: FSVolumeState = 3;
+pub const FS_VOLUME_STATE_DIRTY_MEDIA: FSVolumeState = 4;
+pub const FS_VOLUME_STATE_WRONG_MEDIA: FSVolumeState = 5;
+pub const FS_VOLUME_STATE_MEDIA_ERROR: FSVolumeState = 6;
+pub const FS_VOLUME_STATE_DATA_CORRUPTED: FSVolumeState = 7;
+pub const FS_VOLUME_STATE_WRITE_PROTECTED: FSVolumeState = 8;
+pub const FS_VOLUME_STATE_JOURNAL_FULL: FSVolumeState = 9;
+pub const FS_VOLUME_STATE_FATAL: FSVolumeState = 10;
+pub const FS_VOLUME_STATE_INVALID: FSVolumeState = 11;
+pub type FSVolumeState = ::core::ffi::c_uint;
+pub const FS_MEDIA_STATE_READY: FSMediaState = 0;
+pub const FS_MEDIA_STATE_NO_MEDIA: FSMediaState = 1;
+pub const FS_MEDIA_STATE_INVALID_MEDIA: FSMediaState = 2;
+pub const FS_MEDIA_STATE_DIRTY_MEDIA: FSMediaState = 3;
+pub const FS_MEDIA_STATE_MEDIA_ERROR: FSMediaState = 4;
+pub type FSMediaState = ::core::ffi::c_uint;
+pub const FS_MOUNT_SOURCE_SD: FSMountSourceType = 0;
+pub const FS_MOUNT_SOURCE_UNK: FSMountSourceType = 1;
+pub type FSMountSourceType = ::core::ffi::c_uint;
+pub const FS_OPEN_FLAG_NONE: FSOpenFileFlags = 0;
+pub const FS_OPEN_FLAG_UNENCRYPTED: FSOpenFileFlags = 1;
+pub const FS_OPEN_FLAG_PREALLOC_SIZE: FSOpenFileFlags = 2;
+pub type FSOpenFileFlags = ::core::ffi::c_uint;
 pub type FSAsyncCallback = ::core::option::Option<
-    unsafe extern "C" fn(
-        arg1: *mut FSClient,
-        arg2: *mut FSCmdBlock,
-        arg3: FSStatus::Type,
-        arg4: u32,
-    ),
+    unsafe extern "C" fn(arg1: *mut FSClient, arg2: *mut FSCmdBlock, arg3: FSStatus, arg4: u32),
 >;
 pub type FSStateChangeCallback = ::core::option::Option<
-    unsafe extern "C" fn(
-        arg1: *mut FSClient,
-        arg2: FSVolumeState::Type,
-        arg3: *mut ::core::ffi::c_void,
-    ),
+    unsafe extern "C" fn(arg1: *mut FSClient, arg2: FSVolumeState, arg3: *mut ::core::ffi::c_void),
 >;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct FSFsm {
     pub __unk10: [::core::ffi::c_char; 56usize],
 }
+impl Default for FSFsm {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct FSCmdQueue {
     pub __unk11: [::core::ffi::c_char; 68usize],
+}
+impl Default for FSCmdQueue {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct FSMessage {
     pub data: *mut ::core::ffi::c_void,
     pub __unk12: [::core::ffi::c_char; 8usize],
-    pub type_: OSFunctionType::Type,
+    pub type_: OSFunctionType,
+}
+impl Default for FSMessage {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct FSClientBodyLink {
     pub next: *mut FSClientBody,
     pub prev: *mut FSClientBody,
+}
+impl Default for FSClientBodyLink {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -1771,34 +1868,61 @@ pub struct FSClientBody {
     pub fsm: FSFsm,
     pub cmdQueue: FSCmdQueue,
     pub lastDequeuedCommand: *mut FSCmdBlockBody,
-    pub emulatedError: FSError::Type,
+    pub emulatedError: FSError,
     pub __unk14: [::core::ffi::c_char; 148usize],
     pub mutex: OSFastMutex,
     pub __unk15: [::core::ffi::c_char; 4usize],
     pub fsmAlarm: OSAlarm,
-    pub lastError: FSError::Type,
+    pub lastError: FSError,
     pub isLastErrorWithoutVolume: bool,
     pub fsCmdHandlerMsg: FSMessage,
     pub lastMountSourceDevice: [::core::ffi::c_char; 16usize],
-    pub findMountSourceType: FSMountSourceType::Type,
+    pub findMountSourceType: FSMountSourceType,
     pub link: FSClientBodyLink,
     pub client: *mut FSClient,
+}
+impl Default for FSClientBody {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct FSClient {
     pub __unk16: [::core::ffi::c_char; 5888usize],
 }
+impl Default for FSClient {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct FSCmdBlock {
     pub __unk17: [::core::ffi::c_char; 2688usize],
 }
+impl Default for FSCmdBlock {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C, packed)]
 #[derive(Debug, Copy, Clone)]
 pub struct FSStat {
-    pub flags: FSStatFlags::Type,
-    pub mode: FSMode::Type,
+    pub flags: FSStatFlags,
+    pub mode: FSMode,
     pub owner: u32,
     pub group: u32,
     pub size: u32,
@@ -1809,12 +1933,30 @@ pub struct FSStat {
     pub modified: FSTime,
     pub __unk18: [::core::ffi::c_char; 48usize],
 }
+impl Default for FSStat {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct FSStateChangeParams {
     pub callback: FSStateChangeCallback,
     pub param: *mut ::core::ffi::c_void,
     pub ioMsgQueue: *mut OSMessageQueue,
+}
+impl Default for FSStateChangeParams {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -1823,6 +1965,15 @@ pub struct FSAsyncData {
     pub param: u32,
     pub ioMsgQueue: *mut OSMessageQueue,
 }
+impl Default for FSAsyncData {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct FSAsyncResult {
@@ -1830,7 +1981,16 @@ pub struct FSAsyncResult {
     pub ioMsg: FSMessage,
     pub client: *mut FSClient,
     pub block: *mut FSCmdBlock,
-    pub status: FSStatus::Type,
+    pub status: FSStatus,
+}
+impl Default for FSAsyncResult {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -1839,22 +1999,49 @@ pub struct FSCmdBlockBody {
     pub asyncResult: FSAsyncResult,
     pub __unk20: [::core::ffi::c_char; 104usize],
 }
+impl Default for FSCmdBlockBody {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct FSDirectoryEntry {
     pub info: FSStat,
     pub name: [::core::ffi::c_char; 256usize],
 }
+impl Default for FSDirectoryEntry {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct FSMountSource {
     pub __unk21: [::core::ffi::c_char; 768usize],
 }
+impl Default for FSMountSource {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C, packed)]
 #[derive(Debug, Copy, Clone)]
 pub struct FSVolumeInfo {
     pub flags: u32,
-    pub mediaState: FSMediaState::Type,
+    pub mediaState: FSMediaState,
     pub __unk22: [::core::ffi::c_char; 4usize],
     pub unk0x0C: u32,
     pub unk0x10: u32,
@@ -1866,6 +2053,15 @@ pub struct FSVolumeInfo {
     pub devicePath: [::core::ffi::c_char; 16usize],
     pub mountPath: [::core::ffi::c_char; 128usize],
 }
+impl Default for FSVolumeInfo {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 extern "C" {
     pub fn FSInit();
 }
@@ -1873,10 +2069,10 @@ extern "C" {
     pub fn FSShutdown();
 }
 extern "C" {
-    pub fn FSAddClient(client: *mut FSClient, errorMask: FSErrorFlag::Type) -> FSStatus::Type;
+    pub fn FSAddClient(client: *mut FSClient, errorMask: FSErrorFlag) -> FSStatus;
 }
 extern "C" {
-    pub fn FSDelClient(client: *mut FSClient, errorMask: FSErrorFlag::Type) -> FSStatus::Type;
+    pub fn FSDelClient(client: *mut FSClient, errorMask: FSErrorFlag) -> FSStatus;
 }
 extern "C" {
     pub fn FSGetClientNum() -> u32;
@@ -1885,7 +2081,7 @@ extern "C" {
     pub fn FSInitCmdBlock(block: *mut FSCmdBlock);
 }
 extern "C" {
-    pub fn FSSetCmdPriority(block: *mut FSCmdBlock, priority: FSPriority) -> FSStatus::Type;
+    pub fn FSSetCmdPriority(block: *mut FSCmdBlock, priority: FSPriority) -> FSStatus;
 }
 extern "C" {
     pub fn FSSetStateChangeNotification(client: *mut FSClient, info: *mut FSStateChangeParams);
@@ -1896,25 +2092,25 @@ extern "C" {
         block: *mut FSCmdBlock,
         buffer: *mut ::core::ffi::c_char,
         bufferSize: u32,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn FSChangeDir(
         client: *mut FSClient,
         block: *mut FSCmdBlock,
         path: *const ::core::ffi::c_char,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn FSChangeDirAsync(
         client: *mut FSClient,
         block: *mut FSCmdBlock,
         path: *const ::core::ffi::c_char,
-        errorMask: FSErrorFlag::Type,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn FSGetAsyncResult(message: *mut FSMessage) -> *mut FSAsyncResult;
@@ -1925,8 +2121,8 @@ extern "C" {
         block: *mut FSCmdBlock,
         path: *const ::core::ffi::c_char,
         stat: *mut FSStat,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn FSGetStatAsync(
@@ -1934,26 +2130,26 @@ extern "C" {
         block: *mut FSCmdBlock,
         path: *const ::core::ffi::c_char,
         stat: *mut FSStat,
-        errorMask: FSErrorFlag::Type,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn FSRemove(
         client: *mut FSClient,
         block: *mut FSCmdBlock,
         path: *const ::core::ffi::c_char,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn FSRemoveAsync(
         client: *mut FSClient,
         block: *mut FSCmdBlock,
         path: *const ::core::ffi::c_char,
-        errorMask: FSErrorFlag::Type,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn FSOpenFile(
@@ -1962,8 +2158,8 @@ extern "C" {
         path: *const ::core::ffi::c_char,
         mode: *const ::core::ffi::c_char,
         handle: *mut FSFileHandle,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn FSOpenFileAsync(
@@ -1972,26 +2168,26 @@ extern "C" {
         path: *const ::core::ffi::c_char,
         mode: *const ::core::ffi::c_char,
         outHandle: *mut FSFileHandle,
-        errorMask: FSErrorFlag::Type,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn FSCloseFile(
         client: *mut FSClient,
         block: *mut FSCmdBlock,
         handle: FSFileHandle,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn FSCloseFileAsync(
         client: *mut FSClient,
         block: *mut FSCmdBlock,
         handle: FSFileHandle,
-        errorMask: FSErrorFlag::Type,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn FSOpenFileEx(
@@ -1999,12 +2195,12 @@ extern "C" {
         block: *mut FSCmdBlock,
         path: *const ::core::ffi::c_char,
         mode: *const ::core::ffi::c_char,
-        createMode: FSMode::Type,
-        openFlag: FSOpenFileFlags::Type,
+        createMode: FSMode,
+        openFlag: FSOpenFileFlags,
         preallocSize: u32,
         handle: *mut FSFileHandle,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn FSOpenFileExAsync(
@@ -2012,13 +2208,13 @@ extern "C" {
         block: *mut FSCmdBlock,
         path: *const ::core::ffi::c_char,
         mode: *const ::core::ffi::c_char,
-        createMode: FSMode::Type,
-        openFlag: FSOpenFileFlags::Type,
+        createMode: FSMode,
+        openFlag: FSOpenFileFlags,
         preallocSize: u32,
         handle: *mut FSFileHandle,
-        errorMask: FSErrorFlag::Type,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn FSOpenDir(
@@ -2026,8 +2222,8 @@ extern "C" {
         block: *mut FSCmdBlock,
         path: *const ::core::ffi::c_char,
         handle: *mut FSDirectoryHandle,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn FSOpenDirAsync(
@@ -2035,26 +2231,26 @@ extern "C" {
         block: *mut FSCmdBlock,
         path: *const ::core::ffi::c_char,
         handle: *mut FSDirectoryHandle,
-        errorMask: FSErrorFlag::Type,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn FSMakeDir(
         client: *mut FSClient,
         block: *mut FSCmdBlock,
         path: *const ::core::ffi::c_char,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn FSMakeDirAsync(
         client: *mut FSClient,
         block: *mut FSCmdBlock,
         path: *const ::core::ffi::c_char,
-        errorMask: FSErrorFlag::Type,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn FSReadDir(
@@ -2062,8 +2258,8 @@ extern "C" {
         block: *mut FSCmdBlock,
         handle: FSDirectoryHandle,
         entry: *mut FSDirectoryEntry,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn FSReadDirAsync(
@@ -2071,25 +2267,25 @@ extern "C" {
         block: *mut FSCmdBlock,
         handle: FSDirectoryHandle,
         entry: *mut FSDirectoryEntry,
-        errorMask: FSErrorFlag::Type,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn FSRewindDir(
         client: *mut FSClient,
         block: *mut FSCmdBlock,
         handle: FSDirectoryHandle,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn FSCloseDir(
         client: *mut FSClient,
         block: *mut FSCmdBlock,
         handle: FSDirectoryHandle,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn FSGetVolumeInfo(
@@ -2097,8 +2293,8 @@ extern "C" {
         block: *mut FSCmdBlock,
         path: *const ::core::ffi::c_char,
         volumeInfo: *mut FSVolumeInfo,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn FSGetVolumeInfoAsync(
@@ -2106,39 +2302,39 @@ extern "C" {
         block: *mut FSCmdBlock,
         path: *const ::core::ffi::c_char,
         volumeInfo: *mut FSVolumeInfo,
-        errorMask: FSErrorFlag::Type,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn FSCloseDirAsync(
         client: *mut FSClient,
         block: *mut FSCmdBlock,
         handle: FSDirectoryHandle,
-        errorMask: FSErrorFlag::Type,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn FSChangeMode(
         client: *mut FSClient,
         block: *mut FSCmdBlock,
         path: *const ::core::ffi::c_char,
-        mode: FSMode::Type,
-        modeMask: FSMode::Type,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        mode: FSMode,
+        modeMask: FSMode,
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn FSChangeModeAsync(
         client: *mut FSClient,
         block: *mut FSCmdBlock,
         path: *const ::core::ffi::c_char,
-        mode: FSMode::Type,
-        modeMask: FSMode::Type,
-        errorMask: FSErrorFlag::Type,
+        mode: FSMode,
+        modeMask: FSMode,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn FSGetFreeSpaceSize(
@@ -2146,8 +2342,8 @@ extern "C" {
         block: *mut FSCmdBlock,
         path: *const ::core::ffi::c_char,
         outSize: *mut u64,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn FSGetFreeSpaceSizeAsync(
@@ -2155,9 +2351,9 @@ extern "C" {
         block: *mut FSCmdBlock,
         path: *const ::core::ffi::c_char,
         outSize: *mut u64,
-        errorMask: FSErrorFlag::Type,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn FSGetStatFile(
@@ -2165,8 +2361,8 @@ extern "C" {
         block: *mut FSCmdBlock,
         handle: FSFileHandle,
         stat: *mut FSStat,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn FSGetStatFileAsync(
@@ -2174,9 +2370,9 @@ extern "C" {
         block: *mut FSCmdBlock,
         handle: FSFileHandle,
         stat: *mut FSStat,
-        errorMask: FSErrorFlag::Type,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn FSReadFile(
@@ -2187,8 +2383,8 @@ extern "C" {
         count: u32,
         handle: FSFileHandle,
         unk1: u32,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn FSReadFileAsync(
@@ -2199,9 +2395,9 @@ extern "C" {
         count: u32,
         handle: FSFileHandle,
         unk1: u32,
-        errorMask: FSErrorFlag::Type,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn FSReadFileWithPos(
@@ -2213,8 +2409,8 @@ extern "C" {
         pos: u32,
         handle: FSFileHandle,
         unk1: u32,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn FSReadFileWithPosAsync(
@@ -2226,9 +2422,9 @@ extern "C" {
         pos: u32,
         handle: FSFileHandle,
         unk1: u32,
-        errorMask: FSErrorFlag::Type,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn FSWriteFile(
@@ -2239,8 +2435,8 @@ extern "C" {
         count: u32,
         handle: FSFileHandle,
         unk1: u32,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn FSWriteFileAsync(
@@ -2251,9 +2447,9 @@ extern "C" {
         count: u32,
         handle: FSFileHandle,
         unk1: u32,
-        errorMask: FSErrorFlag::Type,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn FSWriteFileWithPos(
@@ -2265,8 +2461,8 @@ extern "C" {
         pos: u32,
         handle: FSFileHandle,
         unk1: u32,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn FSWriteFileWithPosAsync(
@@ -2278,9 +2474,9 @@ extern "C" {
         pos: u32,
         handle: FSFileHandle,
         unk1: u32,
-        errorMask: FSErrorFlag::Type,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn FSGetPosFile(
@@ -2288,8 +2484,8 @@ extern "C" {
         block: *mut FSCmdBlock,
         fileHandle: FSFileHandle,
         pos: *mut u32,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn FSGetPosFileAsync(
@@ -2297,9 +2493,9 @@ extern "C" {
         block: *mut FSCmdBlock,
         fileHandle: FSFileHandle,
         pos: *mut u32,
-        errorMask: FSErrorFlag::Type,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn FSSetPosFile(
@@ -2307,8 +2503,8 @@ extern "C" {
         block: *mut FSCmdBlock,
         handle: FSFileHandle,
         pos: u32,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn FSSetPosFileAsync(
@@ -2316,43 +2512,43 @@ extern "C" {
         block: *mut FSCmdBlock,
         handle: FSFileHandle,
         pos: u32,
-        errorMask: FSErrorFlag::Type,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn FSFlushFile(
         client: *mut FSClient,
         block: *mut FSCmdBlock,
         handle: FSFileHandle,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn FSFlushFileAsync(
         client: *mut FSClient,
         block: *mut FSCmdBlock,
         handle: FSFileHandle,
-        errorMask: FSErrorFlag::Type,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn FSTruncateFile(
         client: *mut FSClient,
         block: *mut FSCmdBlock,
         handle: FSFileHandle,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn FSTruncateFileAsync(
         client: *mut FSClient,
         block: *mut FSCmdBlock,
         handle: FSFileHandle,
-        errorMask: FSErrorFlag::Type,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn FSRename(
@@ -2360,8 +2556,8 @@ extern "C" {
         block: *mut FSCmdBlock,
         oldPath: *const ::core::ffi::c_char,
         newPath: *const ::core::ffi::c_char,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn FSRenameAsync(
@@ -2369,27 +2565,27 @@ extern "C" {
         block: *mut FSCmdBlock,
         oldPath: *const ::core::ffi::c_char,
         newPath: *const ::core::ffi::c_char,
-        errorMask: FSErrorFlag::Type,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
-    pub fn FSGetVolumeState(client: *mut FSClient) -> FSVolumeState::Type;
+    pub fn FSGetVolumeState(client: *mut FSClient) -> FSVolumeState;
 }
 extern "C" {
-    pub fn FSGetLastError(client: *mut FSClient) -> FSError::Type;
+    pub fn FSGetLastError(client: *mut FSClient) -> FSError;
 }
 extern "C" {
-    pub fn FSGetLastErrorCodeForViewer(client: *mut FSClient) -> FSError::Type;
+    pub fn FSGetLastErrorCodeForViewer(client: *mut FSClient) -> FSError;
 }
 extern "C" {
     pub fn FSGetMountSource(
         client: *mut FSClient,
         cmd: *mut FSCmdBlock,
-        type_: FSMountSourceType::Type,
+        type_: FSMountSourceType,
         out: *mut FSMountSource,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn FSMount(
@@ -2398,16 +2594,16 @@ extern "C" {
         source: *mut FSMountSource,
         target: *const ::core::ffi::c_char,
         bytes: u32,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn FSUnmount(
         client: *mut FSClient,
         cmd: *mut FSCmdBlock,
         target: *const ::core::ffi::c_char,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn FSBindMount(
@@ -2415,186 +2611,162 @@ extern "C" {
         cmd: *mut FSCmdBlock,
         source: *const ::core::ffi::c_char,
         target: *const ::core::ffi::c_char,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn FSBindUnmount(
         client: *mut FSClient,
         cmd: *mut FSCmdBlock,
         target: *const ::core::ffi::c_char,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn FSTimeToCalendarTime(time: FSTime, outCalendarTime: *mut OSCalendarTime);
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct NNResult {
     pub value: i32,
 }
-pub mod WPADChan {
-    pub type Type = ::core::ffi::c_uint;
-    pub const WPAD_CHAN_0: Type = 0;
-    pub const WPAD_CHAN_1: Type = 1;
-    pub const WPAD_CHAN_2: Type = 2;
-    pub const WPAD_CHAN_3: Type = 3;
-    pub const WPAD_CHAN_4: Type = 4;
-    pub const WPAD_CHAN_5: Type = 5;
-    pub const WPAD_CHAN_6: Type = 6;
-}
-pub mod WPADDataFormat {
-    pub type Type = ::core::ffi::c_uint;
-    pub const WPAD_FMT_CORE: Type = 0;
-    pub const WPAD_FMT_CORE_ACC: Type = 1;
-    pub const WPAD_FMT_CORE_ACC_DPD: Type = 2;
-    pub const WPAD_FMT_NUNCHUK: Type = 3;
-    pub const WPAD_FMT_NUNCHUK_ACC: Type = 4;
-    pub const WPAD_FMT_NUNCHUK_ACC_DPD: Type = 5;
-    pub const WPAD_FMT_CLASSIC: Type = 6;
-    pub const WPAD_FMT_CLASSIC_ACC: Type = 7;
-    pub const WPAD_FMT_CLASSIC_ACC_DPD: Type = 8;
-    pub const WPAD_FMT_CORE_ACC_DPD_FULL: Type = 9;
-    pub const WPAD_FMT_TRAIN: Type = 10;
-    pub const WPAD_FMT_GUITAR: Type = 11;
-    pub const WPAD_FMT_BALANCE_BOARD: Type = 12;
-    pub const WPAD_FMT_DRUM: Type = 15;
-    pub const WPAD_FMT_MPLUS: Type = 16;
-    pub const WPAD_FMT_TAIKO: Type = 17;
-    pub const WPAD_FMT_PRO_CONTROLLER: Type = 22;
-}
-pub mod WPADExtensionType {
-    pub type Type = ::core::ffi::c_uint;
-    pub const WPAD_EXT_CORE: Type = 0;
-    pub const WPAD_EXT_NUNCHUK: Type = 1;
-    pub const WPAD_EXT_CLASSIC: Type = 2;
-    pub const WPAD_EXT_MPLUS: Type = 5;
-    pub const WPAD_EXT_MPLUS_NUNCHUK: Type = 6;
-    pub const WPAD_EXT_MPLUS_CLASSIC: Type = 7;
-    pub const WPAD_EXT_PRO_CONTROLLER: Type = 31;
-    pub const WPAD_EXT_DEV_NOT_FOUND: Type = 253;
-    pub const WPAD_EXT_UNKNOWN: Type = 255;
-}
-pub mod WPADButton {
-    pub type Type = ::core::ffi::c_uint;
-    pub const WPAD_BUTTON_LEFT: Type = 1;
-    pub const WPAD_BUTTON_RIGHT: Type = 2;
-    pub const WPAD_BUTTON_DOWN: Type = 4;
-    pub const WPAD_BUTTON_UP: Type = 8;
-    pub const WPAD_BUTTON_PLUS: Type = 16;
-    pub const WPAD_BUTTON_2: Type = 256;
-    pub const WPAD_BUTTON_1: Type = 512;
-    pub const WPAD_BUTTON_B: Type = 1024;
-    pub const WPAD_BUTTON_A: Type = 2048;
-    pub const WPAD_BUTTON_MINUS: Type = 4096;
-    pub const WPAD_BUTTON_Z: Type = 8192;
-    pub const WPAD_BUTTON_C: Type = 16384;
-    pub const WPAD_BUTTON_HOME: Type = 32768;
-}
-pub mod WPADNunchukButton {
-    pub type Type = ::core::ffi::c_uint;
-    pub const WPAD_NUNCHUK_STICK_EMULATION_LEFT: Type = 1;
-    pub const WPAD_NUNCHUK_STICK_EMULATION_RIGHT: Type = 2;
-    pub const WPAD_NUNCHUK_STICK_EMULATION_DOWN: Type = 4;
-    pub const WPAD_NUNCHUK_STICK_EMULATION_UP: Type = 8;
-    pub const WPAD_NUNCHUK_BUTTON_Z: Type = 8192;
-    pub const WPAD_NUNCHUK_BUTTON_C: Type = 16384;
-}
-pub mod WPADClassicButton {
-    pub type Type = ::core::ffi::c_uint;
-    pub const WPAD_CLASSIC_BUTTON_UP: Type = 1;
-    pub const WPAD_CLASSIC_BUTTON_LEFT: Type = 2;
-    pub const WPAD_CLASSIC_BUTTON_ZR: Type = 4;
-    pub const WPAD_CLASSIC_BUTTON_X: Type = 8;
-    pub const WPAD_CLASSIC_BUTTON_A: Type = 16;
-    pub const WPAD_CLASSIC_BUTTON_Y: Type = 32;
-    pub const WPAD_CLASSIC_BUTTON_B: Type = 64;
-    pub const WPAD_CLASSIC_BUTTON_ZL: Type = 128;
-    pub const WPAD_CLASSIC_BUTTON_R: Type = 512;
-    pub const WPAD_CLASSIC_BUTTON_PLUS: Type = 1024;
-    pub const WPAD_CLASSIC_BUTTON_HOME: Type = 2048;
-    pub const WPAD_CLASSIC_BUTTON_MINUS: Type = 4096;
-    pub const WPAD_CLASSIC_BUTTON_L: Type = 8192;
-    pub const WPAD_CLASSIC_BUTTON_DOWN: Type = 16384;
-    pub const WPAD_CLASSIC_BUTTON_RIGHT: Type = 32768;
-    pub const WPAD_CLASSIC_STICK_L_EMULATION_LEFT: Type = 65536;
-    pub const WPAD_CLASSIC_STICK_L_EMULATION_RIGHT: Type = 131072;
-    pub const WPAD_CLASSIC_STICK_L_EMULATION_DOWN: Type = 262144;
-    pub const WPAD_CLASSIC_STICK_L_EMULATION_UP: Type = 524288;
-    pub const WPAD_CLASSIC_STICK_R_EMULATION_LEFT: Type = 1048576;
-    pub const WPAD_CLASSIC_STICK_R_EMULATION_RIGHT: Type = 2097152;
-    pub const WPAD_CLASSIC_STICK_R_EMULATION_DOWN: Type = 4194304;
-    pub const WPAD_CLASSIC_STICK_R_EMULATION_UP: Type = 8388608;
-}
-pub mod WPADProButton {
-    pub type Type = ::core::ffi::c_uint;
-    pub const WPAD_PRO_BUTTON_UP: Type = 1;
-    pub const WPAD_PRO_BUTTON_LEFT: Type = 2;
-    pub const WPAD_PRO_TRIGGER_ZR: Type = 4;
-    pub const WPAD_PRO_BUTTON_X: Type = 8;
-    pub const WPAD_PRO_BUTTON_A: Type = 16;
-    pub const WPAD_PRO_BUTTON_Y: Type = 32;
-    pub const WPAD_PRO_BUTTON_B: Type = 64;
-    pub const WPAD_PRO_TRIGGER_ZL: Type = 128;
-    pub const WPAD_PRO_RESERVED: Type = 256;
-    pub const WPAD_PRO_TRIGGER_R: Type = 512;
-    pub const WPAD_PRO_BUTTON_PLUS: Type = 1024;
-    pub const WPAD_PRO_BUTTON_HOME: Type = 2048;
-    pub const WPAD_PRO_BUTTON_MINUS: Type = 4096;
-    pub const WPAD_PRO_TRIGGER_L: Type = 8192;
-    pub const WPAD_PRO_BUTTON_DOWN: Type = 16384;
-    pub const WPAD_PRO_BUTTON_RIGHT: Type = 32768;
-    pub const WPAD_PRO_BUTTON_STICK_R: Type = 65536;
-    pub const WPAD_PRO_BUTTON_STICK_L: Type = 131072;
-    pub const WPAD_PRO_STICK_L_EMULATION_UP: Type = 2097152;
-    pub const WPAD_PRO_STICK_L_EMULATION_DOWN: Type = 1048576;
-    pub const WPAD_PRO_STICK_L_EMULATION_LEFT: Type = 262144;
-    pub const WPAD_PRO_STICK_L_EMULATION_RIGHT: Type = 524288;
-    pub const WPAD_PRO_STICK_R_EMULATION_UP: Type = 33554432;
-    pub const WPAD_PRO_STICK_R_EMULATION_DOWN: Type = 16777216;
-    pub const WPAD_PRO_STICK_R_EMULATION_LEFT: Type = 4194304;
-    pub const WPAD_PRO_STICK_R_EMULATION_RIGHT: Type = 8388608;
-}
-pub mod WPADLed {
-    pub type Type = ::core::ffi::c_uint;
-    pub const WPAD_LED_ONE: Type = 1;
-    pub const WPAD_LED_TWO: Type = 2;
-    pub const WPAD_LED_THREE: Type = 4;
-    pub const WPAD_LED_FOUR: Type = 8;
-}
-pub mod WPADDpdFormat {
-    pub type Type = ::core::ffi::c_uint;
-    pub const WPAD_DPD_FMT_NONE: Type = 0;
-    pub const WPAD_DPD_FMT_BASIC: Type = 1;
-    pub const WPAD_DPD_FMT_EXTENDED: Type = 3;
-    pub const WPAD_DPD_FMT_FULL: Type = 5;
-}
-pub mod WPADSpeakerCmd {
-    pub type Type = ::core::ffi::c_uint;
-    pub const WPAD_SPEAKER_CMD_OFF: Type = 0;
-    pub const WPAD_SPEAKER_CMD_ON: Type = 1;
-    pub const WPAD_SPEAKER_CMD_MUTE: Type = 2;
-    pub const WPAD_SPEAKER_CMD_UNMUTE: Type = 3;
-    pub const WPAD_SPEAKER_CMD_PLAY: Type = 4;
-    pub const WPAD_SPEAKER_CMD_ON_ALT: Type = 5;
-}
-pub mod WPADMplsMode {
-    pub type Type = ::core::ffi::c_uint;
-    pub const WPAD_MPLS_MODE_DISABLE: Type = 0;
-    pub const WPAD_MPLS_MODE_MPLS_ONLY: Type = 4;
-    pub const WPAD_MPLS_MODE_MPLS_NUNCHUK: Type = 5;
-    pub const WPAD_MPLS_MODE_MPLS_CLASSIC: Type = 7;
-}
-pub mod WPADPeripheralSpace {
-    pub type Type = ::core::ffi::c_uint;
-    pub const WPAD_PERIPHERAL_SPACE_SPEAKER: Type = 162;
-    pub const WPAD_PERIPHERAL_SPACE_EXTENSION: Type = 164;
-    pub const WPAD_PERIPHERAL_SPACE_MOTIONPLUS: Type = 166;
-    pub const WPAD_PERIPHERAL_SPACE_DPD: Type = 176;
-}
+pub const WPAD_CHAN_0: WPADChan = 0;
+pub const WPAD_CHAN_1: WPADChan = 1;
+pub const WPAD_CHAN_2: WPADChan = 2;
+pub const WPAD_CHAN_3: WPADChan = 3;
+pub const WPAD_CHAN_4: WPADChan = 4;
+pub const WPAD_CHAN_5: WPADChan = 5;
+pub const WPAD_CHAN_6: WPADChan = 6;
+pub type WPADChan = ::core::ffi::c_uint;
+pub const WPAD_FMT_CORE: WPADDataFormat = 0;
+pub const WPAD_FMT_CORE_ACC: WPADDataFormat = 1;
+pub const WPAD_FMT_CORE_ACC_DPD: WPADDataFormat = 2;
+pub const WPAD_FMT_NUNCHUK: WPADDataFormat = 3;
+pub const WPAD_FMT_NUNCHUK_ACC: WPADDataFormat = 4;
+pub const WPAD_FMT_NUNCHUK_ACC_DPD: WPADDataFormat = 5;
+pub const WPAD_FMT_CLASSIC: WPADDataFormat = 6;
+pub const WPAD_FMT_CLASSIC_ACC: WPADDataFormat = 7;
+pub const WPAD_FMT_CLASSIC_ACC_DPD: WPADDataFormat = 8;
+pub const WPAD_FMT_CORE_ACC_DPD_FULL: WPADDataFormat = 9;
+pub const WPAD_FMT_TRAIN: WPADDataFormat = 10;
+pub const WPAD_FMT_GUITAR: WPADDataFormat = 11;
+pub const WPAD_FMT_BALANCE_BOARD: WPADDataFormat = 12;
+pub const WPAD_FMT_DRUM: WPADDataFormat = 15;
+pub const WPAD_FMT_MPLUS: WPADDataFormat = 16;
+pub const WPAD_FMT_TAIKO: WPADDataFormat = 17;
+pub const WPAD_FMT_PRO_CONTROLLER: WPADDataFormat = 22;
+pub type WPADDataFormat = ::core::ffi::c_uint;
+pub const WPAD_EXT_CORE: WPADExtensionType = 0;
+pub const WPAD_EXT_NUNCHUK: WPADExtensionType = 1;
+pub const WPAD_EXT_CLASSIC: WPADExtensionType = 2;
+pub const WPAD_EXT_MPLUS: WPADExtensionType = 5;
+pub const WPAD_EXT_MPLUS_NUNCHUK: WPADExtensionType = 6;
+pub const WPAD_EXT_MPLUS_CLASSIC: WPADExtensionType = 7;
+pub const WPAD_EXT_PRO_CONTROLLER: WPADExtensionType = 31;
+pub const WPAD_EXT_DEV_NOT_FOUND: WPADExtensionType = 253;
+pub const WPAD_EXT_UNKNOWN: WPADExtensionType = 255;
+pub type WPADExtensionType = ::core::ffi::c_uint;
+pub const WPAD_BUTTON_LEFT: WPADButton = 1;
+pub const WPAD_BUTTON_RIGHT: WPADButton = 2;
+pub const WPAD_BUTTON_DOWN: WPADButton = 4;
+pub const WPAD_BUTTON_UP: WPADButton = 8;
+pub const WPAD_BUTTON_PLUS: WPADButton = 16;
+pub const WPAD_BUTTON_2: WPADButton = 256;
+pub const WPAD_BUTTON_1: WPADButton = 512;
+pub const WPAD_BUTTON_B: WPADButton = 1024;
+pub const WPAD_BUTTON_A: WPADButton = 2048;
+pub const WPAD_BUTTON_MINUS: WPADButton = 4096;
+pub const WPAD_BUTTON_Z: WPADButton = 8192;
+pub const WPAD_BUTTON_C: WPADButton = 16384;
+pub const WPAD_BUTTON_HOME: WPADButton = 32768;
+pub type WPADButton = ::core::ffi::c_uint;
+pub const WPAD_NUNCHUK_STICK_EMULATION_LEFT: WPADNunchukButton = 1;
+pub const WPAD_NUNCHUK_STICK_EMULATION_RIGHT: WPADNunchukButton = 2;
+pub const WPAD_NUNCHUK_STICK_EMULATION_DOWN: WPADNunchukButton = 4;
+pub const WPAD_NUNCHUK_STICK_EMULATION_UP: WPADNunchukButton = 8;
+pub const WPAD_NUNCHUK_BUTTON_Z: WPADNunchukButton = 8192;
+pub const WPAD_NUNCHUK_BUTTON_C: WPADNunchukButton = 16384;
+pub type WPADNunchukButton = ::core::ffi::c_uint;
+pub const WPAD_CLASSIC_BUTTON_UP: WPADClassicButton = 1;
+pub const WPAD_CLASSIC_BUTTON_LEFT: WPADClassicButton = 2;
+pub const WPAD_CLASSIC_BUTTON_ZR: WPADClassicButton = 4;
+pub const WPAD_CLASSIC_BUTTON_X: WPADClassicButton = 8;
+pub const WPAD_CLASSIC_BUTTON_A: WPADClassicButton = 16;
+pub const WPAD_CLASSIC_BUTTON_Y: WPADClassicButton = 32;
+pub const WPAD_CLASSIC_BUTTON_B: WPADClassicButton = 64;
+pub const WPAD_CLASSIC_BUTTON_ZL: WPADClassicButton = 128;
+pub const WPAD_CLASSIC_BUTTON_R: WPADClassicButton = 512;
+pub const WPAD_CLASSIC_BUTTON_PLUS: WPADClassicButton = 1024;
+pub const WPAD_CLASSIC_BUTTON_HOME: WPADClassicButton = 2048;
+pub const WPAD_CLASSIC_BUTTON_MINUS: WPADClassicButton = 4096;
+pub const WPAD_CLASSIC_BUTTON_L: WPADClassicButton = 8192;
+pub const WPAD_CLASSIC_BUTTON_DOWN: WPADClassicButton = 16384;
+pub const WPAD_CLASSIC_BUTTON_RIGHT: WPADClassicButton = 32768;
+pub const WPAD_CLASSIC_STICK_L_EMULATION_LEFT: WPADClassicButton = 65536;
+pub const WPAD_CLASSIC_STICK_L_EMULATION_RIGHT: WPADClassicButton = 131072;
+pub const WPAD_CLASSIC_STICK_L_EMULATION_DOWN: WPADClassicButton = 262144;
+pub const WPAD_CLASSIC_STICK_L_EMULATION_UP: WPADClassicButton = 524288;
+pub const WPAD_CLASSIC_STICK_R_EMULATION_LEFT: WPADClassicButton = 1048576;
+pub const WPAD_CLASSIC_STICK_R_EMULATION_RIGHT: WPADClassicButton = 2097152;
+pub const WPAD_CLASSIC_STICK_R_EMULATION_DOWN: WPADClassicButton = 4194304;
+pub const WPAD_CLASSIC_STICK_R_EMULATION_UP: WPADClassicButton = 8388608;
+pub type WPADClassicButton = ::core::ffi::c_uint;
+pub const WPAD_PRO_BUTTON_UP: WPADProButton = 1;
+pub const WPAD_PRO_BUTTON_LEFT: WPADProButton = 2;
+pub const WPAD_PRO_TRIGGER_ZR: WPADProButton = 4;
+pub const WPAD_PRO_BUTTON_X: WPADProButton = 8;
+pub const WPAD_PRO_BUTTON_A: WPADProButton = 16;
+pub const WPAD_PRO_BUTTON_Y: WPADProButton = 32;
+pub const WPAD_PRO_BUTTON_B: WPADProButton = 64;
+pub const WPAD_PRO_TRIGGER_ZL: WPADProButton = 128;
+pub const WPAD_PRO_RESERVED: WPADProButton = 256;
+pub const WPAD_PRO_TRIGGER_R: WPADProButton = 512;
+pub const WPAD_PRO_BUTTON_PLUS: WPADProButton = 1024;
+pub const WPAD_PRO_BUTTON_HOME: WPADProButton = 2048;
+pub const WPAD_PRO_BUTTON_MINUS: WPADProButton = 4096;
+pub const WPAD_PRO_TRIGGER_L: WPADProButton = 8192;
+pub const WPAD_PRO_BUTTON_DOWN: WPADProButton = 16384;
+pub const WPAD_PRO_BUTTON_RIGHT: WPADProButton = 32768;
+pub const WPAD_PRO_BUTTON_STICK_R: WPADProButton = 65536;
+pub const WPAD_PRO_BUTTON_STICK_L: WPADProButton = 131072;
+pub const WPAD_PRO_STICK_L_EMULATION_UP: WPADProButton = 2097152;
+pub const WPAD_PRO_STICK_L_EMULATION_DOWN: WPADProButton = 1048576;
+pub const WPAD_PRO_STICK_L_EMULATION_LEFT: WPADProButton = 262144;
+pub const WPAD_PRO_STICK_L_EMULATION_RIGHT: WPADProButton = 524288;
+pub const WPAD_PRO_STICK_R_EMULATION_UP: WPADProButton = 33554432;
+pub const WPAD_PRO_STICK_R_EMULATION_DOWN: WPADProButton = 16777216;
+pub const WPAD_PRO_STICK_R_EMULATION_LEFT: WPADProButton = 4194304;
+pub const WPAD_PRO_STICK_R_EMULATION_RIGHT: WPADProButton = 8388608;
+pub type WPADProButton = ::core::ffi::c_uint;
+pub const WPAD_LED_ONE: WPADLed = 1;
+pub const WPAD_LED_TWO: WPADLed = 2;
+pub const WPAD_LED_THREE: WPADLed = 4;
+pub const WPAD_LED_FOUR: WPADLed = 8;
+pub type WPADLed = ::core::ffi::c_uint;
+pub const WPAD_DPD_FMT_NONE: WPADDpdFormat = 0;
+pub const WPAD_DPD_FMT_BASIC: WPADDpdFormat = 1;
+pub const WPAD_DPD_FMT_EXTENDED: WPADDpdFormat = 3;
+pub const WPAD_DPD_FMT_FULL: WPADDpdFormat = 5;
+pub type WPADDpdFormat = ::core::ffi::c_uint;
+pub const WPAD_SPEAKER_CMD_OFF: WPADSpeakerCmd = 0;
+pub const WPAD_SPEAKER_CMD_ON: WPADSpeakerCmd = 1;
+pub const WPAD_SPEAKER_CMD_MUTE: WPADSpeakerCmd = 2;
+pub const WPAD_SPEAKER_CMD_UNMUTE: WPADSpeakerCmd = 3;
+pub const WPAD_SPEAKER_CMD_PLAY: WPADSpeakerCmd = 4;
+pub const WPAD_SPEAKER_CMD_ON_ALT: WPADSpeakerCmd = 5;
+pub type WPADSpeakerCmd = ::core::ffi::c_uint;
+pub const WPAD_MPLS_MODE_DISABLE: WPADMplsMode = 0;
+pub const WPAD_MPLS_MODE_MPLS_ONLY: WPADMplsMode = 4;
+pub const WPAD_MPLS_MODE_MPLS_NUNCHUK: WPADMplsMode = 5;
+pub const WPAD_MPLS_MODE_MPLS_CLASSIC: WPADMplsMode = 7;
+pub type WPADMplsMode = ::core::ffi::c_uint;
+pub const WPAD_PERIPHERAL_SPACE_SPEAKER: WPADPeripheralSpace = 162;
+pub const WPAD_PERIPHERAL_SPACE_EXTENSION: WPADPeripheralSpace = 164;
+pub const WPAD_PERIPHERAL_SPACE_MOTIONPLUS: WPADPeripheralSpace = 166;
+pub const WPAD_PERIPHERAL_SPACE_DPD: WPADPeripheralSpace = 176;
+pub type WPADPeripheralSpace = ::core::ffi::c_uint;
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct WPADVec2D {
     pub x: i16,
     pub y: i16,
@@ -2610,10 +2782,19 @@ pub struct WPADStatusProController {
     pub leftStick: WPADVec2D,
     pub rightStick: WPADVec2D,
     pub __unk26: [::core::ffi::c_char; 8usize],
-    pub dataFormat: WPADDataFormat::Type,
+    pub dataFormat: WPADDataFormat,
+}
+impl Default for WPADStatusProController {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct WPADInfo {
     pub irEnabled: u32,
     pub speakerEnabled: u32,
@@ -2630,6 +2811,15 @@ pub struct WPADInfo {
 pub struct WPADiQueueElement {
     pub data: [u8; 48usize],
 }
+impl Default for WPADiQueueElement {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct WPADiQueue {
@@ -2639,35 +2829,43 @@ pub struct WPADiQueue {
     pub elements: *mut WPADiQueueElement,
     pub capacity: u32,
 }
+impl Default for WPADiQueue {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct WPADAddress {
     pub btDeviceAddress: [u8; 6usize],
 }
 pub type WPADIsMplsAttachedCallback =
-    ::core::option::Option<unsafe extern "C" fn(chan: WPADChan::Type, status: i32)>;
+    ::core::option::Option<unsafe extern "C" fn(chan: WPADChan, status: i32)>;
 pub type WPADControlLedCallback =
-    ::core::option::Option<unsafe extern "C" fn(chan: WPADChan::Type, status: i32)>;
+    ::core::option::Option<unsafe extern "C" fn(chan: WPADChan, status: i32)>;
 pub type WPADControlDpdCallback =
-    ::core::option::Option<unsafe extern "C" fn(chan: WPADChan::Type, status: i32)>;
+    ::core::option::Option<unsafe extern "C" fn(chan: WPADChan, status: i32)>;
 pub type WPADControlSpeakerCallback =
-    ::core::option::Option<unsafe extern "C" fn(chan: WPADChan::Type, status: i32)>;
+    ::core::option::Option<unsafe extern "C" fn(chan: WPADChan, status: i32)>;
 pub type WPADGetInfoCallback =
-    ::core::option::Option<unsafe extern "C" fn(chan: WPADChan::Type, status: i32)>;
+    ::core::option::Option<unsafe extern "C" fn(chan: WPADChan, status: i32)>;
 pub type WPADReadMemoryCallback =
-    ::core::option::Option<unsafe extern "C" fn(chan: WPADChan::Type, status: i32)>;
+    ::core::option::Option<unsafe extern "C" fn(chan: WPADChan, status: i32)>;
 pub type WPADWriteMemoryCallback =
-    ::core::option::Option<unsafe extern "C" fn(chan: WPADChan::Type, status: i32)>;
-pub type WPADSamplingCallback = ::core::option::Option<unsafe extern "C" fn(chan: WPADChan::Type)>;
-pub type WPADExtensionCallback = ::core::option::Option<
-    unsafe extern "C" fn(chan: WPADChan::Type, ext: WPADExtensionType::Type),
->;
+    ::core::option::Option<unsafe extern "C" fn(chan: WPADChan, status: i32)>;
+pub type WPADSamplingCallback = ::core::option::Option<unsafe extern "C" fn(chan: WPADChan)>;
+pub type WPADExtensionCallback =
+    ::core::option::Option<unsafe extern "C" fn(chan: WPADChan, ext: WPADExtensionType)>;
 pub type WPADConnectCallback =
-    ::core::option::Option<unsafe extern "C" fn(chan: WPADChan::Type, status: i32)>;
+    ::core::option::Option<unsafe extern "C" fn(chan: WPADChan, status: i32)>;
 pub type WPADiSendCallback =
-    ::core::option::Option<unsafe extern "C" fn(chan: WPADChan::Type, status: i32)>;
+    ::core::option::Option<unsafe extern "C" fn(chan: WPADChan, status: i32)>;
 pub type WPADiWriteGameDataCallback =
-    ::core::option::Option<unsafe extern "C" fn(chan: WPADChan::Type, status: i32)>;
+    ::core::option::Option<unsafe extern "C" fn(chan: WPADChan, status: i32)>;
 extern "C" {
     pub fn WPADInit();
 }
@@ -2675,59 +2873,52 @@ extern "C" {
     pub fn WPADShutdown();
 }
 extern "C" {
-    pub fn WPADDisconnect(chan: WPADChan::Type);
+    pub fn WPADDisconnect(chan: WPADChan);
 }
 extern "C" {
-    pub fn WPADProbe(chan: WPADChan::Type, outExtensionType: *mut WPADExtensionType::Type) -> i32;
+    pub fn WPADProbe(chan: WPADChan, outExtensionType: *mut WPADExtensionType) -> i32;
 }
 extern "C" {
-    pub fn WPADSetDataFormat(chan: WPADChan::Type, format: WPADDataFormat::Type) -> i32;
+    pub fn WPADSetDataFormat(chan: WPADChan, format: WPADDataFormat) -> i32;
 }
 extern "C" {
-    pub fn WPADGetDataFormat(chan: WPADChan::Type) -> WPADDataFormat::Type;
+    pub fn WPADGetDataFormat(chan: WPADChan) -> WPADDataFormat;
 }
 extern "C" {
-    pub fn WPADRead(chan: WPADChan::Type, data: *mut ::core::ffi::c_void);
+    pub fn WPADRead(chan: WPADChan, data: *mut ::core::ffi::c_void);
 }
 extern "C" {
-    pub fn WPADControlLed(
-        channel: WPADChan::Type,
-        led: WPADLed::Type,
-        callback: WPADControlLedCallback,
-    ) -> i32;
+    pub fn WPADControlLed(channel: WPADChan, led: WPADLed, callback: WPADControlLedCallback)
+        -> i32;
 }
 extern "C" {
     pub fn WPADControlDpd(
-        channel: WPADChan::Type,
-        mode: WPADDpdFormat::Type,
+        channel: WPADChan,
+        mode: WPADDpdFormat,
         callback: WPADControlDpdCallback,
     ) -> i32;
 }
 extern "C" {
-    pub fn WPADGetDpdFormat(chan: WPADChan::Type) -> WPADDpdFormat::Type;
+    pub fn WPADGetDpdFormat(chan: WPADChan) -> WPADDpdFormat;
 }
 extern "C" {
-    pub fn WPADControlMotor(chan: WPADChan::Type, motorEnabled: BOOL);
+    pub fn WPADControlMotor(chan: WPADChan, motorEnabled: BOOL);
 }
 extern "C" {
     pub fn WPADControlSpeaker(
-        chan: WPADChan::Type,
-        mode: WPADSpeakerCmd::Type,
+        chan: WPADChan,
+        mode: WPADSpeakerCmd,
         arg1: WPADControlSpeakerCallback,
     ) -> i32;
 }
 extern "C" {
-    pub fn WPADIsSpeakerEnabled(chan: WPADChan::Type) -> BOOL;
+    pub fn WPADIsSpeakerEnabled(chan: WPADChan) -> BOOL;
 }
 extern "C" {
-    pub fn WPADCanSendStreamData(chan: WPADChan::Type) -> BOOL;
+    pub fn WPADCanSendStreamData(chan: WPADChan) -> BOOL;
 }
 extern "C" {
-    pub fn WPADSendStreamData(
-        chan: WPADChan::Type,
-        data: *mut ::core::ffi::c_void,
-        size: u32,
-    ) -> i32;
+    pub fn WPADSendStreamData(chan: WPADChan, data: *mut ::core::ffi::c_void, size: u32) -> i32;
 }
 extern "C" {
     pub fn WPADGetSpeakerVolume() -> u8;
@@ -2737,27 +2928,27 @@ extern "C" {
 }
 extern "C" {
     pub fn WPADIsMplsAttached(
-        channel: WPADChan::Type,
+        channel: WPADChan,
         enabled: *mut BOOL,
         callback: WPADIsMplsAttachedCallback,
     ) -> i32;
 }
 extern "C" {
-    pub fn WPADIsMplsIntegrated(channel: WPADChan::Type) -> i32;
+    pub fn WPADIsMplsIntegrated(channel: WPADChan) -> i32;
 }
 extern "C" {
-    pub fn WPADGetInfo(channel: WPADChan::Type, outInfo: *mut WPADInfo) -> i32;
+    pub fn WPADGetInfo(channel: WPADChan, outInfo: *mut WPADInfo) -> i32;
 }
 extern "C" {
     pub fn WPADGetInfoAsync(
-        channel: WPADChan::Type,
+        channel: WPADChan,
         outInfo: *mut WPADInfo,
         arg1: WPADGetInfoCallback,
     ) -> i32;
 }
 extern "C" {
     pub fn WPADReadMemoryAsync(
-        channel: WPADChan::Type,
+        channel: WPADChan,
         destination: *mut ::core::ffi::c_void,
         size: u16,
         address: u32,
@@ -2766,7 +2957,7 @@ extern "C" {
 }
 extern "C" {
     pub fn WPADWriteMemoryAsync(
-        channel: WPADChan::Type,
+        channel: WPADChan,
         source: *mut ::core::ffi::c_void,
         size: u32,
         address: u32,
@@ -2775,27 +2966,27 @@ extern "C" {
 }
 extern "C" {
     pub fn WPADReadExtReg(
-        channel: WPADChan::Type,
+        channel: WPADChan,
         destination: *mut ::core::ffi::c_void,
         size: u16,
-        peripheral: WPADPeripheralSpace::Type,
+        peripheral: WPADPeripheralSpace,
         address: u32,
         callback: WPADReadMemoryCallback,
     ) -> i32;
 }
 extern "C" {
     pub fn WPADWriteExtReg(
-        channel: WPADChan::Type,
+        channel: WPADChan,
         source: *mut ::core::ffi::c_void,
         size: u32,
-        peripheral: WPADPeripheralSpace::Type,
+        peripheral: WPADPeripheralSpace,
         address: u32,
         callback: WPADWriteMemoryCallback,
     ) -> i32;
 }
 extern "C" {
     pub fn WPADGetBLCalibration(
-        channel: WPADChan::Type,
+        channel: WPADChan,
         destination: *mut ::core::ffi::c_void,
         address: u32,
         size: u32,
@@ -2803,13 +2994,13 @@ extern "C" {
     ) -> i32;
 }
 extern "C" {
-    pub fn WPADSetPowerSaveMode(chan: WPADChan::Type, powerSave: BOOL);
+    pub fn WPADSetPowerSaveMode(chan: WPADChan, powerSave: BOOL);
 }
 extern "C" {
-    pub fn WPADGetPowerSaveMode(chan: WPADChan::Type) -> BOOL;
+    pub fn WPADGetPowerSaveMode(chan: WPADChan) -> BOOL;
 }
 extern "C" {
-    pub fn WPADGetAddress(chan: WPADChan::Type, outAddress: *mut WPADAddress);
+    pub fn WPADGetAddress(chan: WPADChan, outAddress: *mut WPADAddress);
 }
 extern "C" {
     pub fn WPADEnableMotor(enable: BOOL);
@@ -2846,19 +3037,19 @@ extern "C" {
 }
 extern "C" {
     pub fn WPADSetConnectCallback(
-        chan: WPADChan::Type,
+        chan: WPADChan,
         callback: WPADConnectCallback,
     ) -> WPADConnectCallback;
 }
 extern "C" {
     pub fn WPADSetExtensionCallback(
-        chan: WPADChan::Type,
+        chan: WPADChan,
         callback: WPADExtensionCallback,
     ) -> WPADExtensionCallback;
 }
 extern "C" {
     pub fn WPADSetSamplingCallback(
-        chan: WPADChan::Type,
+        chan: WPADChan,
         callback: WPADSamplingCallback,
     ) -> WPADSamplingCallback;
 }
@@ -2872,7 +3063,7 @@ extern "C" {
     pub fn WPADiIsAvailableCmdQueue(queue: *mut WPADiQueue, count: u32) -> bool;
 }
 extern "C" {
-    pub fn WPADiHIDParser(channel: WPADChan::Type, hidData: *mut u8) -> i32;
+    pub fn WPADiHIDParser(channel: WPADChan, hidData: *mut u8) -> i32;
 }
 extern "C" {
     pub fn WPADiSendSetVibrator(cmdQueue: *mut WPADiQueue) -> BOOL;
@@ -2880,14 +3071,14 @@ extern "C" {
 extern "C" {
     pub fn WPADiSendSetPort(
         cmdQueue: *mut WPADiQueue,
-        led: WPADLed::Type,
+        led: WPADLed,
         callback: WPADiSendCallback,
     ) -> BOOL;
 }
 extern "C" {
     pub fn WPADiSendSetReportType(
         cmdQueue: *mut WPADiQueue,
-        dataFormat: WPADDataFormat::Type,
+        dataFormat: WPADDataFormat,
         powerSave: BOOL,
         callback: WPADiSendCallback,
     ) -> BOOL;
@@ -2970,14 +3161,14 @@ extern "C" {
     pub fn WPADSetGameTitleUtf16(title: *mut u16);
 }
 extern "C" {
-    pub fn WPADGetGameTitleUtf16(chan: WPADChan::Type, outTitle: *mut *mut u16) -> i32;
+    pub fn WPADGetGameTitleUtf16(chan: WPADChan, outTitle: *mut *mut u16) -> i32;
 }
 extern "C" {
-    pub fn WPADGetGameDataTimestamp(chan: WPADChan::Type, timestamp: *mut OSTime) -> i32;
+    pub fn WPADGetGameDataTimestamp(chan: WPADChan, timestamp: *mut OSTime) -> i32;
 }
 extern "C" {
     pub fn WPADiWriteGameData(
-        channel: WPADChan::Type,
+        channel: WPADChan,
         source: *mut ::core::ffi::c_void,
         size: u16,
         offset: u32,
@@ -2986,7 +3177,7 @@ extern "C" {
 }
 extern "C" {
     pub fn WPADiReadGameData(
-        channel: WPADChan::Type,
+        channel: WPADChan,
         destination: *mut ::core::ffi::c_void,
         size: u16,
         offset: u32,
@@ -2994,29 +3185,27 @@ extern "C" {
     ) -> i32;
 }
 extern "C" {
-    pub fn WPADiGetMplsStatus() -> WPADMplsMode::Type;
+    pub fn WPADiGetMplsStatus() -> WPADMplsMode;
 }
-pub use self::WPADChan::Type as KPADChan;
-pub use self::WPADDataFormat::Type as KPADDataFormat;
-pub use self::WPADExtensionType::Type as KPADExtensionType;
-pub use self::WPADMplsMode::Type as KPADMplsMode;
-pub mod KPADError {
-    pub type Type = ::core::ffi::c_int;
-    pub const KPAD_ERROR_OK: Type = 0;
-    pub const KPAD_ERROR_NO_SAMPLES: Type = -1;
-    pub const KPAD_ERROR_INVALID_CONTROLLER: Type = -2;
-    pub const KPAD_ERROR_WPAD_UNINIT: Type = -3;
-    pub const KPAD_ERROR_BUSY: Type = -4;
-    pub const KPAD_ERROR_UNINITIALIZED: Type = -5;
-}
+pub use self::WPADChan as KPADChan;
+pub use self::WPADDataFormat as KPADDataFormat;
+pub use self::WPADExtensionType as KPADExtensionType;
+pub use self::WPADMplsMode as KPADMplsMode;
+pub const KPAD_ERROR_OK: KPADError = 0;
+pub const KPAD_ERROR_NO_SAMPLES: KPADError = -1;
+pub const KPAD_ERROR_INVALID_CONTROLLER: KPADError = -2;
+pub const KPAD_ERROR_WPAD_UNINIT: KPADError = -3;
+pub const KPAD_ERROR_BUSY: KPADError = -4;
+pub const KPAD_ERROR_UNINITIALIZED: KPADError = -5;
+pub type KPADError = ::core::ffi::c_int;
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct KPADVec2D {
     pub x: f32,
     pub y: f32,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct KPADVec3D {
     pub x: f32,
     pub y: f32,
@@ -3051,7 +3240,7 @@ pub union KPADStatus__bindgen_ty_1 {
     pub __unk30: [::core::ffi::c_char; 80usize],
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct KPADStatus__bindgen_ty_1__bindgen_ty_1 {
     pub stick: KPADVec2D,
     pub acc: KPADVec3D,
@@ -3062,7 +3251,7 @@ pub struct KPADStatus__bindgen_ty_1__bindgen_ty_1 {
     pub release: u32,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct KPADStatus__bindgen_ty_1__bindgen_ty_2 {
     pub hold: u32,
     pub trigger: u32,
@@ -3073,7 +3262,7 @@ pub struct KPADStatus__bindgen_ty_1__bindgen_ty_2 {
     pub rightTrigger: f32,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct KPADStatus__bindgen_ty_1__bindgen_ty_3 {
     pub hold: u32,
     pub trigger: u32,
@@ -3082,6 +3271,24 @@ pub struct KPADStatus__bindgen_ty_1__bindgen_ty_3 {
     pub rightStick: KPADVec2D,
     pub charging: i32,
     pub wired: i32,
+}
+impl Default for KPADStatus__bindgen_ty_1 {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
+impl Default for KPADStatus {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 pub type KPADConnectCallback = WPADConnectCallback;
 extern "C" {
@@ -3098,7 +3305,7 @@ extern "C" {
         chan: KPADChan,
         data: *mut KPADStatus,
         size: u32,
-        error: *mut KPADError::Type,
+        error: *mut KPADError,
     ) -> i32;
 }
 extern "C" {
@@ -3131,16 +3338,12 @@ extern "C" {
 extern "C" {
     pub fn KPADDisableDPD(chan: KPADChan);
 }
-pub mod VPADChan {
-    pub type Type = ::core::ffi::c_uint;
-    pub const VPAD_CHAN_0: Type = 0;
-    pub const VPAD_CHAN_1: Type = 1;
-}
-pub mod VPADIRCStatusFlags {
-    pub type Type = ::core::ffi::c_uint;
-    pub const VPAD_IRC_STATUS_FLAG_HAS_DATA: Type = 1;
-    pub const VPAD_IRC_STATUS_FLAG_CONNECTED: Type = 2;
-}
+pub const VPAD_CHAN_0: VPADChan = 0;
+pub const VPAD_CHAN_1: VPADChan = 1;
+pub type VPADChan = ::core::ffi::c_uint;
+pub const VPAD_IRC_STATUS_FLAG_HAS_DATA: VPADIRCStatusFlags = 1;
+pub const VPAD_IRC_STATUS_FLAG_CONNECTED: VPADIRCStatusFlags = 2;
+pub type VPADIRCStatusFlags = ::core::ffi::c_uint;
 extern "C" {
     pub fn VPADBASEInit();
 }
@@ -3151,135 +3354,119 @@ extern "C" {
     pub fn VPADBASEIsInit() -> BOOL;
 }
 extern "C" {
-    pub fn VPADBASEGetMotorOnRemainingCount(chan: VPADChan::Type) -> i32;
+    pub fn VPADBASEGetMotorOnRemainingCount(chan: VPADChan) -> i32;
 }
 extern "C" {
-    pub fn VPADBASESetMotorOnRemainingCount(chan: VPADChan::Type, counter: i32) -> i32;
+    pub fn VPADBASESetMotorOnRemainingCount(chan: VPADChan, counter: i32) -> i32;
 }
 extern "C" {
-    pub fn VPADBASESetSensorBarSetting(chan: VPADChan::Type, setting: i8);
+    pub fn VPADBASESetSensorBarSetting(chan: VPADChan, setting: i8);
 }
 extern "C" {
-    pub fn VPADBASEGetSensorBarSetting(chan: VPADChan::Type, outSetting: *mut i8);
+    pub fn VPADBASEGetSensorBarSetting(chan: VPADChan, outSetting: *mut i8);
 }
 extern "C" {
-    pub fn VPADBASEGetHeadphoneStatus(chan: VPADChan::Type) -> i32;
+    pub fn VPADBASEGetHeadphoneStatus(chan: VPADChan) -> i32;
 }
 extern "C" {
-    pub fn VPADBASEGetGameControllerMode(chan: VPADChan::Type, mode: *mut i32);
+    pub fn VPADBASEGetGameControllerMode(chan: VPADChan, mode: *mut i32);
 }
 extern "C" {
-    pub fn VPADBASESetGameControllerMode(chan: VPADChan::Type, mode: i32);
+    pub fn VPADBASESetGameControllerMode(chan: VPADChan, mode: i32);
 }
 extern "C" {
-    pub fn VPADBASEGetPowerButtonPressStatus(
-        chan: VPADChan::Type,
-        tick: *mut u32,
-        status: *mut u32,
-    );
+    pub fn VPADBASEGetPowerButtonPressStatus(chan: VPADChan, tick: *mut u32, status: *mut u32);
 }
 extern "C" {
-    pub fn VPADBASESetPowerButtonPressStatus(chan: VPADChan::Type, tick: u32, status: u32);
+    pub fn VPADBASESetPowerButtonPressStatus(chan: VPADChan, tick: u32, status: u32);
 }
 extern "C" {
-    pub fn VPADBASESetPowerButtonDisableMode(chan: VPADChan::Type, mode: u32);
+    pub fn VPADBASESetPowerButtonDisableMode(chan: VPADChan, mode: u32);
 }
 extern "C" {
-    pub fn VPADBASEClearIRCEvent(chan: VPADChan::Type);
+    pub fn VPADBASEClearIRCEvent(chan: VPADChan);
 }
 extern "C" {
-    pub fn VPADBASEGetIRCStatus(chan: VPADChan::Type) -> VPADIRCStatusFlags::Type;
+    pub fn VPADBASEGetIRCStatus(chan: VPADChan) -> VPADIRCStatusFlags;
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct VPADGyroStatus {
     _unused: [u8; 0],
 }
-pub mod VPADButtons {
-    pub type Type = ::core::ffi::c_uint;
-    pub const VPAD_BUTTON_A: Type = 32768;
-    pub const VPAD_BUTTON_B: Type = 16384;
-    pub const VPAD_BUTTON_X: Type = 8192;
-    pub const VPAD_BUTTON_Y: Type = 4096;
-    pub const VPAD_BUTTON_LEFT: Type = 2048;
-    pub const VPAD_BUTTON_RIGHT: Type = 1024;
-    pub const VPAD_BUTTON_UP: Type = 512;
-    pub const VPAD_BUTTON_DOWN: Type = 256;
-    pub const VPAD_BUTTON_ZL: Type = 128;
-    pub const VPAD_BUTTON_ZR: Type = 64;
-    pub const VPAD_BUTTON_L: Type = 32;
-    pub const VPAD_BUTTON_R: Type = 16;
-    pub const VPAD_BUTTON_PLUS: Type = 8;
-    pub const VPAD_BUTTON_MINUS: Type = 4;
-    pub const VPAD_BUTTON_HOME: Type = 2;
-    pub const VPAD_BUTTON_SYNC: Type = 1;
-    pub const VPAD_BUTTON_STICK_R: Type = 131072;
-    pub const VPAD_BUTTON_STICK_L: Type = 262144;
-    pub const VPAD_BUTTON_TV: Type = 65536;
-    pub const VPAD_STICK_R_EMULATION_LEFT: Type = 67108864;
-    pub const VPAD_STICK_R_EMULATION_RIGHT: Type = 33554432;
-    pub const VPAD_STICK_R_EMULATION_UP: Type = 16777216;
-    pub const VPAD_STICK_R_EMULATION_DOWN: Type = 8388608;
-    pub const VPAD_STICK_L_EMULATION_LEFT: Type = 1073741824;
-    pub const VPAD_STICK_L_EMULATION_RIGHT: Type = 536870912;
-    pub const VPAD_STICK_L_EMULATION_UP: Type = 268435456;
-    pub const VPAD_STICK_L_EMULATION_DOWN: Type = 134217728;
-}
-pub mod VPADTouchPadValidity {
-    pub type Type = ::core::ffi::c_uint;
-    pub const VPAD_VALID: Type = 0;
-    pub const VPAD_INVALID_X: Type = 1;
-    pub const VPAD_INVALID_Y: Type = 2;
-}
-pub mod VPADTouchPadResolution {
-    pub type Type = ::core::ffi::c_uint;
-    pub const VPAD_TP_1920X1080: Type = 0;
-    pub const VPAD_TP_1280X720: Type = 1;
-    pub const VPAD_TP_854X480: Type = 2;
-}
-pub mod VPADReadError {
-    pub type Type = ::core::ffi::c_int;
-    pub const VPAD_READ_SUCCESS: Type = 0;
-    pub const VPAD_READ_NO_SAMPLES: Type = -1;
-    pub const VPAD_READ_INVALID_CONTROLLER: Type = -2;
-    pub const VPAD_READ_BUSY: Type = -4;
-    pub const VPAD_READ_UNINITIALIZED: Type = -5;
-}
-pub mod VPADLcdMode {
-    pub type Type = ::core::ffi::c_uint;
-    pub const VPAD_LCD_STANDBY: Type = 0;
-    pub const VPAD_LCD_OFF: Type = 1;
-    pub const VPAD_LCD_ON: Type = 255;
-}
-pub mod VPADGyroZeroDriftMode {
-    pub type Type = ::core::ffi::c_uint;
-    pub const VPAD_GYRO_ZERODRIFT_LOOSE: Type = 0;
-    pub const VPAD_GYRO_ZERODRIFT_STANDARD: Type = 1;
-    pub const VPAD_GYRO_ZERODRIFT_TIGHT: Type = 2;
-    pub const VPAD_GYRO_ZERODRIFT_NONE: Type = 3;
-}
+pub const VPAD_BUTTON_A: VPADButtons = 32768;
+pub const VPAD_BUTTON_B: VPADButtons = 16384;
+pub const VPAD_BUTTON_X: VPADButtons = 8192;
+pub const VPAD_BUTTON_Y: VPADButtons = 4096;
+pub const VPAD_BUTTON_LEFT: VPADButtons = 2048;
+pub const VPAD_BUTTON_RIGHT: VPADButtons = 1024;
+pub const VPAD_BUTTON_UP: VPADButtons = 512;
+pub const VPAD_BUTTON_DOWN: VPADButtons = 256;
+pub const VPAD_BUTTON_ZL: VPADButtons = 128;
+pub const VPAD_BUTTON_ZR: VPADButtons = 64;
+pub const VPAD_BUTTON_L: VPADButtons = 32;
+pub const VPAD_BUTTON_R: VPADButtons = 16;
+pub const VPAD_BUTTON_PLUS: VPADButtons = 8;
+pub const VPAD_BUTTON_MINUS: VPADButtons = 4;
+pub const VPAD_BUTTON_HOME: VPADButtons = 2;
+pub const VPAD_BUTTON_SYNC: VPADButtons = 1;
+pub const VPAD_BUTTON_STICK_R: VPADButtons = 131072;
+pub const VPAD_BUTTON_STICK_L: VPADButtons = 262144;
+pub const VPAD_BUTTON_TV: VPADButtons = 65536;
+pub const VPAD_STICK_R_EMULATION_LEFT: VPADButtons = 67108864;
+pub const VPAD_STICK_R_EMULATION_RIGHT: VPADButtons = 33554432;
+pub const VPAD_STICK_R_EMULATION_UP: VPADButtons = 16777216;
+pub const VPAD_STICK_R_EMULATION_DOWN: VPADButtons = 8388608;
+pub const VPAD_STICK_L_EMULATION_LEFT: VPADButtons = 1073741824;
+pub const VPAD_STICK_L_EMULATION_RIGHT: VPADButtons = 536870912;
+pub const VPAD_STICK_L_EMULATION_UP: VPADButtons = 268435456;
+pub const VPAD_STICK_L_EMULATION_DOWN: VPADButtons = 134217728;
+pub type VPADButtons = ::core::ffi::c_uint;
+pub const VPAD_VALID: VPADTouchPadValidity = 0;
+pub const VPAD_INVALID_X: VPADTouchPadValidity = 1;
+pub const VPAD_INVALID_Y: VPADTouchPadValidity = 2;
+pub type VPADTouchPadValidity = ::core::ffi::c_uint;
+pub const VPAD_TP_1920X1080: VPADTouchPadResolution = 0;
+pub const VPAD_TP_1280X720: VPADTouchPadResolution = 1;
+pub const VPAD_TP_854X480: VPADTouchPadResolution = 2;
+pub type VPADTouchPadResolution = ::core::ffi::c_uint;
+pub const VPAD_READ_SUCCESS: VPADReadError = 0;
+pub const VPAD_READ_NO_SAMPLES: VPADReadError = -1;
+pub const VPAD_READ_INVALID_CONTROLLER: VPADReadError = -2;
+pub const VPAD_READ_BUSY: VPADReadError = -4;
+pub const VPAD_READ_UNINITIALIZED: VPADReadError = -5;
+pub type VPADReadError = ::core::ffi::c_int;
+pub const VPAD_LCD_STANDBY: VPADLcdMode = 0;
+pub const VPAD_LCD_OFF: VPADLcdMode = 1;
+pub const VPAD_LCD_ON: VPADLcdMode = 255;
+pub type VPADLcdMode = ::core::ffi::c_uint;
+pub const VPAD_GYRO_ZERODRIFT_LOOSE: VPADGyroZeroDriftMode = 0;
+pub const VPAD_GYRO_ZERODRIFT_STANDARD: VPADGyroZeroDriftMode = 1;
+pub const VPAD_GYRO_ZERODRIFT_TIGHT: VPADGyroZeroDriftMode = 2;
+pub const VPAD_GYRO_ZERODRIFT_NONE: VPADGyroZeroDriftMode = 3;
+pub type VPADGyroZeroDriftMode = ::core::ffi::c_uint;
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct VPADVec2D {
     pub x: f32,
     pub y: f32,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct VPADVec3D {
     pub x: f32,
     pub y: f32,
     pub z: f32,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct VPADDirection {
     pub x: VPADVec3D,
     pub y: VPADVec3D,
     pub z: VPADVec3D,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct VPADTouchCalibrationParam {
     pub adjustX: u16,
     pub adjustY: u16,
@@ -3287,7 +3474,7 @@ pub struct VPADTouchCalibrationParam {
     pub scaleY: f32,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct VPADTouchData {
     pub x: u16,
     pub y: u16,
@@ -3295,7 +3482,7 @@ pub struct VPADTouchData {
     pub validity: u16,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct VPADAccStatus {
     pub acc: VPADVec3D,
     pub magnitude: f32,
@@ -3303,7 +3490,7 @@ pub struct VPADAccStatus {
     pub vertical: VPADVec2D,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct VPADStatus {
     pub hold: u32,
     pub trigger: u32,
@@ -3328,7 +3515,7 @@ pub struct VPADStatus {
     pub slideVolumeEx: u8,
     pub __unk34: [::core::ffi::c_char; 8usize],
 }
-pub type VPADSamplingCallback = ::core::option::Option<unsafe extern "C" fn(chan: VPADChan::Type)>;
+pub type VPADSamplingCallback = ::core::option::Option<unsafe extern "C" fn(chan: VPADChan)>;
 extern "C" {
     pub fn VPADInit();
 }
@@ -3337,87 +3524,84 @@ extern "C" {
 }
 extern "C" {
     pub fn VPADRead(
-        chan: VPADChan::Type,
+        chan: VPADChan,
         buffers: *mut VPADStatus,
         count: u32,
-        outError: *mut VPADReadError::Type,
+        outError: *mut VPADReadError,
     ) -> i32;
 }
 extern "C" {
-    pub fn VPADGetTPCalibrationParam(
-        chan: VPADChan::Type,
-        outParam: *mut VPADTouchCalibrationParam,
-    );
+    pub fn VPADGetTPCalibrationParam(chan: VPADChan, outParam: *mut VPADTouchCalibrationParam);
 }
 extern "C" {
-    pub fn VPADSetTPCalibrationParam(chan: VPADChan::Type, param: *const VPADTouchCalibrationParam);
+    pub fn VPADSetTPCalibrationParam(chan: VPADChan, param: *const VPADTouchCalibrationParam);
 }
 extern "C" {
     pub fn VPADGetTPCalibratedPoint(
-        chan: VPADChan::Type,
+        chan: VPADChan,
         calibratedData: *mut VPADTouchData,
         uncalibratedData: *const VPADTouchData,
     );
 }
 extern "C" {
     pub fn VPADGetTPCalibratedPointEx(
-        chan: VPADChan::Type,
-        tpResolution: VPADTouchPadResolution::Type,
+        chan: VPADChan,
+        tpResolution: VPADTouchPadResolution,
         calibratedData: *mut VPADTouchData,
         uncalibratedData: *const VPADTouchData,
     );
 }
 extern "C" {
-    pub fn VPADSetAccParam(chan: VPADChan::Type, playRadius: f32, sensitivity: f32);
+    pub fn VPADSetAccParam(chan: VPADChan, playRadius: f32, sensitivity: f32);
 }
 extern "C" {
-    pub fn VPADGetAccParam(chan: VPADChan::Type, outPlayRadius: *mut f32, outSensitivity: *mut f32);
+    pub fn VPADGetAccParam(chan: VPADChan, outPlayRadius: *mut f32, outSensitivity: *mut f32);
 }
 extern "C" {
-    pub fn VPADSetBtnRepeat(chan: VPADChan::Type, delaySec: f32, pulseSec: f32);
+    pub fn VPADSetBtnRepeat(chan: VPADChan, delaySec: f32, pulseSec: f32);
 }
 extern "C" {
-    pub fn VPADEnableStickCrossClamp(chan: VPADChan::Type);
+    pub fn VPADEnableStickCrossClamp(chan: VPADChan);
 }
 extern "C" {
-    pub fn VPADDisableStickCrossClamp(chan: VPADChan::Type);
+    pub fn VPADDisableStickCrossClamp(chan: VPADChan);
 }
 extern "C" {
-    pub fn VPADSetLStickClampThreshold(chan: VPADChan::Type, max: i32, min: i32);
+    pub fn VPADSetLStickClampThreshold(chan: VPADChan, max: i32, min: i32);
 }
 extern "C" {
-    pub fn VPADSetRStickClampThreshold(chan: VPADChan::Type, max: i32, min: i32);
+    pub fn VPADSetRStickClampThreshold(chan: VPADChan, max: i32, min: i32);
 }
 extern "C" {
-    pub fn VPADGetGyroDirReviseParam(chan: VPADChan::Type, param: *mut f32);
+    pub fn VPADGetGyroDirReviseParam(chan: VPADChan, param: *mut f32);
 }
 extern "C" {
-    pub fn VPADGetGyroZeroDriftMode(chan: VPADChan::Type, mode: *mut VPADGyroZeroDriftMode::Type);
+    pub fn VPADGetGyroZeroDriftMode(chan: VPADChan, mode: *mut VPADGyroZeroDriftMode);
 }
 extern "C" {
-    pub fn VPADGetLStickClampThreshold(chan: VPADChan::Type, max: *mut i32, min: *mut i32);
+    pub fn VPADGetLStickClampThreshold(chan: VPADChan, max: *mut i32, min: *mut i32);
 }
 extern "C" {
-    pub fn VPADGetRStickClampThreshold(chan: VPADChan::Type, max: *mut i32, min: *mut i32);
+    pub fn VPADGetRStickClampThreshold(chan: VPADChan, max: *mut i32, min: *mut i32);
 }
 extern "C" {
-    pub fn VPADSetStickOrigin(chan: VPADChan::Type);
+    pub fn VPADSetStickOrigin(chan: VPADChan);
 }
 extern "C" {
-    pub fn VPADDisableLStickZeroClamp(chan: VPADChan::Type);
+    pub fn VPADDisableLStickZeroClamp(chan: VPADChan);
 }
 extern "C" {
-    pub fn VPADDisableRStickZeroClamp(chan: VPADChan::Type);
+    pub fn VPADDisableRStickZeroClamp(chan: VPADChan);
 }
 extern "C" {
-    pub fn VPADEnableLStickZeroClamp(chan: VPADChan::Type);
+    pub fn VPADEnableLStickZeroClamp(chan: VPADChan);
 }
 extern "C" {
-    pub fn VPADEnableRStickZeroClamp(chan: VPADChan::Type);
+    pub fn VPADEnableRStickZeroClamp(chan: VPADChan);
 }
 extern "C" {
     pub fn VPADSetCrossStickEmulationParamsL(
-        chan: VPADChan::Type,
+        chan: VPADChan,
         rotationDegree: f32,
         range: f32,
         radius: f32,
@@ -3425,7 +3609,7 @@ extern "C" {
 }
 extern "C" {
     pub fn VPADSetCrossStickEmulationParamsR(
-        chan: VPADChan::Type,
+        chan: VPADChan,
         rotationDegree: f32,
         range: f32,
         radius: f32,
@@ -3433,7 +3617,7 @@ extern "C" {
 }
 extern "C" {
     pub fn VPADGetCrossStickEmulationParamsL(
-        chan: VPADChan::Type,
+        chan: VPADChan,
         outRotationDegree: *mut f32,
         outRange: *mut f32,
         outRadius: *mut f32,
@@ -3441,119 +3625,119 @@ extern "C" {
 }
 extern "C" {
     pub fn VPADGetCrossStickEmulationParamsR(
-        chan: VPADChan::Type,
+        chan: VPADChan,
         outRotationDegree: *mut f32,
         outRange: *mut f32,
         outRadius: *mut f32,
     );
 }
 extern "C" {
-    pub fn VPADSetGyroAngle(chan: VPADChan::Type, ax: f32, ay: f32, az: f32);
+    pub fn VPADSetGyroAngle(chan: VPADChan, ax: f32, ay: f32, az: f32);
 }
 extern "C" {
-    pub fn VPADSetGyroDirReviseBase(chan: VPADChan::Type, base: *mut VPADDirection);
+    pub fn VPADSetGyroDirReviseBase(chan: VPADChan, base: *mut VPADDirection);
 }
 extern "C" {
-    pub fn VPADSetGyroDirReviseParam(chan: VPADChan::Type, param: f32);
+    pub fn VPADSetGyroDirReviseParam(chan: VPADChan, param: f32);
 }
 extern "C" {
-    pub fn VPADSetGyroDirection(chan: VPADChan::Type, dir: *mut VPADDirection);
+    pub fn VPADSetGyroDirection(chan: VPADChan, dir: *mut VPADDirection);
 }
 extern "C" {
-    pub fn VPADSetGyroDirectionMag(chan: VPADChan::Type, mag: f32);
+    pub fn VPADSetGyroDirectionMag(chan: VPADChan, mag: f32);
 }
 extern "C" {
-    pub fn VPADSetGyroMagnification(chan: VPADChan::Type, pitch: f32, yaw: f32, roll: f32);
+    pub fn VPADSetGyroMagnification(chan: VPADChan, pitch: f32, yaw: f32, roll: f32);
 }
 extern "C" {
-    pub fn VPADSetGyroZeroDriftMode(chan: VPADChan::Type, mode: VPADGyroZeroDriftMode::Type);
+    pub fn VPADSetGyroZeroDriftMode(chan: VPADChan, mode: VPADGyroZeroDriftMode);
 }
 extern "C" {
-    pub fn VPADEnableGyroZeroPlay(chan: VPADChan::Type);
+    pub fn VPADEnableGyroZeroPlay(chan: VPADChan);
 }
 extern "C" {
-    pub fn VPADEnableGyroDirRevise(chan: VPADChan::Type);
+    pub fn VPADEnableGyroDirRevise(chan: VPADChan);
 }
 extern "C" {
-    pub fn VPADEnableGyroAccRevise(chan: VPADChan::Type);
+    pub fn VPADEnableGyroAccRevise(chan: VPADChan);
 }
 extern "C" {
-    pub fn VPADDisableGyroZeroPlay(chan: VPADChan::Type);
+    pub fn VPADDisableGyroZeroPlay(chan: VPADChan);
 }
 extern "C" {
-    pub fn VPADDisableGyroDirRevise(chan: VPADChan::Type);
+    pub fn VPADDisableGyroDirRevise(chan: VPADChan);
 }
 extern "C" {
-    pub fn VPADDisableGyroAccRevise(chan: VPADChan::Type);
+    pub fn VPADDisableGyroAccRevise(chan: VPADChan);
 }
 extern "C" {
-    pub fn VPADIsEnableGyroZeroPlay(chan: VPADChan::Type) -> f32;
+    pub fn VPADIsEnableGyroZeroPlay(chan: VPADChan) -> f32;
 }
 extern "C" {
-    pub fn VPADIsEnableGyroZeroDrift(chan: VPADChan::Type) -> f32;
+    pub fn VPADIsEnableGyroZeroDrift(chan: VPADChan) -> f32;
 }
 extern "C" {
-    pub fn VPADIsEnableGyroDirRevise(chan: VPADChan::Type) -> f32;
+    pub fn VPADIsEnableGyroDirRevise(chan: VPADChan) -> f32;
 }
 extern "C" {
-    pub fn VPADIsEnableGyroAccRevise(chan: VPADChan::Type) -> f32;
+    pub fn VPADIsEnableGyroAccRevise(chan: VPADChan) -> f32;
 }
 extern "C" {
-    pub fn VPADSetGyroZeroPlayParam(chan: VPADChan::Type, radius: f32);
+    pub fn VPADSetGyroZeroPlayParam(chan: VPADChan, radius: f32);
 }
 extern "C" {
-    pub fn VPADInitGyroZeroPlayParam(chan: VPADChan::Type);
+    pub fn VPADInitGyroZeroPlayParam(chan: VPADChan);
 }
 extern "C" {
-    pub fn VPADInitGyroDirReviseParam(chan: VPADChan::Type);
+    pub fn VPADInitGyroDirReviseParam(chan: VPADChan);
 }
 extern "C" {
-    pub fn VPADInitGyroAccReviseParam(chan: VPADChan::Type);
+    pub fn VPADInitGyroAccReviseParam(chan: VPADChan);
 }
 extern "C" {
-    pub fn VPADStartGyroMagRevise(chan: VPADChan::Type);
+    pub fn VPADStartGyroMagRevise(chan: VPADChan);
 }
 extern "C" {
-    pub fn VPADStopGyroMagRevise(chan: VPADChan::Type);
+    pub fn VPADStopGyroMagRevise(chan: VPADChan);
 }
 extern "C" {
-    pub fn VPADInitGyroZeroDriftMode(chan: VPADChan::Type);
+    pub fn VPADInitGyroZeroDriftMode(chan: VPADChan);
 }
 extern "C" {
-    pub fn VPADGetTVMenuStatus(chan: VPADChan::Type) -> BOOL;
+    pub fn VPADGetTVMenuStatus(chan: VPADChan) -> BOOL;
 }
 extern "C" {
-    pub fn VPADSetTVMenuInvalid(chan: VPADChan::Type, invalid: BOOL);
+    pub fn VPADSetTVMenuInvalid(chan: VPADChan, invalid: BOOL);
 }
 extern "C" {
-    pub fn VPADDisablePowerButton(chan: VPADChan::Type);
+    pub fn VPADDisablePowerButton(chan: VPADChan);
 }
 extern "C" {
-    pub fn VPADEnablePowerButton(chan: VPADChan::Type);
+    pub fn VPADEnablePowerButton(chan: VPADChan);
 }
 extern "C" {
-    pub fn VPADControlMotor(chan: VPADChan::Type, pattern: *mut u8, length: u8) -> i32;
+    pub fn VPADControlMotor(chan: VPADChan, pattern: *mut u8, length: u8) -> i32;
 }
 extern "C" {
-    pub fn VPADStopMotor(chan: VPADChan::Type);
+    pub fn VPADStopMotor(chan: VPADChan);
 }
 extern "C" {
-    pub fn VPADSetLcdMode(chan: VPADChan::Type, lcdMode: VPADLcdMode::Type) -> i32;
+    pub fn VPADSetLcdMode(chan: VPADChan, lcdMode: VPADLcdMode) -> i32;
 }
 extern "C" {
-    pub fn VPADGetLcdMode(chan: VPADChan::Type, outLcdMode: *mut VPADLcdMode::Type) -> i32;
+    pub fn VPADGetLcdMode(chan: VPADChan, outLcdMode: *mut VPADLcdMode) -> i32;
 }
 extern "C" {
-    pub fn VPADSetSensorBar(chan: VPADChan::Type, on: BOOL) -> i32;
+    pub fn VPADSetSensorBar(chan: VPADChan, on: BOOL) -> i32;
 }
 extern "C" {
     pub fn VPADSetSamplingCallback(
-        chan: VPADChan::Type,
+        chan: VPADChan,
         callback: VPADSamplingCallback,
     ) -> VPADSamplingCallback;
 }
 extern "C" {
-    pub fn VPADGetButtonProcMode(chan: VPADChan::Type) -> BOOL;
+    pub fn VPADGetButtonProcMode(chan: VPADChan) -> BOOL;
 }
 pub type wint_t = ::core::ffi::c_int;
 pub type _off_t = __int64_t;
@@ -3587,6 +3771,24 @@ pub struct _mbstate_t {
 pub union _mbstate_t__bindgen_ty_1 {
     pub __wch: wint_t,
     pub __wchb: [::core::ffi::c_uchar; 4usize],
+}
+impl Default for _mbstate_t__bindgen_ty_1 {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
+impl Default for _mbstate_t {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 pub type _iconv_t = *mut ::core::ffi::c_void;
 pub type __clock_t = ::core::ffi::c_ulong;
@@ -3650,8 +3852,17 @@ pub struct _Bigint {
     pub _wds: ::core::ffi::c_int,
     pub _x: [__ULong; 1usize],
 }
+impl Default for _Bigint {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct __tm {
     pub __tm_sec: ::core::ffi::c_int,
     pub __tm_min: ::core::ffi::c_int,
@@ -3671,6 +3882,15 @@ pub struct _on_exit_args {
     pub _fntypes: __ULong,
     pub _is_cxa: __ULong,
 }
+impl Default for _on_exit_args {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct _atexit {
@@ -3679,11 +3899,29 @@ pub struct _atexit {
     pub _fns: [::core::option::Option<unsafe extern "C" fn()>; 32usize],
     pub _on_exit_args: _on_exit_args,
 }
+impl Default for _atexit {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct __sbuf {
     pub _base: *mut ::core::ffi::c_uchar,
     pub _size: ::core::ffi::c_int,
+}
+impl Default for __sbuf {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -3739,6 +3977,15 @@ pub struct __sFILE {
     pub _mbstate: _mbstate_t,
     pub _flags2: ::core::ffi::c_int,
 }
+impl Default for __sFILE {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 pub type __FILE = __sFILE;
 extern "C" {
     pub static mut __sf: [__FILE; 3usize];
@@ -3750,11 +3997,20 @@ pub struct _glue {
     pub _niobs: ::core::ffi::c_int,
     pub _iobs: *mut __FILE,
 }
+impl Default for _glue {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 extern "C" {
     pub static mut __sglue: _glue;
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct _rand48 {
     pub _seed: [::core::ffi::c_ushort; 3usize],
     pub _mult: [::core::ffi::c_ushort; 3usize],
@@ -3807,6 +4063,33 @@ pub struct _reent__bindgen_ty_1__bindgen_ty_1 {
     pub _wcrtomb_state: _mbstate_t,
     pub _wcsrtombs_state: _mbstate_t,
     pub _h_errno: ::core::ffi::c_int,
+}
+impl Default for _reent__bindgen_ty_1__bindgen_ty_1 {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
+impl Default for _reent__bindgen_ty_1 {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
+impl Default for _reent {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 extern "C" {
     pub static mut _impure_ptr: *mut _reent;
@@ -4187,28 +4470,33 @@ extern "C" {
     pub fn strsignal(__signo: ::core::ffi::c_int) -> *mut ::core::ffi::c_char;
 }
 pub type MICHandle = ::core::ffi::c_int;
-pub mod MICError {
-    pub type Type = ::core::ffi::c_int;
-    pub const MIC_ERROR_OK: Type = 0;
-    pub const MIC_ERROR_NOT_OPENED: Type = -1;
-    pub const MIC_ERROR_INVALID_HANDLE: Type = -2;
-    pub const MIC_ERROR_INIT: Type = -5;
-    pub const MIC_ERROR_ALREADY_CLOSED: Type = -7;
-    pub const MIC_ERROR_INVALID_INSTANCE: Type = -8;
-}
-pub mod MICInstance {
-    pub type Type = ::core::ffi::c_uint;
-    pub const MIC_INSTANCE_0: Type = 0;
-    pub const MIC_INSTANCE_1: Type = 1;
-}
+pub const MIC_ERROR_OK: MICError = 0;
+pub const MIC_ERROR_NOT_OPENED: MICError = -1;
+pub const MIC_ERROR_INVALID_HANDLE: MICError = -2;
+pub const MIC_ERROR_INIT: MICError = -5;
+pub const MIC_ERROR_ALREADY_CLOSED: MICError = -7;
+pub const MIC_ERROR_INVALID_INSTANCE: MICError = -8;
+pub type MICError = ::core::ffi::c_int;
+pub const MIC_INSTANCE_0: MICInstance = 0;
+pub const MIC_INSTANCE_1: MICInstance = 1;
+pub type MICInstance = ::core::ffi::c_uint;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct MICWorkMemory {
     pub sampleMaxCount: usize,
     pub sampleBuffer: *mut ::core::ffi::c_void,
 }
+impl Default for MICWorkMemory {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct MICStatus {
     pub state: ::core::ffi::c_int,
     pub availableData: ::core::ffi::c_int,
@@ -4216,97 +4504,83 @@ pub struct MICStatus {
 }
 extern "C" {
     pub fn MICInit(
-        instance: MICInstance::Type,
+        instance: MICInstance,
         unused: ::core::ffi::c_int,
         workMemory: *mut MICWorkMemory,
-        outError: *mut MICError::Type,
+        outError: *mut MICError,
     ) -> MICHandle;
 }
 extern "C" {
-    pub fn MICOpen(handle: MICHandle) -> MICError::Type;
+    pub fn MICOpen(handle: MICHandle) -> MICError;
 }
 extern "C" {
     pub fn MICGetState(
         handle: MICHandle,
         state: ::core::ffi::c_int,
         outStateVal: *mut u32,
-    ) -> MICError::Type;
+    ) -> MICError;
 }
 extern "C" {
-    pub fn MICSetState(
-        handle: MICHandle,
-        state: ::core::ffi::c_int,
-        stateVal: u32,
-    ) -> MICError::Type;
+    pub fn MICSetState(handle: MICHandle, state: ::core::ffi::c_int, stateVal: u32) -> MICError;
 }
 extern "C" {
-    pub fn MICGetStatus(handle: MICHandle, outStatus: *mut MICStatus) -> MICError::Type;
+    pub fn MICGetStatus(handle: MICHandle, outStatus: *mut MICStatus) -> MICError;
 }
 extern "C" {
     pub fn MICSetDataConsumed(
         handle: MICHandle,
         dataAmountConsumed: ::core::ffi::c_int,
-    ) -> MICError::Type;
+    ) -> MICError;
 }
 extern "C" {
-    pub fn MICClose(handle: MICHandle) -> MICError::Type;
+    pub fn MICClose(handle: MICHandle) -> MICError;
 }
 extern "C" {
-    pub fn MICUninit(handle: MICHandle) -> MICError::Type;
+    pub fn MICUninit(handle: MICHandle) -> MICError;
 }
 pub type NFCError = i32;
 pub type NFCProtocol = u8;
 pub type NFCTechnology = u8;
 pub type NFCTechnologyMask = u8;
 pub type NFCNDEFFlags = u8;
-pub mod NFCMode {
-    pub type Type = ::core::ffi::c_int;
-    pub const NFC_MODE_INVALID: Type = -1;
-    pub const NFC_MODE_IDLE: Type = 0;
-    pub const NFC_MODE_ACTIVE: Type = 1;
-}
-pub mod NFCProtocolEnum {
-    pub type Type = ::core::ffi::c_uint;
-    pub const NFC_PROTOCOL_UNKNOWN: Type = 0;
-    pub const NFC_PROTOCOL_T1T: Type = 1;
-    pub const NFC_PROTOCOL_T2T: Type = 2;
-    pub const NFC_PROTOCOL_T3T: Type = 3;
-    pub const NFC_PROTOCOL_ISO_DEP: Type = 4;
-    pub const NFC_PROTOCOL_15693: Type = 131;
-}
-pub mod NFCTechnologyEnum {
-    pub type Type = ::core::ffi::c_uint;
-    pub const NFC_TECHNOLOGY_A: Type = 0;
-    pub const NFC_TECHNOLOGY_B: Type = 1;
-    pub const NFC_TECHNOLOGY_F: Type = 2;
-    pub const NFC_TECHNOLOGY_ISO15693: Type = 6;
-}
-pub mod NFCTechnologyMaskEnum {
-    pub type Type = ::core::ffi::c_uint;
-    pub const NFC_TECHNOLOGY_MASK_ALL: Type = 0;
-    pub const NFC_TECHNOLOGY_MASK_A: Type = 1;
-    pub const NFC_TECHNOLOGY_MASK_B: Type = 2;
-    pub const NFC_TECHNOLOGY_MASK_F: Type = 4;
-    pub const NFC_TECHNOLOGY_MASK_ISO15693: Type = 8;
-}
-pub mod NFCNDEFFlagsEnum {
-    pub type Type = ::core::ffi::c_uint;
-    pub const NFC_NDEF_FLAG_READ_ONLY: Type = 1;
-    pub const NFC_NDEF_FLAG_FORMATED: Type = 2;
-    pub const NFC_NDEF_FLAG_SUPPORTED: Type = 4;
-    pub const NFC_NDEF_FLAG_UNKNOWN: Type = 8;
-    pub const NFC_NDEF_FLAG_FORMATABLE: Type = 16;
-    pub const NFC_NDEF_FLAG_SOFT_LOCKABLE: Type = 32;
-    pub const NFC_NDEF_FLAG_HARD_LOCKABLE: Type = 64;
-    pub const NFC_NDEF_FLAG_OTP: Type = 128;
-}
+pub const NFC_MODE_INVALID: NFCMode = -1;
+pub const NFC_MODE_IDLE: NFCMode = 0;
+pub const NFC_MODE_ACTIVE: NFCMode = 1;
+pub type NFCMode = ::core::ffi::c_int;
+pub const NFC_PROTOCOL_UNKNOWN: NFCProtocolEnum = 0;
+pub const NFC_PROTOCOL_T1T: NFCProtocolEnum = 1;
+pub const NFC_PROTOCOL_T2T: NFCProtocolEnum = 2;
+pub const NFC_PROTOCOL_T3T: NFCProtocolEnum = 3;
+pub const NFC_PROTOCOL_ISO_DEP: NFCProtocolEnum = 4;
+pub const NFC_PROTOCOL_15693: NFCProtocolEnum = 131;
+pub type NFCProtocolEnum = ::core::ffi::c_uint;
+pub const NFC_TECHNOLOGY_A: NFCTechnologyEnum = 0;
+pub const NFC_TECHNOLOGY_B: NFCTechnologyEnum = 1;
+pub const NFC_TECHNOLOGY_F: NFCTechnologyEnum = 2;
+pub const NFC_TECHNOLOGY_ISO15693: NFCTechnologyEnum = 6;
+pub type NFCTechnologyEnum = ::core::ffi::c_uint;
+pub const NFC_TECHNOLOGY_MASK_ALL: NFCTechnologyMaskEnum = 0;
+pub const NFC_TECHNOLOGY_MASK_A: NFCTechnologyMaskEnum = 1;
+pub const NFC_TECHNOLOGY_MASK_B: NFCTechnologyMaskEnum = 2;
+pub const NFC_TECHNOLOGY_MASK_F: NFCTechnologyMaskEnum = 4;
+pub const NFC_TECHNOLOGY_MASK_ISO15693: NFCTechnologyMaskEnum = 8;
+pub type NFCTechnologyMaskEnum = ::core::ffi::c_uint;
+pub const NFC_NDEF_FLAG_READ_ONLY: NFCNDEFFlagsEnum = 1;
+pub const NFC_NDEF_FLAG_FORMATED: NFCNDEFFlagsEnum = 2;
+pub const NFC_NDEF_FLAG_SUPPORTED: NFCNDEFFlagsEnum = 4;
+pub const NFC_NDEF_FLAG_UNKNOWN: NFCNDEFFlagsEnum = 8;
+pub const NFC_NDEF_FLAG_FORMATABLE: NFCNDEFFlagsEnum = 16;
+pub const NFC_NDEF_FLAG_SOFT_LOCKABLE: NFCNDEFFlagsEnum = 32;
+pub const NFC_NDEF_FLAG_HARD_LOCKABLE: NFCNDEFFlagsEnum = 64;
+pub const NFC_NDEF_FLAG_OTP: NFCNDEFFlagsEnum = 128;
+pub type NFCNDEFFlagsEnum = ::core::ffi::c_uint;
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct NFCUid {
     pub uid: [u8; 7usize],
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct NFCTagInfo {
     pub uidSize: u8,
     pub uid: [u8; 10usize],
@@ -4315,7 +4589,7 @@ pub struct NFCTagInfo {
     pub __unk35: [::core::ffi::c_char; 32usize],
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct NFCNTAGVersion {
     pub header: u8,
     pub vendorId: u8,
@@ -4340,19 +4614,24 @@ pub struct NFCReadT2TResult {
     pub read3End: u8,
     pub data: [u8; 928usize],
 }
+impl Default for NFCReadT2TResult {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 pub type NFCCallbackFn = ::core::option::Option<
-    unsafe extern "C" fn(
-        chan: VPADChan::Type,
-        error: NFCError,
-        userContext: *mut ::core::ffi::c_void,
-    ),
+    unsafe extern "C" fn(chan: VPADChan, error: NFCError, userContext: *mut ::core::ffi::c_void),
 >;
 pub type NFCTagDetectCallbackFn = ::core::option::Option<
-    unsafe extern "C" fn(chan: VPADChan::Type, hasTag: BOOL, userContext: *mut ::core::ffi::c_void),
+    unsafe extern "C" fn(chan: VPADChan, hasTag: BOOL, userContext: *mut ::core::ffi::c_void),
 >;
 pub type NFCDetectCallbackFn = ::core::option::Option<
     unsafe extern "C" fn(
-        chan: VPADChan::Type,
+        chan: VPADChan,
         error: NFCError,
         uid: *mut NFCUid,
         readOnly: BOOL,
@@ -4363,7 +4642,7 @@ pub type NFCDetectCallbackFn = ::core::option::Option<
 >;
 pub type NFCRawDataCallbackFn = ::core::option::Option<
     unsafe extern "C" fn(
-        chan: VPADChan::Type,
+        chan: VPADChan,
         error: NFCError,
         responseSize: u32,
         responseData: *mut ::core::ffi::c_void,
@@ -4372,7 +4651,7 @@ pub type NFCRawDataCallbackFn = ::core::option::Option<
 >;
 pub type NFCRawDataTwiceCallbackFn = ::core::option::Option<
     unsafe extern "C" fn(
-        chan: VPADChan::Type,
+        chan: VPADChan,
         error: NFCError,
         numCompleted: u8,
         response0Size: u32,
@@ -4384,7 +4663,7 @@ pub type NFCRawDataTwiceCallbackFn = ::core::option::Option<
 >;
 pub type NFCReadCallbackFn = ::core::option::Option<
     unsafe extern "C" fn(
-        chan: VPADChan::Type,
+        chan: VPADChan,
         error: NFCError,
         uid: *mut NFCUid,
         readOnly: BOOL,
@@ -4397,7 +4676,7 @@ pub type NFCReadCallbackFn = ::core::option::Option<
 >;
 pub type NFCReadT2TCallbackFn = ::core::option::Option<
     unsafe extern "C" fn(
-        chan: VPADChan::Type,
+        chan: VPADChan,
         error: NFCError,
         rfDiscId: u8,
         protocol: NFCProtocol,
@@ -4411,7 +4690,7 @@ pub type NFCReadT2TCallbackFn = ::core::option::Option<
 >;
 pub type NFCGetTagInfoCallbackFn = ::core::option::Option<
     unsafe extern "C" fn(
-        chan: VPADChan::Type,
+        chan: VPADChan,
         error: NFCError,
         tagInfo: *mut NFCTagInfo,
         userContext: *mut ::core::ffi::c_void,
@@ -4419,7 +4698,7 @@ pub type NFCGetTagInfoCallbackFn = ::core::option::Option<
 >;
 pub type NFCGetTagInfoMultiCallbackFn = ::core::option::Option<
     unsafe extern "C" fn(
-        chan: VPADChan::Type,
+        chan: VPADChan,
         error: NFCError,
         numTagInfos: u8,
         tagInfo0: *mut NFCTagInfo,
@@ -4429,50 +4708,50 @@ pub type NFCGetTagInfoMultiCallbackFn = ::core::option::Option<
     ),
 >;
 extern "C" {
-    pub fn NFCInit(chan: VPADChan::Type) -> NFCError;
+    pub fn NFCInit(chan: VPADChan) -> NFCError;
 }
 extern "C" {
-    pub fn NFCInitEx(chan: VPADChan::Type, powerMode: u32) -> NFCError;
+    pub fn NFCInitEx(chan: VPADChan, powerMode: u32) -> NFCError;
 }
 extern "C" {
-    pub fn NFCShutdown(chan: VPADChan::Type) -> NFCError;
+    pub fn NFCShutdown(chan: VPADChan) -> NFCError;
 }
 extern "C" {
-    pub fn NFCIsInit(chan: VPADChan::Type) -> BOOL;
+    pub fn NFCIsInit(chan: VPADChan) -> BOOL;
 }
 extern "C" {
-    pub fn NFCProc(chan: VPADChan::Type);
+    pub fn NFCProc(chan: VPADChan);
 }
 extern "C" {
     pub fn NFCSetTagDetectCallback(
-        chan: VPADChan::Type,
+        chan: VPADChan,
         callback: NFCTagDetectCallbackFn,
         userContext: *mut ::core::ffi::c_void,
     );
 }
 extern "C" {
-    pub fn NFCGetMode(chan: VPADChan::Type) -> NFCMode::Type;
+    pub fn NFCGetMode(chan: VPADChan) -> NFCMode;
 }
 extern "C" {
-    pub fn NFCSetMode(chan: VPADChan::Type, mode: NFCMode::Type) -> NFCError;
+    pub fn NFCSetMode(chan: VPADChan, mode: NFCMode) -> NFCError;
 }
 extern "C" {
     pub fn NFCAbort(
-        chan: VPADChan::Type,
+        chan: VPADChan,
         callback: NFCCallbackFn,
         userContext: *mut ::core::ffi::c_void,
     ) -> NFCError;
 }
 extern "C" {
     pub fn NFCAntennaCheck(
-        chan: VPADChan::Type,
+        chan: VPADChan,
         callback: NFCCallbackFn,
         userContext: *mut ::core::ffi::c_void,
     ) -> NFCError;
 }
 extern "C" {
     pub fn NFCDetect(
-        chan: VPADChan::Type,
+        chan: VPADChan,
         discoveryTimeout: u32,
         callback: NFCDetectCallbackFn,
         userContext: *mut ::core::ffi::c_void,
@@ -4480,7 +4759,7 @@ extern "C" {
 }
 extern "C" {
     pub fn NFCSetLockBitsForT1T(
-        chan: VPADChan::Type,
+        chan: VPADChan,
         numBlocks: u8,
         callback: NFCRawDataCallbackFn,
         userContext: *mut ::core::ffi::c_void,
@@ -4488,7 +4767,7 @@ extern "C" {
 }
 extern "C" {
     pub fn NFCRead(
-        chan: VPADChan::Type,
+        chan: VPADChan,
         discoveryTimeout: u32,
         uid: *mut NFCUid,
         uidMask: *mut NFCUid,
@@ -4498,7 +4777,7 @@ extern "C" {
 }
 extern "C" {
     pub fn NFCWrite(
-        chan: VPADChan::Type,
+        chan: VPADChan,
         discoveryTimeout: u32,
         uid: *mut NFCUid,
         uidMask: *mut NFCUid,
@@ -4510,7 +4789,7 @@ extern "C" {
 }
 extern "C" {
     pub fn NFCSendRawData(
-        chan: VPADChan::Type,
+        chan: VPADChan,
         startDiscovery: BOOL,
         discoveryTimeout: u32,
         commandTimeout: u32,
@@ -4523,7 +4802,7 @@ extern "C" {
 }
 extern "C" {
     pub fn NFCSendRawDataEx(
-        chan: VPADChan::Type,
+        chan: VPADChan,
         startDiscovery: BOOL,
         discoveryTimeout: u32,
         commandTimeout: u32,
@@ -4537,7 +4816,7 @@ extern "C" {
 }
 extern "C" {
     pub fn NFCSendRawDataEx2(
-        chan: VPADChan::Type,
+        chan: VPADChan,
         startDiscovery: BOOL,
         discoveryTimeout: u32,
         commandTimeout: u32,
@@ -4552,7 +4831,7 @@ extern "C" {
 }
 extern "C" {
     pub fn NFCSendRawDataWithPrePolling(
-        chan: VPADChan::Type,
+        chan: VPADChan,
         startDiscovery: BOOL,
         discoveryTimeout: u32,
         commandTimeout: u32,
@@ -4565,7 +4844,7 @@ extern "C" {
 }
 extern "C" {
     pub fn NFCSendRawDataWithPrePollingEx(
-        chan: VPADChan::Type,
+        chan: VPADChan,
         startDiscovery: BOOL,
         discoveryTimeout: u32,
         commandTimeout: u32,
@@ -4578,7 +4857,7 @@ extern "C" {
 }
 extern "C" {
     pub fn NFCSendRawDataTwice(
-        chan: VPADChan::Type,
+        chan: VPADChan,
         command0Timeout: u32,
         command0Size: u32,
         response0Size: u32,
@@ -4593,7 +4872,7 @@ extern "C" {
 }
 extern "C" {
     pub fn NFCFormat(
-        chan: VPADChan::Type,
+        chan: VPADChan,
         discoveryTimeout: u32,
         uid: *mut NFCUid,
         uidMask: *mut NFCUid,
@@ -4603,7 +4882,7 @@ extern "C" {
 }
 extern "C" {
     pub fn NFCGetTagInfo(
-        chan: VPADChan::Type,
+        chan: VPADChan,
         discoveryTimeout: u32,
         callback: NFCGetTagInfoCallbackFn,
         userContext: *mut ::core::ffi::c_void,
@@ -4611,7 +4890,7 @@ extern "C" {
 }
 extern "C" {
     pub fn NFCGetTagInfoMulti(
-        chan: VPADChan::Type,
+        chan: VPADChan,
         discoveryTimeout: u32,
         callback: NFCGetTagInfoMultiCallbackFn,
         userContext: *mut ::core::ffi::c_void,
@@ -4619,7 +4898,7 @@ extern "C" {
 }
 extern "C" {
     pub fn NFCIsTagPresent(
-        chan: VPADChan::Type,
+        chan: VPADChan,
         discoveryTimeout: u32,
         uid: *mut NFCUid,
         uidMask: *mut NFCUid,
@@ -4629,7 +4908,7 @@ extern "C" {
 }
 extern "C" {
     pub fn NFCSetReadOnly(
-        chan: VPADChan::Type,
+        chan: VPADChan,
         discoveryTimeout: u32,
         uid: *mut NFCUid,
         uidMask: *mut NFCUid,
@@ -4640,7 +4919,7 @@ extern "C" {
 }
 extern "C" {
     pub fn NFCReadT2T(
-        chan: VPADChan::Type,
+        chan: VPADChan,
         discoveryTimeout: u32,
         uid: *mut NFCUid,
         uidMask: *mut NFCUid,
@@ -4662,7 +4941,7 @@ extern "C" {
 }
 extern "C" {
     pub fn NFCWriteT2T(
-        chan: VPADChan::Type,
+        chan: VPADChan,
         discoveryTimeout: u16,
         uid: *mut NFCUid,
         uidMask: *mut NFCUid,
@@ -4700,571 +4979,480 @@ extern "C" {
     );
 }
 extern "C" {
-    pub fn __NFCSystemAbort(chan: VPADChan::Type) -> NFCError;
+    pub fn __NFCSystemAbort(chan: VPADChan) -> NFCError;
 }
-pub mod GX2AAMode {
-    pub type Type = ::core::ffi::c_uint;
-    pub const GX2_AA_MODE1X: Type = 0;
-    pub const GX2_AA_MODE2X: Type = 1;
-    pub const GX2_AA_MODE4X: Type = 2;
-    pub const GX2_AA_MODE8X: Type = 3;
-}
-pub mod GX2AlphaToMaskMode {
-    pub type Type = ::core::ffi::c_uint;
-    pub const GX2_ALPHA_TO_MASK_MODE_NON_DITHERED: Type = 0;
-    pub const GX2_ALPHA_TO_MASK_MODE_DITHER_0: Type = 1;
-    pub const GX2_ALPHA_TO_MASK_MODE_DITHER_90: Type = 2;
-    pub const GX2_ALPHA_TO_MASK_MODE_DITHER_180: Type = 3;
-    pub const GX2_ALPHA_TO_MASK_MODE_DITHER_270: Type = 4;
-}
-pub mod GX2AspectRatio {
-    pub type Type = ::core::ffi::c_uint;
-    pub const GX2_ASPECT_RATIO_4_3: Type = 0;
-    pub const GX2_ASPECT_RATIO_16_9: Type = 1;
-}
-pub mod GX2AttribFormat {
-    pub type Type = ::core::ffi::c_uint;
-    pub const GX2_ATTRIB_TYPE_8: Type = 0;
-    pub const GX2_ATTRIB_TYPE_4_4: Type = 1;
-    pub const GX2_ATTRIB_TYPE_16: Type = 2;
-    pub const GX2_ATTRIB_TYPE_16_FLOAT: Type = 3;
-    pub const GX2_ATTRIB_TYPE_8_8: Type = 4;
-    pub const GX2_ATTRIB_TYPE_32: Type = 5;
-    pub const GX2_ATTRIB_TYPE_32_FLOAT: Type = 6;
-    pub const GX2_ATTRIB_TYPE_16_16: Type = 7;
-    pub const GX2_ATTRIB_TYPE_16_16_FLOAT: Type = 8;
-    pub const GX2_ATTRIB_TYPE_10_11_11_FLOAT: Type = 9;
-    pub const GX2_ATTRIB_TYPE_8_8_8_8: Type = 10;
-    pub const GX2_ATTRIB_TYPE_10_10_10_2: Type = 11;
-    pub const GX2_ATTRIB_TYPE_32_32: Type = 12;
-    pub const GX2_ATTRIB_TYPE_32_32_FLOAT: Type = 13;
-    pub const GX2_ATTRIB_TYPE_16_16_16_16: Type = 14;
-    pub const GX2_ATTRIB_TYPE_16_16_16_16_FLOAT: Type = 15;
-    pub const GX2_ATTRIB_TYPE_32_32_32: Type = 16;
-    pub const GX2_ATTRIB_TYPE_32_32_32_FLOAT: Type = 17;
-    pub const GX2_ATTRIB_TYPE_32_32_32_32: Type = 18;
-    pub const GX2_ATTRIB_TYPE_32_32_32_32_FLOAT: Type = 19;
-    pub const GX2_ATTRIB_FLAG_INTEGER: Type = 256;
-    pub const GX2_ATTRIB_FLAG_SIGNED: Type = 512;
-    pub const GX2_ATTRIB_FLAG_DEGAMMA: Type = 1024;
-    pub const GX2_ATTRIB_FLAG_SCALED: Type = 2048;
-    pub const GX2_ATTRIB_FORMAT_UNORM_8: Type = 0;
-    pub const GX2_ATTRIB_FORMAT_UNORM_8_8: Type = 4;
-    pub const GX2_ATTRIB_FORMAT_UNORM_8_8_8_8: Type = 10;
-    pub const GX2_ATTRIB_FORMAT_UINT_8: Type = 256;
-    pub const GX2_ATTRIB_FORMAT_UINT_8_8: Type = 260;
-    pub const GX2_ATTRIB_FORMAT_UINT_8_8_8_8: Type = 266;
-    pub const GX2_ATTRIB_FORMAT_SNORM_8: Type = 512;
-    pub const GX2_ATTRIB_FORMAT_SNORM_8_8: Type = 516;
-    pub const GX2_ATTRIB_FORMAT_SNORM_8_8_8_8: Type = 522;
-    pub const GX2_ATTRIB_FORMAT_SINT_8: Type = 768;
-    pub const GX2_ATTRIB_FORMAT_SINT_8_8: Type = 772;
-    pub const GX2_ATTRIB_FORMAT_SINT_8_8_8_8: Type = 778;
-    pub const GX2_ATTRIB_FORMAT_FLOAT_32: Type = 2054;
-    pub const GX2_ATTRIB_FORMAT_FLOAT_32_32: Type = 2061;
-    pub const GX2_ATTRIB_FORMAT_FLOAT_32_32_32: Type = 2065;
-    pub const GX2_ATTRIB_FORMAT_FLOAT_32_32_32_32: Type = 2067;
-}
-pub mod GX2AttribIndexType {
-    pub type Type = ::core::ffi::c_uint;
-    pub const GX2_ATTRIB_INDEX_PER_VERTEX: Type = 0;
-    pub const GX2_ATTRIB_INDEX_PER_INSTANCE: Type = 1;
-}
-pub mod GX2BlendMode {
-    pub type Type = ::core::ffi::c_uint;
-    pub const GX2_BLEND_MODE_ZERO: Type = 0;
-    pub const GX2_BLEND_MODE_ONE: Type = 1;
-    pub const GX2_BLEND_MODE_SRC_COLOR: Type = 2;
-    pub const GX2_BLEND_MODE_INV_SRC_COLOR: Type = 3;
-    pub const GX2_BLEND_MODE_SRC_ALPHA: Type = 4;
-    pub const GX2_BLEND_MODE_INV_SRC_ALPHA: Type = 5;
-    pub const GX2_BLEND_MODE_DST_ALPHA: Type = 6;
-    pub const GX2_BLEND_MODE_INV_DST_ALPHA: Type = 7;
-    pub const GX2_BLEND_MODE_DST_COLOR: Type = 8;
-    pub const GX2_BLEND_MODE_INV_DST_COLOR: Type = 9;
-    pub const GX2_BLEND_MODE_SRC_ALPHA_SAT: Type = 10;
-    pub const GX2_BLEND_MODE_BOTH_SRC_ALPHA: Type = 11;
-    pub const GX2_BLEND_MODE_BOTH_INV_SRC_ALPHA: Type = 12;
-    pub const GX2_BLEND_MODE_BLEND_FACTOR: Type = 13;
-    pub const GX2_BLEND_MODE_INV_BLEND_FACTOR: Type = 14;
-    pub const GX2_BLEND_MODE_SRC1_COLOR: Type = 15;
-    pub const GX2_BLEND_MODE_INV_SRC1_COLOR: Type = 16;
-    pub const GX2_BLEND_MODE_SRC1_ALPHA: Type = 17;
-    pub const GX2_BLEND_MODE_INV_SRC1_ALPHA: Type = 18;
-    pub const GX2_BLEND_MODE_CONSTANT_ALPHA: Type = 19;
-    pub const GX2_BLEND_MODE_INV_CONSTANT_ALPHA: Type = 20;
-}
-pub mod GX2BlendCombineMode {
-    pub type Type = ::core::ffi::c_uint;
-    pub const GX2_BLEND_COMBINE_MODE_ADD: Type = 0;
-    pub const GX2_BLEND_COMBINE_MODE_SUB: Type = 1;
-    pub const GX2_BLEND_COMBINE_MODE_MIN: Type = 2;
-    pub const GX2_BLEND_COMBINE_MODE_MAX: Type = 3;
-    pub const GX2_BLEND_COMBINE_MODE_REV_SUB: Type = 4;
-}
-pub mod GX2BufferingMode {
-    pub type Type = ::core::ffi::c_uint;
-    pub const GX2_BUFFERING_MODE_SINGLE: Type = 1;
-    pub const GX2_BUFFERING_MODE_DOUBLE: Type = 2;
-    pub const GX2_BUFFERING_MODE_TRIPLE: Type = 3;
-}
-pub mod GX2ChannelMask {
-    pub type Type = ::core::ffi::c_uint;
-    pub const GX2_CHANNEL_MASK_R: Type = 1;
-    pub const GX2_CHANNEL_MASK_G: Type = 2;
-    pub const GX2_CHANNEL_MASK_RG: Type = 3;
-    pub const GX2_CHANNEL_MASK_B: Type = 4;
-    pub const GX2_CHANNEL_MASK_RB: Type = 5;
-    pub const GX2_CHANNEL_MASK_GB: Type = 6;
-    pub const GX2_CHANNEL_MASK_RGB: Type = 7;
-    pub const GX2_CHANNEL_MASK_A: Type = 8;
-    pub const GX2_CHANNEL_MASK_RA: Type = 9;
-    pub const GX2_CHANNEL_MASK_GA: Type = 10;
-    pub const GX2_CHANNEL_MASK_RGA: Type = 11;
-    pub const GX2_CHANNEL_MASK_BA: Type = 12;
-    pub const GX2_CHANNEL_MASK_RBA: Type = 13;
-    pub const GX2_CHANNEL_MASK_GBA: Type = 14;
-    pub const GX2_CHANNEL_MASK_RGBA: Type = 15;
-}
-pub mod GX2ClearFlags {
-    pub type Type = ::core::ffi::c_uint;
-    pub const GX2_CLEAR_FLAGS_DEPTH: Type = 1;
-    pub const GX2_CLEAR_FLAGS_STENCIL: Type = 2;
-    pub const GX2_CLEAR_FLAGS_BOTH: Type = 3;
-}
-pub mod GX2CompareFunction {
-    pub type Type = ::core::ffi::c_uint;
-    pub const GX2_COMPARE_FUNC_NEVER: Type = 0;
-    pub const GX2_COMPARE_FUNC_LESS: Type = 1;
-    pub const GX2_COMPARE_FUNC_EQUAL: Type = 2;
-    pub const GX2_COMPARE_FUNC_LEQUAL: Type = 3;
-    pub const GX2_COMPARE_FUNC_GREATER: Type = 4;
-    pub const GX2_COMPARE_FUNC_NOT_EQUAL: Type = 5;
-    pub const GX2_COMPARE_FUNC_GEQUAL: Type = 6;
-    pub const GX2_COMPARE_FUNC_ALWAYS: Type = 7;
-}
-pub mod GX2DrcRenderMode {
-    pub type Type = ::core::ffi::c_uint;
-    pub const GX2_DRC_RENDER_MODE_DISABLED: Type = 0;
-    pub const GX2_DRC_RENDER_MODE_SINGLE: Type = 1;
-    pub const GX2_DRC_RENDER_MODE_DOUBLE: Type = 2;
-}
-pub mod GX2EventType {
-    pub type Type = ::core::ffi::c_uint;
-    pub const GX2_EVENT_TYPE_START_OF_PIPE_INTERRUPT: Type = 0;
-    pub const GX2_EVENT_TYPE_END_OF_PIPE_INTERRUPT: Type = 1;
-    pub const GX2_EVENT_TYPE_VSYNC: Type = 2;
-    pub const GX2_EVENT_TYPE_FLIP: Type = 3;
-    pub const GX2_EVENT_TYPE_DISPLAY_LIST_OVERRUN: Type = 4;
-}
-pub mod GX2EndianSwapMode {
-    pub type Type = ::core::ffi::c_uint;
-    pub const GX2_ENDIAN_SWAP_NONE: Type = 0;
-    pub const GX2_ENDIAN_SWAP_8_IN_16: Type = 1;
-    pub const GX2_ENDIAN_SWAP_8_IN_32: Type = 2;
-    pub const GX2_ENDIAN_SWAP_DEFAULT: Type = 3;
-}
-pub mod GX2FetchShaderType {
-    pub type Type = ::core::ffi::c_uint;
-    pub const GX2_FETCH_SHADER_TESSELLATION_NONE: Type = 0;
-    pub const GX2_FETCH_SHADER_TESSELLATION_LINE: Type = 1;
-    pub const GX2_FETCH_SHADER_TESSELLATION_TRIANGLE: Type = 2;
-    pub const GX2_FETCH_SHADER_TESSELLATION_QUAD: Type = 3;
-}
-pub mod GX2FrontFace {
-    pub type Type = ::core::ffi::c_uint;
-    pub const GX2_FRONT_FACE_CCW: Type = 0;
-    pub const GX2_FRONT_FACE_CW: Type = 1;
-}
-pub mod GX2IndexType {
-    pub type Type = ::core::ffi::c_uint;
-    pub const GX2_INDEX_TYPE_U16_LE: Type = 0;
-    pub const GX2_INDEX_TYPE_U32_LE: Type = 1;
-    pub const GX2_INDEX_TYPE_U16: Type = 4;
-    pub const GX2_INDEX_TYPE_U32: Type = 9;
-}
-pub mod GX2InvalidateMode {
-    pub type Type = ::core::ffi::c_uint;
-    pub const GX2_INVALIDATE_MODE_NONE: Type = 0;
-    pub const GX2_INVALIDATE_MODE_ATTRIBUTE_BUFFER: Type = 1;
-    pub const GX2_INVALIDATE_MODE_TEXTURE: Type = 2;
-    pub const GX2_INVALIDATE_MODE_UNIFORM_BLOCK: Type = 4;
-    pub const GX2_INVALIDATE_MODE_SHADER: Type = 8;
-    pub const GX2_INVALIDATE_MODE_COLOR_BUFFER: Type = 16;
-    pub const GX2_INVALIDATE_MODE_DEPTH_BUFFER: Type = 32;
-    pub const GX2_INVALIDATE_MODE_CPU: Type = 64;
-    pub const GX2_INVALIDATE_MODE_STREAM_OUT_BUFFER: Type = 128;
-    pub const GX2_INVALIDATE_MODE_EXPORT_BUFFER: Type = 256;
-    pub const GX2_INVALIDATE_MODE_CPU_ATTRIBUTE_BUFFER: Type = 65;
-    pub const GX2_INVALIDATE_MODE_CPU_TEXTURE: Type = 66;
-    pub const GX2_INVALIDATE_MODE_CPU_SHADER: Type = 72;
-}
-pub mod GX2InitAttributes {
-    pub type Type = ::core::ffi::c_uint;
-    pub const GX2_INIT_END: Type = 0;
-    pub const GX2_INIT_CMD_BUF_BASE: Type = 1;
-    pub const GX2_INIT_CMD_BUF_POOL_SIZE: Type = 2;
-    pub const GX2_INIT_ARGC: Type = 7;
-    pub const GX2_INIT_ARGV: Type = 8;
-    pub const GX2_INIT_PROFILE_MODE: Type = 9;
-    pub const GX2_INIT_TOSS_STAGE: Type = 10;
-    pub const GX2_INIT_APP_IO_THREAD_STACK_SIZE: Type = 11;
-}
-pub mod GX2LogicOp {
-    pub type Type = ::core::ffi::c_uint;
-    pub const GX2_LOGIC_OP_CLEAR: Type = 0;
-    pub const GX2_LOGIC_OP_NOR: Type = 17;
-    pub const GX2_LOGIC_OP_INV_AND: Type = 34;
-    pub const GX2_LOGIC_OP_INV_COPY: Type = 51;
-    pub const GX2_LOGIC_OP_REV_AND: Type = 68;
-    pub const GX2_LOGIC_OP_INV: Type = 85;
-    pub const GX2_LOGIC_OP_XOR: Type = 102;
-    pub const GX2_LOGIC_OP_NOT_AND: Type = 119;
-    pub const GX2_LOGIC_OP_AND: Type = 136;
-    pub const GX2_LOGIC_OP_EQUIV: Type = 153;
-    pub const GX2_LOGIC_OP_NOP: Type = 170;
-    pub const GX2_LOGIC_OP_INV_OR: Type = 187;
-    pub const GX2_LOGIC_OP_COPY: Type = 204;
-    pub const GX2_LOGIC_OP_REV_OR: Type = 221;
-    pub const GX2_LOGIC_OP_OR: Type = 238;
-    pub const GX2_LOGIC_OP_SET: Type = 255;
-}
-pub mod GX2PrimitiveMode {
-    pub type Type = ::core::ffi::c_uint;
-    pub const GX2_PRIMITIVE_MODE_POINTS: Type = 1;
-    pub const GX2_PRIMITIVE_MODE_LINES: Type = 2;
-    pub const GX2_PRIMITIVE_MODE_LINE_STRIP: Type = 3;
-    pub const GX2_PRIMITIVE_MODE_TRIANGLES: Type = 4;
-    pub const GX2_PRIMITIVE_MODE_TRIANGLE_FAN: Type = 5;
-    pub const GX2_PRIMITIVE_MODE_TRIANGLE_STRIP: Type = 6;
-    pub const GX2_PRIMITIVE_MODE_LINES_ADJACENCY: Type = 10;
-    pub const GX2_PRIMITIVE_MODE_LINE_STRIP_ADJACENCY: Type = 11;
-    pub const GX2_PRIMITIVE_MODE_TRIANGLES_ADJACENCY: Type = 12;
-    pub const GX2_PRIMITIVE_MODE_TRIANGLE_STRIP_ADJACENCY: Type = 13;
-    pub const GX2_PRIMITIVE_MODE_RECTS: Type = 17;
-    pub const GX2_PRIMITIVE_MODE_LINE_LOOP: Type = 18;
-    pub const GX2_PRIMITIVE_MODE_QUADS: Type = 19;
-    pub const GX2_PRIMITIVE_MODE_QUAD_STRIP: Type = 20;
-}
-pub mod GX2PolygonMode {
-    pub type Type = ::core::ffi::c_uint;
-    pub const GX2_POLYGON_MODE_POINT: Type = 0;
-    pub const GX2_POLYGON_MODE_LINE: Type = 1;
-    pub const GX2_POLYGON_MODE_TRIANGLE: Type = 2;
-}
-pub mod GX2RenderTarget {
-    pub type Type = ::core::ffi::c_uint;
-    pub const GX2_RENDER_TARGET_0: Type = 0;
-    pub const GX2_RENDER_TARGET_1: Type = 1;
-    pub const GX2_RENDER_TARGET_2: Type = 2;
-    pub const GX2_RENDER_TARGET_3: Type = 3;
-    pub const GX2_RENDER_TARGET_4: Type = 4;
-    pub const GX2_RENDER_TARGET_5: Type = 5;
-    pub const GX2_RENDER_TARGET_6: Type = 6;
-    pub const GX2_RENDER_TARGET_7: Type = 7;
-}
-pub mod GX2RoundingMode {
-    pub type Type = ::core::ffi::c_uint;
-    pub const GX2_ROUNDING_MODE_ROUND_TO_EVEN: Type = 0;
-    pub const GX2_ROUNDING_MODE_TRUNCATE: Type = 1;
-}
-pub mod GX2SamplerVarType {
-    pub type Type = ::core::ffi::c_uint;
-    pub const GX2_SAMPLER_VAR_TYPE_SAMPLER_1D: Type = 0;
-    pub const GX2_SAMPLER_VAR_TYPE_SAMPLER_2D: Type = 1;
-    pub const GX2_SAMPLER_VAR_TYPE_SAMPLER_3D: Type = 3;
-    pub const GX2_SAMPLER_VAR_TYPE_SAMPLER_CUBE: Type = 4;
-}
-pub mod GX2ScanTarget {
-    pub type Type = ::core::ffi::c_uint;
-    pub const GX2_SCAN_TARGET_TV0: Type = 1;
-    pub const GX2_SCAN_TARGET_TV1: Type = 2;
-    pub const GX2_SCAN_TARGET_DRC0: Type = 4;
-    pub const GX2_SCAN_TARGET_DRC1: Type = 8;
-    pub const GX2_SCAN_TARGET_TV: Type = 1;
-    pub const GX2_SCAN_TARGET_DRC: Type = 4;
-}
-pub mod GX2ShaderMode {
-    pub type Type = ::core::ffi::c_uint;
-    pub const GX2_SHADER_MODE_UNIFORM_REGISTER: Type = 0;
-    pub const GX2_SHADER_MODE_UNIFORM_BLOCK: Type = 1;
-    pub const GX2_SHADER_MODE_GEOMETRY_SHADER: Type = 2;
-    pub const GX2_SHADER_MODE_COMPUTE_SHADER: Type = 3;
-}
-pub mod GX2ShaderVarType {
-    pub type Type = ::core::ffi::c_uint;
-    pub const GX2_SHADER_VAR_TYPE_VOID: Type = 0;
-    pub const GX2_SHADER_VAR_TYPE_BOOL: Type = 1;
-    pub const GX2_SHADER_VAR_TYPE_INT: Type = 2;
-    pub const GX2_SHADER_VAR_TYPE_UINT: Type = 3;
-    pub const GX2_SHADER_VAR_TYPE_FLOAT: Type = 4;
-    pub const GX2_SHADER_VAR_TYPE_DOUBLE: Type = 5;
-    pub const GX2_SHADER_VAR_TYPE_DOUBLE2: Type = 6;
-    pub const GX2_SHADER_VAR_TYPE_DOUBLE3: Type = 7;
-    pub const GX2_SHADER_VAR_TYPE_DOUBLE4: Type = 8;
-    pub const GX2_SHADER_VAR_TYPE_FLOAT2: Type = 9;
-    pub const GX2_SHADER_VAR_TYPE_FLOAT3: Type = 10;
-    pub const GX2_SHADER_VAR_TYPE_FLOAT4: Type = 11;
-    pub const GX2_SHADER_VAR_TYPE_BOOL2: Type = 12;
-    pub const GX2_SHADER_VAR_TYPE_BOOL3: Type = 13;
-    pub const GX2_SHADER_VAR_TYPE_BOOL4: Type = 14;
-    pub const GX2_SHADER_VAR_TYPE_INT2: Type = 15;
-    pub const GX2_SHADER_VAR_TYPE_INT3: Type = 16;
-    pub const GX2_SHADER_VAR_TYPE_INT4: Type = 17;
-    pub const GX2_SHADER_VAR_TYPE_UINT2: Type = 18;
-    pub const GX2_SHADER_VAR_TYPE_UINT3: Type = 19;
-    pub const GX2_SHADER_VAR_TYPE_UINT4: Type = 20;
-    pub const GX2_SHADER_VAR_TYPE_FLOAT2X2: Type = 21;
-    pub const GX2_SHADER_VAR_TYPE_FLOAT2X3: Type = 22;
-    pub const GX2_SHADER_VAR_TYPE_FLOAT2X4: Type = 23;
-    pub const GX2_SHADER_VAR_TYPE_FLOAT3X2: Type = 24;
-    pub const GX2_SHADER_VAR_TYPE_FLOAT3X3: Type = 25;
-    pub const GX2_SHADER_VAR_TYPE_FLOAT3X4: Type = 26;
-    pub const GX2_SHADER_VAR_TYPE_FLOAT4X2: Type = 27;
-    pub const GX2_SHADER_VAR_TYPE_FLOAT4X3: Type = 28;
-    pub const GX2_SHADER_VAR_TYPE_FLOAT4X4: Type = 29;
-    pub const GX2_SHADER_VAR_TYPE_DOUBLE2X2: Type = 30;
-    pub const GX2_SHADER_VAR_TYPE_DOUBLE2X3: Type = 31;
-    pub const GX2_SHADER_VAR_TYPE_DOUBLE2X4: Type = 32;
-    pub const GX2_SHADER_VAR_TYPE_DOUBLE3X2: Type = 33;
-    pub const GX2_SHADER_VAR_TYPE_DOUBLE3X3: Type = 34;
-    pub const GX2_SHADER_VAR_TYPE_DOUBLE3X4: Type = 35;
-    pub const GX2_SHADER_VAR_TYPE_DOUBLE4X2: Type = 36;
-    pub const GX2_SHADER_VAR_TYPE_DOUBLE4X3: Type = 37;
-    pub const GX2_SHADER_VAR_TYPE_DOUBLE4X4: Type = 38;
-}
-pub mod GX2StencilFunction {
-    pub type Type = ::core::ffi::c_uint;
-    pub const GX2_STENCIL_FUNCTION_KEEP: Type = 0;
-    pub const GX2_STENCIL_FUNCTION_ZERO: Type = 1;
-    pub const GX2_STENCIL_FUNCTION_REPLACE: Type = 2;
-    pub const GX2_STENCIL_FUNCTION_INCR_CLAMP: Type = 3;
-    pub const GX2_STENCIL_FUNCTION_DECR_CLAMP: Type = 4;
-    pub const GX2_STENCIL_FUNCTION_INV: Type = 5;
-    pub const GX2_STENCIL_FUNCTION_INCR_WRAP: Type = 6;
-    pub const GX2_STENCIL_FUNCTION_DECR_WRAP: Type = 7;
-}
-pub mod GX2SurfaceDim {
-    pub type Type = ::core::ffi::c_uint;
-    pub const GX2_SURFACE_DIM_TEXTURE_1D: Type = 0;
-    pub const GX2_SURFACE_DIM_TEXTURE_2D: Type = 1;
-    pub const GX2_SURFACE_DIM_TEXTURE_3D: Type = 2;
-    pub const GX2_SURFACE_DIM_TEXTURE_CUBE: Type = 3;
-    pub const GX2_SURFACE_DIM_TEXTURE_1D_ARRAY: Type = 4;
-    pub const GX2_SURFACE_DIM_TEXTURE_2D_ARRAY: Type = 5;
-    pub const GX2_SURFACE_DIM_TEXTURE_2D_MSAA: Type = 6;
-    pub const GX2_SURFACE_DIM_TEXTURE_2D_MSAA_ARRAY: Type = 7;
-}
-pub mod GX2SurfaceFormat {
-    pub type Type = ::core::ffi::c_uint;
-    pub const GX2_SURFACE_FORMAT_INVALID: Type = 0;
-    pub const GX2_SURFACE_FORMAT_UNORM_R4_G4: Type = 2;
-    pub const GX2_SURFACE_FORMAT_UNORM_R4_G4_B4_A4: Type = 11;
-    pub const GX2_SURFACE_FORMAT_UNORM_R8: Type = 1;
-    pub const GX2_SURFACE_FORMAT_UNORM_R8_G8: Type = 7;
-    pub const GX2_SURFACE_FORMAT_UNORM_R8_G8_B8_A8: Type = 26;
-    pub const GX2_SURFACE_FORMAT_UNORM_R16: Type = 5;
-    pub const GX2_SURFACE_FORMAT_UNORM_R16_G16: Type = 15;
-    pub const GX2_SURFACE_FORMAT_UNORM_R16_G16_B16_A16: Type = 31;
-    pub const GX2_SURFACE_FORMAT_UNORM_R5_G6_B5: Type = 8;
-    pub const GX2_SURFACE_FORMAT_UNORM_R5_G5_B5_A1: Type = 10;
-    pub const GX2_SURFACE_FORMAT_UNORM_A1_B5_G5_R5: Type = 12;
-    pub const GX2_SURFACE_FORMAT_UNORM_R24_X8: Type = 17;
-    pub const GX2_SURFACE_FORMAT_UNORM_A2_B10_G10_R10: Type = 27;
-    pub const GX2_SURFACE_FORMAT_UNORM_R10_G10_B10_A2: Type = 25;
-    pub const GX2_SURFACE_FORMAT_UNORM_BC1: Type = 49;
-    pub const GX2_SURFACE_FORMAT_UNORM_BC2: Type = 50;
-    pub const GX2_SURFACE_FORMAT_UNORM_BC3: Type = 51;
-    pub const GX2_SURFACE_FORMAT_UNORM_BC4: Type = 52;
-    pub const GX2_SURFACE_FORMAT_UNORM_BC5: Type = 53;
-    pub const GX2_SURFACE_FORMAT_UNORM_NV12: Type = 129;
-    pub const GX2_SURFACE_FORMAT_UINT_R8: Type = 257;
-    pub const GX2_SURFACE_FORMAT_UINT_R8_G8: Type = 263;
-    pub const GX2_SURFACE_FORMAT_UINT_R8_G8_B8_A8: Type = 282;
-    pub const GX2_SURFACE_FORMAT_UINT_R16: Type = 261;
-    pub const GX2_SURFACE_FORMAT_UINT_R16_G16: Type = 271;
-    pub const GX2_SURFACE_FORMAT_UINT_R16_G16_B16_A16: Type = 287;
-    pub const GX2_SURFACE_FORMAT_UINT_R32: Type = 269;
-    pub const GX2_SURFACE_FORMAT_UINT_R32_G32: Type = 285;
-    pub const GX2_SURFACE_FORMAT_UINT_R32_G32_B32_A32: Type = 290;
-    pub const GX2_SURFACE_FORMAT_UINT_A2_B10_G10_R10: Type = 283;
-    pub const GX2_SURFACE_FORMAT_UINT_R10_G10_B10_A2: Type = 281;
-    pub const GX2_SURFACE_FORMAT_UINT_X24_G8: Type = 273;
-    pub const GX2_SURFACE_FORMAT_UINT_G8_X24: Type = 284;
-    pub const GX2_SURFACE_FORMAT_SNORM_R8: Type = 513;
-    pub const GX2_SURFACE_FORMAT_SNORM_R8_G8: Type = 519;
-    pub const GX2_SURFACE_FORMAT_SNORM_R8_G8_B8_A8: Type = 538;
-    pub const GX2_SURFACE_FORMAT_SNORM_R16: Type = 517;
-    pub const GX2_SURFACE_FORMAT_SNORM_R16_G16: Type = 527;
-    pub const GX2_SURFACE_FORMAT_SNORM_R16_G16_B16_A16: Type = 543;
-    pub const GX2_SURFACE_FORMAT_SNORM_R10_G10_B10_A2: Type = 537;
-    pub const GX2_SURFACE_FORMAT_SNORM_BC4: Type = 564;
-    pub const GX2_SURFACE_FORMAT_SNORM_BC5: Type = 565;
-    pub const GX2_SURFACE_FORMAT_SINT_R8: Type = 769;
-    pub const GX2_SURFACE_FORMAT_SINT_R8_G8: Type = 775;
-    pub const GX2_SURFACE_FORMAT_SINT_R8_G8_B8_A8: Type = 794;
-    pub const GX2_SURFACE_FORMAT_SINT_R16: Type = 773;
-    pub const GX2_SURFACE_FORMAT_SINT_R16_G16: Type = 783;
-    pub const GX2_SURFACE_FORMAT_SINT_R16_G16_B16_A16: Type = 799;
-    pub const GX2_SURFACE_FORMAT_SINT_R32: Type = 781;
-    pub const GX2_SURFACE_FORMAT_SINT_R32_G32: Type = 797;
-    pub const GX2_SURFACE_FORMAT_SINT_R32_G32_B32_A32: Type = 802;
-    pub const GX2_SURFACE_FORMAT_SINT_R10_G10_B10_A2: Type = 793;
-    pub const GX2_SURFACE_FORMAT_SRGB_R8_G8_B8_A8: Type = 1050;
-    pub const GX2_SURFACE_FORMAT_SRGB_BC1: Type = 1073;
-    pub const GX2_SURFACE_FORMAT_SRGB_BC2: Type = 1074;
-    pub const GX2_SURFACE_FORMAT_SRGB_BC3: Type = 1075;
-    pub const GX2_SURFACE_FORMAT_FLOAT_R32: Type = 2062;
-    pub const GX2_SURFACE_FORMAT_FLOAT_R32_G32: Type = 2078;
-    pub const GX2_SURFACE_FORMAT_FLOAT_R32_G32_B32_A32: Type = 2083;
-    pub const GX2_SURFACE_FORMAT_FLOAT_R16: Type = 2054;
-    pub const GX2_SURFACE_FORMAT_FLOAT_R16_G16: Type = 2064;
-    pub const GX2_SURFACE_FORMAT_FLOAT_R16_G16_B16_A16: Type = 2080;
-    pub const GX2_SURFACE_FORMAT_FLOAT_R11_G11_B10: Type = 2070;
-    pub const GX2_SURFACE_FORMAT_FLOAT_D24_S8: Type = 2065;
-    pub const GX2_SURFACE_FORMAT_FLOAT_X8_X24: Type = 2076;
-}
-pub mod GX2SurfaceUse {
-    pub type Type = ::core::ffi::c_int;
-    pub const GX2_SURFACE_USE_NONE: Type = 0;
-    pub const GX2_SURFACE_USE_TEXTURE: Type = 1;
-    pub const GX2_SURFACE_USE_COLOR_BUFFER: Type = 2;
-    pub const GX2_SURFACE_USE_DEPTH_BUFFER: Type = 4;
-    pub const GX2_SURFACE_USE_SCAN_BUFFER: Type = 8;
-    pub const GX2_SURFACE_USE_TV: Type = -2147483648;
-    pub const GX2_SURFACE_USE_TEXTURE_COLOR_BUFFER_TV: Type = -2147483645;
-}
-pub mod GX2TessellationMode {
-    pub type Type = ::core::ffi::c_uint;
-    pub const GX2_TESSELLATION_MODE_DISCRETE: Type = 0;
-    pub const GX2_TESSELLATION_MODE_CONTINUOUS: Type = 1;
-    pub const GX2_TESSELLATION_MODE_ADAPTIVE: Type = 2;
-}
-pub mod GX2TexBorderType {
-    pub type Type = ::core::ffi::c_uint;
-    pub const GX2_TEX_BORDER_TYPE_TRANSPARENT_BLACK: Type = 0;
-    pub const GX2_TEX_BORDER_TYPE_BLACK: Type = 1;
-    pub const GX2_TEX_BORDER_TYPE_WHITE: Type = 2;
-    pub const GX2_TEX_BORDER_TYPE_VARIABLE: Type = 3;
-}
-pub mod GX2TexClampMode {
-    pub type Type = ::core::ffi::c_uint;
-    pub const GX2_TEX_CLAMP_MODE_WRAP: Type = 0;
-    pub const GX2_TEX_CLAMP_MODE_MIRROR: Type = 1;
-    pub const GX2_TEX_CLAMP_MODE_CLAMP: Type = 2;
-    pub const GX2_TEX_CLAMP_MODE_MIRROR_ONCE: Type = 3;
-    pub const GX2_TEX_CLAMP_MODE_CLAMP_HALF_BORDER: Type = 4;
-    pub const GX2_TEX_CLAMP_MODE_MIRROR_ONCE_HALF_BORDER: Type = 5;
-    pub const GX2_TEX_CLAMP_MODE_CLAMP_BORDER: Type = 6;
-    pub const GX2_TEX_CLAMP_MODE_MIRROR_ONCE_BORDER: Type = 7;
-}
-pub mod GX2TexMipFilterMode {
-    pub type Type = ::core::ffi::c_uint;
-    pub const GX2_TEX_MIP_FILTER_MODE_NONE: Type = 0;
-    pub const GX2_TEX_MIP_FILTER_MODE_POINT: Type = 1;
-    pub const GX2_TEX_MIP_FILTER_MODE_LINEAR: Type = 2;
-}
-pub mod GX2TexMipPerfMode {
-    pub type Type = ::core::ffi::c_uint;
-    pub const GX2_TEX_MIP_PERF_MODE_DISABLE: Type = 0;
-}
-pub mod GX2TexXYFilterMode {
-    pub type Type = ::core::ffi::c_uint;
-    pub const GX2_TEX_XY_FILTER_MODE_POINT: Type = 0;
-    pub const GX2_TEX_XY_FILTER_MODE_LINEAR: Type = 1;
-    pub const GX2_TEX_XY_FILTER_MODE_BICUBIC: Type = 2;
-}
-pub mod GX2TexAnisoRatio {
-    pub type Type = ::core::ffi::c_uint;
-    pub const GX2_TEX_ANISO_RATIO_NONE: Type = 0;
-    pub const GX2_TEX_ANISO_RATIO_2_TO_1: Type = 1;
-    pub const GX2_TEX_ANISO_RATIO_4_TO_1: Type = 2;
-    pub const GX2_TEX_ANISO_RATIO_8_TO_1: Type = 3;
-    pub const GX2_TEX_ANISO_RATIO_16_TO_1: Type = 4;
-}
-pub mod GX2TexZFilterMode {
-    pub type Type = ::core::ffi::c_uint;
-    pub const GX2_TEX_Z_FILTER_MODE_NONE: Type = 0;
-    pub const GX2_TEX_Z_FILTER_MODE_POINT: Type = 1;
-    pub const GX2_TEX_Z_FILTER_MODE_LINEAR: Type = 2;
-}
-pub mod GX2TexZPerfMode {
-    pub type Type = ::core::ffi::c_uint;
-    pub const GX2_TEX_Z_PERF_MODE_DISABLED: Type = 0;
-}
-pub mod GX2TileMode {
-    pub type Type = ::core::ffi::c_uint;
-    pub const GX2_TILE_MODE_DEFAULT: Type = 0;
-    pub const GX2_TILE_MODE_LINEAR_ALIGNED: Type = 1;
-    pub const GX2_TILE_MODE_TILED_1D_THIN1: Type = 2;
-    pub const GX2_TILE_MODE_TILED_1D_THICK: Type = 3;
-    pub const GX2_TILE_MODE_TILED_2D_THIN1: Type = 4;
-    pub const GX2_TILE_MODE_TILED_2D_THIN2: Type = 5;
-    pub const GX2_TILE_MODE_TILED_2D_THIN4: Type = 6;
-    pub const GX2_TILE_MODE_TILED_2D_THICK: Type = 7;
-    pub const GX2_TILE_MODE_TILED_2B_THIN1: Type = 8;
-    pub const GX2_TILE_MODE_TILED_2B_THIN2: Type = 9;
-    pub const GX2_TILE_MODE_TILED_2B_THIN4: Type = 10;
-    pub const GX2_TILE_MODE_TILED_2B_THICK: Type = 11;
-    pub const GX2_TILE_MODE_TILED_3D_THIN1: Type = 12;
-    pub const GX2_TILE_MODE_TILED_3D_THICK: Type = 13;
-    pub const GX2_TILE_MODE_TILED_3B_THIN1: Type = 14;
-    pub const GX2_TILE_MODE_TILED_3B_THICK: Type = 15;
-    pub const GX2_TILE_MODE_LINEAR_SPECIAL: Type = 16;
-}
-pub mod GX2TVRenderMode {
-    pub type Type = ::core::ffi::c_uint;
-    pub const GX2_TV_RENDER_MODE_DISABLED: Type = 0;
-    pub const GX2_TV_RENDER_MODE_STANDARD_480P: Type = 1;
-    pub const GX2_TV_RENDER_MODE_WIDE_480P: Type = 2;
-    pub const GX2_TV_RENDER_MODE_WIDE_720P: Type = 3;
-    pub const GX2_TV_RENDER_MODE_WIDE_1080P: Type = 5;
-}
-pub mod GX2TVScanMode {
-    pub type Type = ::core::ffi::c_uint;
-    pub const GX2_TV_SCAN_MODE_NONE: Type = 0;
-    pub const GX2_TV_SCAN_MODE_576I: Type = 1;
-    pub const GX2_TV_SCAN_MODE_480I: Type = 2;
-    pub const GX2_TV_SCAN_MODE_480P: Type = 3;
-    pub const GX2_TV_SCAN_MODE_720P: Type = 4;
-    pub const GX2_TV_SCAN_MODE_1080I: Type = 6;
-    pub const GX2_TV_SCAN_MODE_1080P: Type = 7;
-}
+pub const GX2_AA_MODE1X: GX2AAMode = 0;
+pub const GX2_AA_MODE2X: GX2AAMode = 1;
+pub const GX2_AA_MODE4X: GX2AAMode = 2;
+pub const GX2_AA_MODE8X: GX2AAMode = 3;
+pub type GX2AAMode = ::core::ffi::c_uint;
+pub const GX2_ALPHA_TO_MASK_MODE_NON_DITHERED: GX2AlphaToMaskMode = 0;
+pub const GX2_ALPHA_TO_MASK_MODE_DITHER_0: GX2AlphaToMaskMode = 1;
+pub const GX2_ALPHA_TO_MASK_MODE_DITHER_90: GX2AlphaToMaskMode = 2;
+pub const GX2_ALPHA_TO_MASK_MODE_DITHER_180: GX2AlphaToMaskMode = 3;
+pub const GX2_ALPHA_TO_MASK_MODE_DITHER_270: GX2AlphaToMaskMode = 4;
+pub type GX2AlphaToMaskMode = ::core::ffi::c_uint;
+pub const GX2_ASPECT_RATIO_4_3: GX2AspectRatio = 0;
+pub const GX2_ASPECT_RATIO_16_9: GX2AspectRatio = 1;
+pub type GX2AspectRatio = ::core::ffi::c_uint;
+pub const GX2_ATTRIB_TYPE_8: GX2AttribFormat = 0;
+pub const GX2_ATTRIB_TYPE_4_4: GX2AttribFormat = 1;
+pub const GX2_ATTRIB_TYPE_16: GX2AttribFormat = 2;
+pub const GX2_ATTRIB_TYPE_16_FLOAT: GX2AttribFormat = 3;
+pub const GX2_ATTRIB_TYPE_8_8: GX2AttribFormat = 4;
+pub const GX2_ATTRIB_TYPE_32: GX2AttribFormat = 5;
+pub const GX2_ATTRIB_TYPE_32_FLOAT: GX2AttribFormat = 6;
+pub const GX2_ATTRIB_TYPE_16_16: GX2AttribFormat = 7;
+pub const GX2_ATTRIB_TYPE_16_16_FLOAT: GX2AttribFormat = 8;
+pub const GX2_ATTRIB_TYPE_10_11_11_FLOAT: GX2AttribFormat = 9;
+pub const GX2_ATTRIB_TYPE_8_8_8_8: GX2AttribFormat = 10;
+pub const GX2_ATTRIB_TYPE_10_10_10_2: GX2AttribFormat = 11;
+pub const GX2_ATTRIB_TYPE_32_32: GX2AttribFormat = 12;
+pub const GX2_ATTRIB_TYPE_32_32_FLOAT: GX2AttribFormat = 13;
+pub const GX2_ATTRIB_TYPE_16_16_16_16: GX2AttribFormat = 14;
+pub const GX2_ATTRIB_TYPE_16_16_16_16_FLOAT: GX2AttribFormat = 15;
+pub const GX2_ATTRIB_TYPE_32_32_32: GX2AttribFormat = 16;
+pub const GX2_ATTRIB_TYPE_32_32_32_FLOAT: GX2AttribFormat = 17;
+pub const GX2_ATTRIB_TYPE_32_32_32_32: GX2AttribFormat = 18;
+pub const GX2_ATTRIB_TYPE_32_32_32_32_FLOAT: GX2AttribFormat = 19;
+pub const GX2_ATTRIB_FLAG_INTEGER: GX2AttribFormat = 256;
+pub const GX2_ATTRIB_FLAG_SIGNED: GX2AttribFormat = 512;
+pub const GX2_ATTRIB_FLAG_DEGAMMA: GX2AttribFormat = 1024;
+pub const GX2_ATTRIB_FLAG_SCALED: GX2AttribFormat = 2048;
+pub const GX2_ATTRIB_FORMAT_UNORM_8: GX2AttribFormat = 0;
+pub const GX2_ATTRIB_FORMAT_UNORM_8_8: GX2AttribFormat = 4;
+pub const GX2_ATTRIB_FORMAT_UNORM_8_8_8_8: GX2AttribFormat = 10;
+pub const GX2_ATTRIB_FORMAT_UINT_8: GX2AttribFormat = 256;
+pub const GX2_ATTRIB_FORMAT_UINT_8_8: GX2AttribFormat = 260;
+pub const GX2_ATTRIB_FORMAT_UINT_8_8_8_8: GX2AttribFormat = 266;
+pub const GX2_ATTRIB_FORMAT_SNORM_8: GX2AttribFormat = 512;
+pub const GX2_ATTRIB_FORMAT_SNORM_8_8: GX2AttribFormat = 516;
+pub const GX2_ATTRIB_FORMAT_SNORM_8_8_8_8: GX2AttribFormat = 522;
+pub const GX2_ATTRIB_FORMAT_SINT_8: GX2AttribFormat = 768;
+pub const GX2_ATTRIB_FORMAT_SINT_8_8: GX2AttribFormat = 772;
+pub const GX2_ATTRIB_FORMAT_SINT_8_8_8_8: GX2AttribFormat = 778;
+pub const GX2_ATTRIB_FORMAT_FLOAT_32: GX2AttribFormat = 2054;
+pub const GX2_ATTRIB_FORMAT_FLOAT_32_32: GX2AttribFormat = 2061;
+pub const GX2_ATTRIB_FORMAT_FLOAT_32_32_32: GX2AttribFormat = 2065;
+pub const GX2_ATTRIB_FORMAT_FLOAT_32_32_32_32: GX2AttribFormat = 2067;
+pub type GX2AttribFormat = ::core::ffi::c_uint;
+pub const GX2_ATTRIB_INDEX_PER_VERTEX: GX2AttribIndexType = 0;
+pub const GX2_ATTRIB_INDEX_PER_INSTANCE: GX2AttribIndexType = 1;
+pub type GX2AttribIndexType = ::core::ffi::c_uint;
+pub const GX2_BLEND_MODE_ZERO: GX2BlendMode = 0;
+pub const GX2_BLEND_MODE_ONE: GX2BlendMode = 1;
+pub const GX2_BLEND_MODE_SRC_COLOR: GX2BlendMode = 2;
+pub const GX2_BLEND_MODE_INV_SRC_COLOR: GX2BlendMode = 3;
+pub const GX2_BLEND_MODE_SRC_ALPHA: GX2BlendMode = 4;
+pub const GX2_BLEND_MODE_INV_SRC_ALPHA: GX2BlendMode = 5;
+pub const GX2_BLEND_MODE_DST_ALPHA: GX2BlendMode = 6;
+pub const GX2_BLEND_MODE_INV_DST_ALPHA: GX2BlendMode = 7;
+pub const GX2_BLEND_MODE_DST_COLOR: GX2BlendMode = 8;
+pub const GX2_BLEND_MODE_INV_DST_COLOR: GX2BlendMode = 9;
+pub const GX2_BLEND_MODE_SRC_ALPHA_SAT: GX2BlendMode = 10;
+pub const GX2_BLEND_MODE_BOTH_SRC_ALPHA: GX2BlendMode = 11;
+pub const GX2_BLEND_MODE_BOTH_INV_SRC_ALPHA: GX2BlendMode = 12;
+pub const GX2_BLEND_MODE_BLEND_FACTOR: GX2BlendMode = 13;
+pub const GX2_BLEND_MODE_INV_BLEND_FACTOR: GX2BlendMode = 14;
+pub const GX2_BLEND_MODE_SRC1_COLOR: GX2BlendMode = 15;
+pub const GX2_BLEND_MODE_INV_SRC1_COLOR: GX2BlendMode = 16;
+pub const GX2_BLEND_MODE_SRC1_ALPHA: GX2BlendMode = 17;
+pub const GX2_BLEND_MODE_INV_SRC1_ALPHA: GX2BlendMode = 18;
+pub const GX2_BLEND_MODE_CONSTANT_ALPHA: GX2BlendMode = 19;
+pub const GX2_BLEND_MODE_INV_CONSTANT_ALPHA: GX2BlendMode = 20;
+pub type GX2BlendMode = ::core::ffi::c_uint;
+pub const GX2_BLEND_COMBINE_MODE_ADD: GX2BlendCombineMode = 0;
+pub const GX2_BLEND_COMBINE_MODE_SUB: GX2BlendCombineMode = 1;
+pub const GX2_BLEND_COMBINE_MODE_MIN: GX2BlendCombineMode = 2;
+pub const GX2_BLEND_COMBINE_MODE_MAX: GX2BlendCombineMode = 3;
+pub const GX2_BLEND_COMBINE_MODE_REV_SUB: GX2BlendCombineMode = 4;
+pub type GX2BlendCombineMode = ::core::ffi::c_uint;
+pub const GX2_BUFFERING_MODE_SINGLE: GX2BufferingMode = 1;
+pub const GX2_BUFFERING_MODE_DOUBLE: GX2BufferingMode = 2;
+pub const GX2_BUFFERING_MODE_TRIPLE: GX2BufferingMode = 3;
+pub type GX2BufferingMode = ::core::ffi::c_uint;
+pub const GX2_CHANNEL_MASK_R: GX2ChannelMask = 1;
+pub const GX2_CHANNEL_MASK_G: GX2ChannelMask = 2;
+pub const GX2_CHANNEL_MASK_RG: GX2ChannelMask = 3;
+pub const GX2_CHANNEL_MASK_B: GX2ChannelMask = 4;
+pub const GX2_CHANNEL_MASK_RB: GX2ChannelMask = 5;
+pub const GX2_CHANNEL_MASK_GB: GX2ChannelMask = 6;
+pub const GX2_CHANNEL_MASK_RGB: GX2ChannelMask = 7;
+pub const GX2_CHANNEL_MASK_A: GX2ChannelMask = 8;
+pub const GX2_CHANNEL_MASK_RA: GX2ChannelMask = 9;
+pub const GX2_CHANNEL_MASK_GA: GX2ChannelMask = 10;
+pub const GX2_CHANNEL_MASK_RGA: GX2ChannelMask = 11;
+pub const GX2_CHANNEL_MASK_BA: GX2ChannelMask = 12;
+pub const GX2_CHANNEL_MASK_RBA: GX2ChannelMask = 13;
+pub const GX2_CHANNEL_MASK_GBA: GX2ChannelMask = 14;
+pub const GX2_CHANNEL_MASK_RGBA: GX2ChannelMask = 15;
+pub type GX2ChannelMask = ::core::ffi::c_uint;
+pub const GX2_CLEAR_FLAGS_DEPTH: GX2ClearFlags = 1;
+pub const GX2_CLEAR_FLAGS_STENCIL: GX2ClearFlags = 2;
+pub const GX2_CLEAR_FLAGS_BOTH: GX2ClearFlags = 3;
+pub type GX2ClearFlags = ::core::ffi::c_uint;
+pub const GX2_COMPARE_FUNC_NEVER: GX2CompareFunction = 0;
+pub const GX2_COMPARE_FUNC_LESS: GX2CompareFunction = 1;
+pub const GX2_COMPARE_FUNC_EQUAL: GX2CompareFunction = 2;
+pub const GX2_COMPARE_FUNC_LEQUAL: GX2CompareFunction = 3;
+pub const GX2_COMPARE_FUNC_GREATER: GX2CompareFunction = 4;
+pub const GX2_COMPARE_FUNC_NOT_EQUAL: GX2CompareFunction = 5;
+pub const GX2_COMPARE_FUNC_GEQUAL: GX2CompareFunction = 6;
+pub const GX2_COMPARE_FUNC_ALWAYS: GX2CompareFunction = 7;
+pub type GX2CompareFunction = ::core::ffi::c_uint;
+pub const GX2_DRC_RENDER_MODE_DISABLED: GX2DrcRenderMode = 0;
+pub const GX2_DRC_RENDER_MODE_SINGLE: GX2DrcRenderMode = 1;
+pub const GX2_DRC_RENDER_MODE_DOUBLE: GX2DrcRenderMode = 2;
+pub type GX2DrcRenderMode = ::core::ffi::c_uint;
+pub const GX2_EVENT_TYPE_START_OF_PIPE_INTERRUPT: GX2EventType = 0;
+pub const GX2_EVENT_TYPE_END_OF_PIPE_INTERRUPT: GX2EventType = 1;
+pub const GX2_EVENT_TYPE_VSYNC: GX2EventType = 2;
+pub const GX2_EVENT_TYPE_FLIP: GX2EventType = 3;
+pub const GX2_EVENT_TYPE_DISPLAY_LIST_OVERRUN: GX2EventType = 4;
+pub type GX2EventType = ::core::ffi::c_uint;
+pub const GX2_ENDIAN_SWAP_NONE: GX2EndianSwapMode = 0;
+pub const GX2_ENDIAN_SWAP_8_IN_16: GX2EndianSwapMode = 1;
+pub const GX2_ENDIAN_SWAP_8_IN_32: GX2EndianSwapMode = 2;
+pub const GX2_ENDIAN_SWAP_DEFAULT: GX2EndianSwapMode = 3;
+pub type GX2EndianSwapMode = ::core::ffi::c_uint;
+pub const GX2_FETCH_SHADER_TESSELLATION_NONE: GX2FetchShaderType = 0;
+pub const GX2_FETCH_SHADER_TESSELLATION_LINE: GX2FetchShaderType = 1;
+pub const GX2_FETCH_SHADER_TESSELLATION_TRIANGLE: GX2FetchShaderType = 2;
+pub const GX2_FETCH_SHADER_TESSELLATION_QUAD: GX2FetchShaderType = 3;
+pub type GX2FetchShaderType = ::core::ffi::c_uint;
+pub const GX2_FRONT_FACE_CCW: GX2FrontFace = 0;
+pub const GX2_FRONT_FACE_CW: GX2FrontFace = 1;
+pub type GX2FrontFace = ::core::ffi::c_uint;
+pub const GX2_INDEX_TYPE_U16_LE: GX2IndexType = 0;
+pub const GX2_INDEX_TYPE_U32_LE: GX2IndexType = 1;
+pub const GX2_INDEX_TYPE_U16: GX2IndexType = 4;
+pub const GX2_INDEX_TYPE_U32: GX2IndexType = 9;
+pub type GX2IndexType = ::core::ffi::c_uint;
+pub const GX2_INVALIDATE_MODE_NONE: GX2InvalidateMode = 0;
+pub const GX2_INVALIDATE_MODE_ATTRIBUTE_BUFFER: GX2InvalidateMode = 1;
+pub const GX2_INVALIDATE_MODE_TEXTURE: GX2InvalidateMode = 2;
+pub const GX2_INVALIDATE_MODE_UNIFORM_BLOCK: GX2InvalidateMode = 4;
+pub const GX2_INVALIDATE_MODE_SHADER: GX2InvalidateMode = 8;
+pub const GX2_INVALIDATE_MODE_COLOR_BUFFER: GX2InvalidateMode = 16;
+pub const GX2_INVALIDATE_MODE_DEPTH_BUFFER: GX2InvalidateMode = 32;
+pub const GX2_INVALIDATE_MODE_CPU: GX2InvalidateMode = 64;
+pub const GX2_INVALIDATE_MODE_STREAM_OUT_BUFFER: GX2InvalidateMode = 128;
+pub const GX2_INVALIDATE_MODE_EXPORT_BUFFER: GX2InvalidateMode = 256;
+pub const GX2_INVALIDATE_MODE_CPU_ATTRIBUTE_BUFFER: GX2InvalidateMode = 65;
+pub const GX2_INVALIDATE_MODE_CPU_TEXTURE: GX2InvalidateMode = 66;
+pub const GX2_INVALIDATE_MODE_CPU_SHADER: GX2InvalidateMode = 72;
+pub type GX2InvalidateMode = ::core::ffi::c_uint;
+pub const GX2_INIT_END: GX2InitAttributes = 0;
+pub const GX2_INIT_CMD_BUF_BASE: GX2InitAttributes = 1;
+pub const GX2_INIT_CMD_BUF_POOL_SIZE: GX2InitAttributes = 2;
+pub const GX2_INIT_ARGC: GX2InitAttributes = 7;
+pub const GX2_INIT_ARGV: GX2InitAttributes = 8;
+pub const GX2_INIT_PROFILE_MODE: GX2InitAttributes = 9;
+pub const GX2_INIT_TOSS_STAGE: GX2InitAttributes = 10;
+pub const GX2_INIT_APP_IO_THREAD_STACK_SIZE: GX2InitAttributes = 11;
+pub type GX2InitAttributes = ::core::ffi::c_uint;
+pub const GX2_LOGIC_OP_CLEAR: GX2LogicOp = 0;
+pub const GX2_LOGIC_OP_NOR: GX2LogicOp = 17;
+pub const GX2_LOGIC_OP_INV_AND: GX2LogicOp = 34;
+pub const GX2_LOGIC_OP_INV_COPY: GX2LogicOp = 51;
+pub const GX2_LOGIC_OP_REV_AND: GX2LogicOp = 68;
+pub const GX2_LOGIC_OP_INV: GX2LogicOp = 85;
+pub const GX2_LOGIC_OP_XOR: GX2LogicOp = 102;
+pub const GX2_LOGIC_OP_NOT_AND: GX2LogicOp = 119;
+pub const GX2_LOGIC_OP_AND: GX2LogicOp = 136;
+pub const GX2_LOGIC_OP_EQUIV: GX2LogicOp = 153;
+pub const GX2_LOGIC_OP_NOP: GX2LogicOp = 170;
+pub const GX2_LOGIC_OP_INV_OR: GX2LogicOp = 187;
+pub const GX2_LOGIC_OP_COPY: GX2LogicOp = 204;
+pub const GX2_LOGIC_OP_REV_OR: GX2LogicOp = 221;
+pub const GX2_LOGIC_OP_OR: GX2LogicOp = 238;
+pub const GX2_LOGIC_OP_SET: GX2LogicOp = 255;
+pub type GX2LogicOp = ::core::ffi::c_uint;
+pub const GX2_PRIMITIVE_MODE_POINTS: GX2PrimitiveMode = 1;
+pub const GX2_PRIMITIVE_MODE_LINES: GX2PrimitiveMode = 2;
+pub const GX2_PRIMITIVE_MODE_LINE_STRIP: GX2PrimitiveMode = 3;
+pub const GX2_PRIMITIVE_MODE_TRIANGLES: GX2PrimitiveMode = 4;
+pub const GX2_PRIMITIVE_MODE_TRIANGLE_FAN: GX2PrimitiveMode = 5;
+pub const GX2_PRIMITIVE_MODE_TRIANGLE_STRIP: GX2PrimitiveMode = 6;
+pub const GX2_PRIMITIVE_MODE_LINES_ADJACENCY: GX2PrimitiveMode = 10;
+pub const GX2_PRIMITIVE_MODE_LINE_STRIP_ADJACENCY: GX2PrimitiveMode = 11;
+pub const GX2_PRIMITIVE_MODE_TRIANGLES_ADJACENCY: GX2PrimitiveMode = 12;
+pub const GX2_PRIMITIVE_MODE_TRIANGLE_STRIP_ADJACENCY: GX2PrimitiveMode = 13;
+pub const GX2_PRIMITIVE_MODE_RECTS: GX2PrimitiveMode = 17;
+pub const GX2_PRIMITIVE_MODE_LINE_LOOP: GX2PrimitiveMode = 18;
+pub const GX2_PRIMITIVE_MODE_QUADS: GX2PrimitiveMode = 19;
+pub const GX2_PRIMITIVE_MODE_QUAD_STRIP: GX2PrimitiveMode = 20;
+pub type GX2PrimitiveMode = ::core::ffi::c_uint;
+pub const GX2_POLYGON_MODE_POINT: GX2PolygonMode = 0;
+pub const GX2_POLYGON_MODE_LINE: GX2PolygonMode = 1;
+pub const GX2_POLYGON_MODE_TRIANGLE: GX2PolygonMode = 2;
+pub type GX2PolygonMode = ::core::ffi::c_uint;
+pub const GX2_RENDER_TARGET_0: GX2RenderTarget = 0;
+pub const GX2_RENDER_TARGET_1: GX2RenderTarget = 1;
+pub const GX2_RENDER_TARGET_2: GX2RenderTarget = 2;
+pub const GX2_RENDER_TARGET_3: GX2RenderTarget = 3;
+pub const GX2_RENDER_TARGET_4: GX2RenderTarget = 4;
+pub const GX2_RENDER_TARGET_5: GX2RenderTarget = 5;
+pub const GX2_RENDER_TARGET_6: GX2RenderTarget = 6;
+pub const GX2_RENDER_TARGET_7: GX2RenderTarget = 7;
+pub type GX2RenderTarget = ::core::ffi::c_uint;
+pub const GX2_ROUNDING_MODE_ROUND_TO_EVEN: GX2RoundingMode = 0;
+pub const GX2_ROUNDING_MODE_TRUNCATE: GX2RoundingMode = 1;
+pub type GX2RoundingMode = ::core::ffi::c_uint;
+pub const GX2_SAMPLER_VAR_TYPE_SAMPLER_1D: GX2SamplerVarType = 0;
+pub const GX2_SAMPLER_VAR_TYPE_SAMPLER_2D: GX2SamplerVarType = 1;
+pub const GX2_SAMPLER_VAR_TYPE_SAMPLER_3D: GX2SamplerVarType = 3;
+pub const GX2_SAMPLER_VAR_TYPE_SAMPLER_CUBE: GX2SamplerVarType = 4;
+pub type GX2SamplerVarType = ::core::ffi::c_uint;
+pub const GX2_SCAN_TARGET_TV0: GX2ScanTarget = 1;
+pub const GX2_SCAN_TARGET_TV1: GX2ScanTarget = 2;
+pub const GX2_SCAN_TARGET_DRC0: GX2ScanTarget = 4;
+pub const GX2_SCAN_TARGET_DRC1: GX2ScanTarget = 8;
+pub const GX2_SCAN_TARGET_TV: GX2ScanTarget = 1;
+pub const GX2_SCAN_TARGET_DRC: GX2ScanTarget = 4;
+pub type GX2ScanTarget = ::core::ffi::c_uint;
+pub const GX2_SHADER_MODE_UNIFORM_REGISTER: GX2ShaderMode = 0;
+pub const GX2_SHADER_MODE_UNIFORM_BLOCK: GX2ShaderMode = 1;
+pub const GX2_SHADER_MODE_GEOMETRY_SHADER: GX2ShaderMode = 2;
+pub const GX2_SHADER_MODE_COMPUTE_SHADER: GX2ShaderMode = 3;
+pub type GX2ShaderMode = ::core::ffi::c_uint;
+pub const GX2_SHADER_VAR_TYPE_VOID: GX2ShaderVarType = 0;
+pub const GX2_SHADER_VAR_TYPE_BOOL: GX2ShaderVarType = 1;
+pub const GX2_SHADER_VAR_TYPE_INT: GX2ShaderVarType = 2;
+pub const GX2_SHADER_VAR_TYPE_UINT: GX2ShaderVarType = 3;
+pub const GX2_SHADER_VAR_TYPE_FLOAT: GX2ShaderVarType = 4;
+pub const GX2_SHADER_VAR_TYPE_DOUBLE: GX2ShaderVarType = 5;
+pub const GX2_SHADER_VAR_TYPE_DOUBLE2: GX2ShaderVarType = 6;
+pub const GX2_SHADER_VAR_TYPE_DOUBLE3: GX2ShaderVarType = 7;
+pub const GX2_SHADER_VAR_TYPE_DOUBLE4: GX2ShaderVarType = 8;
+pub const GX2_SHADER_VAR_TYPE_FLOAT2: GX2ShaderVarType = 9;
+pub const GX2_SHADER_VAR_TYPE_FLOAT3: GX2ShaderVarType = 10;
+pub const GX2_SHADER_VAR_TYPE_FLOAT4: GX2ShaderVarType = 11;
+pub const GX2_SHADER_VAR_TYPE_BOOL2: GX2ShaderVarType = 12;
+pub const GX2_SHADER_VAR_TYPE_BOOL3: GX2ShaderVarType = 13;
+pub const GX2_SHADER_VAR_TYPE_BOOL4: GX2ShaderVarType = 14;
+pub const GX2_SHADER_VAR_TYPE_INT2: GX2ShaderVarType = 15;
+pub const GX2_SHADER_VAR_TYPE_INT3: GX2ShaderVarType = 16;
+pub const GX2_SHADER_VAR_TYPE_INT4: GX2ShaderVarType = 17;
+pub const GX2_SHADER_VAR_TYPE_UINT2: GX2ShaderVarType = 18;
+pub const GX2_SHADER_VAR_TYPE_UINT3: GX2ShaderVarType = 19;
+pub const GX2_SHADER_VAR_TYPE_UINT4: GX2ShaderVarType = 20;
+pub const GX2_SHADER_VAR_TYPE_FLOAT2X2: GX2ShaderVarType = 21;
+pub const GX2_SHADER_VAR_TYPE_FLOAT2X3: GX2ShaderVarType = 22;
+pub const GX2_SHADER_VAR_TYPE_FLOAT2X4: GX2ShaderVarType = 23;
+pub const GX2_SHADER_VAR_TYPE_FLOAT3X2: GX2ShaderVarType = 24;
+pub const GX2_SHADER_VAR_TYPE_FLOAT3X3: GX2ShaderVarType = 25;
+pub const GX2_SHADER_VAR_TYPE_FLOAT3X4: GX2ShaderVarType = 26;
+pub const GX2_SHADER_VAR_TYPE_FLOAT4X2: GX2ShaderVarType = 27;
+pub const GX2_SHADER_VAR_TYPE_FLOAT4X3: GX2ShaderVarType = 28;
+pub const GX2_SHADER_VAR_TYPE_FLOAT4X4: GX2ShaderVarType = 29;
+pub const GX2_SHADER_VAR_TYPE_DOUBLE2X2: GX2ShaderVarType = 30;
+pub const GX2_SHADER_VAR_TYPE_DOUBLE2X3: GX2ShaderVarType = 31;
+pub const GX2_SHADER_VAR_TYPE_DOUBLE2X4: GX2ShaderVarType = 32;
+pub const GX2_SHADER_VAR_TYPE_DOUBLE3X2: GX2ShaderVarType = 33;
+pub const GX2_SHADER_VAR_TYPE_DOUBLE3X3: GX2ShaderVarType = 34;
+pub const GX2_SHADER_VAR_TYPE_DOUBLE3X4: GX2ShaderVarType = 35;
+pub const GX2_SHADER_VAR_TYPE_DOUBLE4X2: GX2ShaderVarType = 36;
+pub const GX2_SHADER_VAR_TYPE_DOUBLE4X3: GX2ShaderVarType = 37;
+pub const GX2_SHADER_VAR_TYPE_DOUBLE4X4: GX2ShaderVarType = 38;
+pub type GX2ShaderVarType = ::core::ffi::c_uint;
+pub const GX2_STENCIL_FUNCTION_KEEP: GX2StencilFunction = 0;
+pub const GX2_STENCIL_FUNCTION_ZERO: GX2StencilFunction = 1;
+pub const GX2_STENCIL_FUNCTION_REPLACE: GX2StencilFunction = 2;
+pub const GX2_STENCIL_FUNCTION_INCR_CLAMP: GX2StencilFunction = 3;
+pub const GX2_STENCIL_FUNCTION_DECR_CLAMP: GX2StencilFunction = 4;
+pub const GX2_STENCIL_FUNCTION_INV: GX2StencilFunction = 5;
+pub const GX2_STENCIL_FUNCTION_INCR_WRAP: GX2StencilFunction = 6;
+pub const GX2_STENCIL_FUNCTION_DECR_WRAP: GX2StencilFunction = 7;
+pub type GX2StencilFunction = ::core::ffi::c_uint;
+pub const GX2_SURFACE_DIM_TEXTURE_1D: GX2SurfaceDim = 0;
+pub const GX2_SURFACE_DIM_TEXTURE_2D: GX2SurfaceDim = 1;
+pub const GX2_SURFACE_DIM_TEXTURE_3D: GX2SurfaceDim = 2;
+pub const GX2_SURFACE_DIM_TEXTURE_CUBE: GX2SurfaceDim = 3;
+pub const GX2_SURFACE_DIM_TEXTURE_1D_ARRAY: GX2SurfaceDim = 4;
+pub const GX2_SURFACE_DIM_TEXTURE_2D_ARRAY: GX2SurfaceDim = 5;
+pub const GX2_SURFACE_DIM_TEXTURE_2D_MSAA: GX2SurfaceDim = 6;
+pub const GX2_SURFACE_DIM_TEXTURE_2D_MSAA_ARRAY: GX2SurfaceDim = 7;
+pub type GX2SurfaceDim = ::core::ffi::c_uint;
+pub const GX2_SURFACE_FORMAT_INVALID: GX2SurfaceFormat = 0;
+pub const GX2_SURFACE_FORMAT_UNORM_R4_G4: GX2SurfaceFormat = 2;
+pub const GX2_SURFACE_FORMAT_UNORM_R4_G4_B4_A4: GX2SurfaceFormat = 11;
+pub const GX2_SURFACE_FORMAT_UNORM_R8: GX2SurfaceFormat = 1;
+pub const GX2_SURFACE_FORMAT_UNORM_R8_G8: GX2SurfaceFormat = 7;
+pub const GX2_SURFACE_FORMAT_UNORM_R8_G8_B8_A8: GX2SurfaceFormat = 26;
+pub const GX2_SURFACE_FORMAT_UNORM_R16: GX2SurfaceFormat = 5;
+pub const GX2_SURFACE_FORMAT_UNORM_R16_G16: GX2SurfaceFormat = 15;
+pub const GX2_SURFACE_FORMAT_UNORM_R16_G16_B16_A16: GX2SurfaceFormat = 31;
+pub const GX2_SURFACE_FORMAT_UNORM_R5_G6_B5: GX2SurfaceFormat = 8;
+pub const GX2_SURFACE_FORMAT_UNORM_R5_G5_B5_A1: GX2SurfaceFormat = 10;
+pub const GX2_SURFACE_FORMAT_UNORM_A1_B5_G5_R5: GX2SurfaceFormat = 12;
+pub const GX2_SURFACE_FORMAT_UNORM_R24_X8: GX2SurfaceFormat = 17;
+pub const GX2_SURFACE_FORMAT_UNORM_A2_B10_G10_R10: GX2SurfaceFormat = 27;
+pub const GX2_SURFACE_FORMAT_UNORM_R10_G10_B10_A2: GX2SurfaceFormat = 25;
+pub const GX2_SURFACE_FORMAT_UNORM_BC1: GX2SurfaceFormat = 49;
+pub const GX2_SURFACE_FORMAT_UNORM_BC2: GX2SurfaceFormat = 50;
+pub const GX2_SURFACE_FORMAT_UNORM_BC3: GX2SurfaceFormat = 51;
+pub const GX2_SURFACE_FORMAT_UNORM_BC4: GX2SurfaceFormat = 52;
+pub const GX2_SURFACE_FORMAT_UNORM_BC5: GX2SurfaceFormat = 53;
+pub const GX2_SURFACE_FORMAT_UNORM_NV12: GX2SurfaceFormat = 129;
+pub const GX2_SURFACE_FORMAT_UINT_R8: GX2SurfaceFormat = 257;
+pub const GX2_SURFACE_FORMAT_UINT_R8_G8: GX2SurfaceFormat = 263;
+pub const GX2_SURFACE_FORMAT_UINT_R8_G8_B8_A8: GX2SurfaceFormat = 282;
+pub const GX2_SURFACE_FORMAT_UINT_R16: GX2SurfaceFormat = 261;
+pub const GX2_SURFACE_FORMAT_UINT_R16_G16: GX2SurfaceFormat = 271;
+pub const GX2_SURFACE_FORMAT_UINT_R16_G16_B16_A16: GX2SurfaceFormat = 287;
+pub const GX2_SURFACE_FORMAT_UINT_R32: GX2SurfaceFormat = 269;
+pub const GX2_SURFACE_FORMAT_UINT_R32_G32: GX2SurfaceFormat = 285;
+pub const GX2_SURFACE_FORMAT_UINT_R32_G32_B32_A32: GX2SurfaceFormat = 290;
+pub const GX2_SURFACE_FORMAT_UINT_A2_B10_G10_R10: GX2SurfaceFormat = 283;
+pub const GX2_SURFACE_FORMAT_UINT_R10_G10_B10_A2: GX2SurfaceFormat = 281;
+pub const GX2_SURFACE_FORMAT_UINT_X24_G8: GX2SurfaceFormat = 273;
+pub const GX2_SURFACE_FORMAT_UINT_G8_X24: GX2SurfaceFormat = 284;
+pub const GX2_SURFACE_FORMAT_SNORM_R8: GX2SurfaceFormat = 513;
+pub const GX2_SURFACE_FORMAT_SNORM_R8_G8: GX2SurfaceFormat = 519;
+pub const GX2_SURFACE_FORMAT_SNORM_R8_G8_B8_A8: GX2SurfaceFormat = 538;
+pub const GX2_SURFACE_FORMAT_SNORM_R16: GX2SurfaceFormat = 517;
+pub const GX2_SURFACE_FORMAT_SNORM_R16_G16: GX2SurfaceFormat = 527;
+pub const GX2_SURFACE_FORMAT_SNORM_R16_G16_B16_A16: GX2SurfaceFormat = 543;
+pub const GX2_SURFACE_FORMAT_SNORM_R10_G10_B10_A2: GX2SurfaceFormat = 537;
+pub const GX2_SURFACE_FORMAT_SNORM_BC4: GX2SurfaceFormat = 564;
+pub const GX2_SURFACE_FORMAT_SNORM_BC5: GX2SurfaceFormat = 565;
+pub const GX2_SURFACE_FORMAT_SINT_R8: GX2SurfaceFormat = 769;
+pub const GX2_SURFACE_FORMAT_SINT_R8_G8: GX2SurfaceFormat = 775;
+pub const GX2_SURFACE_FORMAT_SINT_R8_G8_B8_A8: GX2SurfaceFormat = 794;
+pub const GX2_SURFACE_FORMAT_SINT_R16: GX2SurfaceFormat = 773;
+pub const GX2_SURFACE_FORMAT_SINT_R16_G16: GX2SurfaceFormat = 783;
+pub const GX2_SURFACE_FORMAT_SINT_R16_G16_B16_A16: GX2SurfaceFormat = 799;
+pub const GX2_SURFACE_FORMAT_SINT_R32: GX2SurfaceFormat = 781;
+pub const GX2_SURFACE_FORMAT_SINT_R32_G32: GX2SurfaceFormat = 797;
+pub const GX2_SURFACE_FORMAT_SINT_R32_G32_B32_A32: GX2SurfaceFormat = 802;
+pub const GX2_SURFACE_FORMAT_SINT_R10_G10_B10_A2: GX2SurfaceFormat = 793;
+pub const GX2_SURFACE_FORMAT_SRGB_R8_G8_B8_A8: GX2SurfaceFormat = 1050;
+pub const GX2_SURFACE_FORMAT_SRGB_BC1: GX2SurfaceFormat = 1073;
+pub const GX2_SURFACE_FORMAT_SRGB_BC2: GX2SurfaceFormat = 1074;
+pub const GX2_SURFACE_FORMAT_SRGB_BC3: GX2SurfaceFormat = 1075;
+pub const GX2_SURFACE_FORMAT_FLOAT_R32: GX2SurfaceFormat = 2062;
+pub const GX2_SURFACE_FORMAT_FLOAT_R32_G32: GX2SurfaceFormat = 2078;
+pub const GX2_SURFACE_FORMAT_FLOAT_R32_G32_B32_A32: GX2SurfaceFormat = 2083;
+pub const GX2_SURFACE_FORMAT_FLOAT_R16: GX2SurfaceFormat = 2054;
+pub const GX2_SURFACE_FORMAT_FLOAT_R16_G16: GX2SurfaceFormat = 2064;
+pub const GX2_SURFACE_FORMAT_FLOAT_R16_G16_B16_A16: GX2SurfaceFormat = 2080;
+pub const GX2_SURFACE_FORMAT_FLOAT_R11_G11_B10: GX2SurfaceFormat = 2070;
+pub const GX2_SURFACE_FORMAT_FLOAT_D24_S8: GX2SurfaceFormat = 2065;
+pub const GX2_SURFACE_FORMAT_FLOAT_X8_X24: GX2SurfaceFormat = 2076;
+pub type GX2SurfaceFormat = ::core::ffi::c_uint;
+pub const GX2_SURFACE_USE_NONE: GX2SurfaceUse = 0;
+pub const GX2_SURFACE_USE_TEXTURE: GX2SurfaceUse = 1;
+pub const GX2_SURFACE_USE_COLOR_BUFFER: GX2SurfaceUse = 2;
+pub const GX2_SURFACE_USE_DEPTH_BUFFER: GX2SurfaceUse = 4;
+pub const GX2_SURFACE_USE_SCAN_BUFFER: GX2SurfaceUse = 8;
+pub const GX2_SURFACE_USE_TV: GX2SurfaceUse = -2147483648;
+pub const GX2_SURFACE_USE_TEXTURE_COLOR_BUFFER_TV: GX2SurfaceUse = -2147483645;
+pub type GX2SurfaceUse = ::core::ffi::c_int;
+pub const GX2_TESSELLATION_MODE_DISCRETE: GX2TessellationMode = 0;
+pub const GX2_TESSELLATION_MODE_CONTINUOUS: GX2TessellationMode = 1;
+pub const GX2_TESSELLATION_MODE_ADAPTIVE: GX2TessellationMode = 2;
+pub type GX2TessellationMode = ::core::ffi::c_uint;
+pub const GX2_TEX_BORDER_TYPE_TRANSPARENT_BLACK: GX2TexBorderType = 0;
+pub const GX2_TEX_BORDER_TYPE_BLACK: GX2TexBorderType = 1;
+pub const GX2_TEX_BORDER_TYPE_WHITE: GX2TexBorderType = 2;
+pub const GX2_TEX_BORDER_TYPE_VARIABLE: GX2TexBorderType = 3;
+pub type GX2TexBorderType = ::core::ffi::c_uint;
+pub const GX2_TEX_CLAMP_MODE_WRAP: GX2TexClampMode = 0;
+pub const GX2_TEX_CLAMP_MODE_MIRROR: GX2TexClampMode = 1;
+pub const GX2_TEX_CLAMP_MODE_CLAMP: GX2TexClampMode = 2;
+pub const GX2_TEX_CLAMP_MODE_MIRROR_ONCE: GX2TexClampMode = 3;
+pub const GX2_TEX_CLAMP_MODE_CLAMP_HALF_BORDER: GX2TexClampMode = 4;
+pub const GX2_TEX_CLAMP_MODE_MIRROR_ONCE_HALF_BORDER: GX2TexClampMode = 5;
+pub const GX2_TEX_CLAMP_MODE_CLAMP_BORDER: GX2TexClampMode = 6;
+pub const GX2_TEX_CLAMP_MODE_MIRROR_ONCE_BORDER: GX2TexClampMode = 7;
+pub type GX2TexClampMode = ::core::ffi::c_uint;
+pub const GX2_TEX_MIP_FILTER_MODE_NONE: GX2TexMipFilterMode = 0;
+pub const GX2_TEX_MIP_FILTER_MODE_POINT: GX2TexMipFilterMode = 1;
+pub const GX2_TEX_MIP_FILTER_MODE_LINEAR: GX2TexMipFilterMode = 2;
+pub type GX2TexMipFilterMode = ::core::ffi::c_uint;
+pub const GX2_TEX_MIP_PERF_MODE_DISABLE: GX2TexMipPerfMode = 0;
+pub type GX2TexMipPerfMode = ::core::ffi::c_uint;
+pub const GX2_TEX_XY_FILTER_MODE_POINT: GX2TexXYFilterMode = 0;
+pub const GX2_TEX_XY_FILTER_MODE_LINEAR: GX2TexXYFilterMode = 1;
+pub const GX2_TEX_XY_FILTER_MODE_BICUBIC: GX2TexXYFilterMode = 2;
+pub type GX2TexXYFilterMode = ::core::ffi::c_uint;
+pub const GX2_TEX_ANISO_RATIO_NONE: GX2TexAnisoRatio = 0;
+pub const GX2_TEX_ANISO_RATIO_2_TO_1: GX2TexAnisoRatio = 1;
+pub const GX2_TEX_ANISO_RATIO_4_TO_1: GX2TexAnisoRatio = 2;
+pub const GX2_TEX_ANISO_RATIO_8_TO_1: GX2TexAnisoRatio = 3;
+pub const GX2_TEX_ANISO_RATIO_16_TO_1: GX2TexAnisoRatio = 4;
+pub type GX2TexAnisoRatio = ::core::ffi::c_uint;
+pub const GX2_TEX_Z_FILTER_MODE_NONE: GX2TexZFilterMode = 0;
+pub const GX2_TEX_Z_FILTER_MODE_POINT: GX2TexZFilterMode = 1;
+pub const GX2_TEX_Z_FILTER_MODE_LINEAR: GX2TexZFilterMode = 2;
+pub type GX2TexZFilterMode = ::core::ffi::c_uint;
+pub const GX2_TEX_Z_PERF_MODE_DISABLED: GX2TexZPerfMode = 0;
+pub type GX2TexZPerfMode = ::core::ffi::c_uint;
+pub const GX2_TILE_MODE_DEFAULT: GX2TileMode = 0;
+pub const GX2_TILE_MODE_LINEAR_ALIGNED: GX2TileMode = 1;
+pub const GX2_TILE_MODE_TILED_1D_THIN1: GX2TileMode = 2;
+pub const GX2_TILE_MODE_TILED_1D_THICK: GX2TileMode = 3;
+pub const GX2_TILE_MODE_TILED_2D_THIN1: GX2TileMode = 4;
+pub const GX2_TILE_MODE_TILED_2D_THIN2: GX2TileMode = 5;
+pub const GX2_TILE_MODE_TILED_2D_THIN4: GX2TileMode = 6;
+pub const GX2_TILE_MODE_TILED_2D_THICK: GX2TileMode = 7;
+pub const GX2_TILE_MODE_TILED_2B_THIN1: GX2TileMode = 8;
+pub const GX2_TILE_MODE_TILED_2B_THIN2: GX2TileMode = 9;
+pub const GX2_TILE_MODE_TILED_2B_THIN4: GX2TileMode = 10;
+pub const GX2_TILE_MODE_TILED_2B_THICK: GX2TileMode = 11;
+pub const GX2_TILE_MODE_TILED_3D_THIN1: GX2TileMode = 12;
+pub const GX2_TILE_MODE_TILED_3D_THICK: GX2TileMode = 13;
+pub const GX2_TILE_MODE_TILED_3B_THIN1: GX2TileMode = 14;
+pub const GX2_TILE_MODE_TILED_3B_THICK: GX2TileMode = 15;
+pub const GX2_TILE_MODE_LINEAR_SPECIAL: GX2TileMode = 16;
+pub type GX2TileMode = ::core::ffi::c_uint;
+pub const GX2_TV_RENDER_MODE_DISABLED: GX2TVRenderMode = 0;
+pub const GX2_TV_RENDER_MODE_STANDARD_480P: GX2TVRenderMode = 1;
+pub const GX2_TV_RENDER_MODE_WIDE_480P: GX2TVRenderMode = 2;
+pub const GX2_TV_RENDER_MODE_WIDE_720P: GX2TVRenderMode = 3;
+pub const GX2_TV_RENDER_MODE_WIDE_1080P: GX2TVRenderMode = 5;
+pub type GX2TVRenderMode = ::core::ffi::c_uint;
+pub const GX2_TV_SCAN_MODE_NONE: GX2TVScanMode = 0;
+pub const GX2_TV_SCAN_MODE_576I: GX2TVScanMode = 1;
+pub const GX2_TV_SCAN_MODE_480I: GX2TVScanMode = 2;
+pub const GX2_TV_SCAN_MODE_480P: GX2TVScanMode = 3;
+pub const GX2_TV_SCAN_MODE_720P: GX2TVScanMode = 4;
+pub const GX2_TV_SCAN_MODE_1080I: GX2TVScanMode = 6;
+pub const GX2_TV_SCAN_MODE_1080P: GX2TVScanMode = 7;
+pub type GX2TVScanMode = ::core::ffi::c_uint;
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct GX2Sampler {
     pub regs: [u32; 3usize],
 }
 extern "C" {
     pub fn GX2InitSampler(
         sampler: *mut GX2Sampler,
-        clampMode: GX2TexClampMode::Type,
-        minMagFilterMode: GX2TexXYFilterMode::Type,
+        clampMode: GX2TexClampMode,
+        minMagFilterMode: GX2TexXYFilterMode,
     );
 }
 extern "C" {
-    pub fn GX2InitSamplerBorderType(sampler: *mut GX2Sampler, borderType: GX2TexBorderType::Type);
+    pub fn GX2InitSamplerBorderType(sampler: *mut GX2Sampler, borderType: GX2TexBorderType);
 }
 extern "C" {
     pub fn GX2InitSamplerClamping(
         sampler: *mut GX2Sampler,
-        clampX: GX2TexClampMode::Type,
-        clampY: GX2TexClampMode::Type,
-        clampZ: GX2TexClampMode::Type,
+        clampX: GX2TexClampMode,
+        clampY: GX2TexClampMode,
+        clampZ: GX2TexClampMode,
     );
 }
 extern "C" {
-    pub fn GX2InitSamplerDepthCompare(
-        sampler: *mut GX2Sampler,
-        depthCompare: GX2CompareFunction::Type,
-    );
+    pub fn GX2InitSamplerDepthCompare(sampler: *mut GX2Sampler, depthCompare: GX2CompareFunction);
 }
 extern "C" {
     pub fn GX2InitSamplerFilterAdjust(
         sampler: *mut GX2Sampler,
         highPrecision: BOOL,
-        perfMip: GX2TexMipPerfMode::Type,
-        perfZ: GX2TexZPerfMode::Type,
+        perfMip: GX2TexMipPerfMode,
+        perfZ: GX2TexZPerfMode,
     );
 }
 extern "C" {
@@ -5274,61 +5462,65 @@ extern "C" {
     pub fn GX2InitSamplerLODAdjust(sampler: *mut GX2Sampler, unk1: f32, unk2: BOOL);
 }
 extern "C" {
-    pub fn GX2InitSamplerRoundingMode(
-        sampler: *mut GX2Sampler,
-        roundingMode: GX2RoundingMode::Type,
-    );
+    pub fn GX2InitSamplerRoundingMode(sampler: *mut GX2Sampler, roundingMode: GX2RoundingMode);
 }
 extern "C" {
     pub fn GX2InitSamplerXYFilter(
         sampler: *mut GX2Sampler,
-        filterMag: GX2TexXYFilterMode::Type,
-        filterMin: GX2TexXYFilterMode::Type,
-        maxAniso: GX2TexAnisoRatio::Type,
+        filterMag: GX2TexXYFilterMode,
+        filterMin: GX2TexXYFilterMode,
+        maxAniso: GX2TexAnisoRatio,
     );
 }
 extern "C" {
     pub fn GX2InitSamplerZMFilter(
         sampler: *mut GX2Sampler,
-        filterZ: GX2TexZFilterMode::Type,
-        filterMip: GX2TexMipFilterMode::Type,
+        filterZ: GX2TexZFilterMode,
+        filterMip: GX2TexMipFilterMode,
     );
 }
-pub mod GX2RResourceFlags {
-    pub type Type = ::core::ffi::c_uint;
-    pub const GX2R_RESOURCE_BIND_NONE: Type = 0;
-    pub const GX2R_RESOURCE_BIND_TEXTURE: Type = 1;
-    pub const GX2R_RESOURCE_BIND_COLOR_BUFFER: Type = 2;
-    pub const GX2R_RESOURCE_BIND_DEPTH_BUFFER: Type = 4;
-    pub const GX2R_RESOURCE_BIND_SCAN_BUFFER: Type = 8;
-    pub const GX2R_RESOURCE_BIND_VERTEX_BUFFER: Type = 16;
-    pub const GX2R_RESOURCE_BIND_INDEX_BUFFER: Type = 32;
-    pub const GX2R_RESOURCE_BIND_UNIFORM_BLOCK: Type = 64;
-    pub const GX2R_RESOURCE_BIND_SHADER_PROGRAM: Type = 128;
-    pub const GX2R_RESOURCE_BIND_STREAM_OUTPUT: Type = 256;
-    pub const GX2R_RESOURCE_BIND_DISPLAY_LIST: Type = 512;
-    pub const GX2R_RESOURCE_BIND_GS_RING_BUFFER: Type = 1024;
-    pub const GX2R_RESOURCE_USAGE_CPU_READ: Type = 2048;
-    pub const GX2R_RESOURCE_USAGE_CPU_WRITE: Type = 4096;
-    pub const GX2R_RESOURCE_USAGE_GPU_READ: Type = 8192;
-    pub const GX2R_RESOURCE_USAGE_GPU_WRITE: Type = 16384;
-    pub const GX2R_RESOURCE_USAGE_DMA_READ: Type = 32768;
-    pub const GX2R_RESOURCE_USAGE_DMA_WRITE: Type = 65536;
-    pub const GX2R_RESOURCE_USAGE_FORCE_MEM1: Type = 131072;
-    pub const GX2R_RESOURCE_USAGE_FORCE_MEM2: Type = 262144;
-    pub const GX2R_RESOURCE_DISABLE_CPU_INVALIDATE: Type = 1048576;
-    pub const GX2R_RESOURCE_DISABLE_GPU_INVALIDATE: Type = 2097152;
-    pub const GX2R_RESOURCE_LOCKED_READ_ONLY: Type = 4194304;
-    pub const GX2R_RESOURCE_GX2R_ALLOCATED: Type = 536870912;
-    pub const GX2R_RESOURCE_LOCKED: Type = 1073741824;
-}
+pub const GX2R_RESOURCE_BIND_NONE: GX2RResourceFlags = 0;
+pub const GX2R_RESOURCE_BIND_TEXTURE: GX2RResourceFlags = 1;
+pub const GX2R_RESOURCE_BIND_COLOR_BUFFER: GX2RResourceFlags = 2;
+pub const GX2R_RESOURCE_BIND_DEPTH_BUFFER: GX2RResourceFlags = 4;
+pub const GX2R_RESOURCE_BIND_SCAN_BUFFER: GX2RResourceFlags = 8;
+pub const GX2R_RESOURCE_BIND_VERTEX_BUFFER: GX2RResourceFlags = 16;
+pub const GX2R_RESOURCE_BIND_INDEX_BUFFER: GX2RResourceFlags = 32;
+pub const GX2R_RESOURCE_BIND_UNIFORM_BLOCK: GX2RResourceFlags = 64;
+pub const GX2R_RESOURCE_BIND_SHADER_PROGRAM: GX2RResourceFlags = 128;
+pub const GX2R_RESOURCE_BIND_STREAM_OUTPUT: GX2RResourceFlags = 256;
+pub const GX2R_RESOURCE_BIND_DISPLAY_LIST: GX2RResourceFlags = 512;
+pub const GX2R_RESOURCE_BIND_GS_RING_BUFFER: GX2RResourceFlags = 1024;
+pub const GX2R_RESOURCE_USAGE_CPU_READ: GX2RResourceFlags = 2048;
+pub const GX2R_RESOURCE_USAGE_CPU_WRITE: GX2RResourceFlags = 4096;
+pub const GX2R_RESOURCE_USAGE_GPU_READ: GX2RResourceFlags = 8192;
+pub const GX2R_RESOURCE_USAGE_GPU_WRITE: GX2RResourceFlags = 16384;
+pub const GX2R_RESOURCE_USAGE_DMA_READ: GX2RResourceFlags = 32768;
+pub const GX2R_RESOURCE_USAGE_DMA_WRITE: GX2RResourceFlags = 65536;
+pub const GX2R_RESOURCE_USAGE_FORCE_MEM1: GX2RResourceFlags = 131072;
+pub const GX2R_RESOURCE_USAGE_FORCE_MEM2: GX2RResourceFlags = 262144;
+pub const GX2R_RESOURCE_DISABLE_CPU_INVALIDATE: GX2RResourceFlags = 1048576;
+pub const GX2R_RESOURCE_DISABLE_GPU_INVALIDATE: GX2RResourceFlags = 2097152;
+pub const GX2R_RESOURCE_LOCKED_READ_ONLY: GX2RResourceFlags = 4194304;
+pub const GX2R_RESOURCE_GX2R_ALLOCATED: GX2RResourceFlags = 536870912;
+pub const GX2R_RESOURCE_LOCKED: GX2RResourceFlags = 1073741824;
+pub type GX2RResourceFlags = ::core::ffi::c_uint;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct GX2RBuffer {
-    pub flags: GX2RResourceFlags::Type,
+    pub flags: GX2RResourceFlags,
     pub elemSize: u32,
     pub elemCount: u32,
     pub buffer: *mut ::core::ffi::c_void,
+}
+impl Default for GX2RBuffer {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 extern "C" {
     pub fn GX2RBufferExists(buffer: *mut GX2RBuffer) -> BOOL;
@@ -5344,25 +5536,25 @@ extern "C" {
     ) -> BOOL;
 }
 extern "C" {
-    pub fn GX2RDestroyBufferEx(buffer: *mut GX2RBuffer, flags: GX2RResourceFlags::Type);
+    pub fn GX2RDestroyBufferEx(buffer: *mut GX2RBuffer, flags: GX2RResourceFlags);
 }
 extern "C" {
-    pub fn GX2RGetBufferAlignment(flags: GX2RResourceFlags::Type) -> u32;
+    pub fn GX2RGetBufferAlignment(flags: GX2RResourceFlags) -> u32;
 }
 extern "C" {
     pub fn GX2RGetBufferAllocationSize(buffer: *mut GX2RBuffer) -> u32;
 }
 extern "C" {
-    pub fn GX2RInvalidateBuffer(buffer: *mut GX2RBuffer, flags: GX2RResourceFlags::Type);
+    pub fn GX2RInvalidateBuffer(buffer: *mut GX2RBuffer, flags: GX2RResourceFlags);
 }
 extern "C" {
     pub fn GX2RLockBufferEx(
         buffer: *mut GX2RBuffer,
-        flags: GX2RResourceFlags::Type,
+        flags: GX2RResourceFlags,
     ) -> *mut ::core::ffi::c_void;
 }
 extern "C" {
-    pub fn GX2RUnlockBufferEx(buffer: *mut GX2RBuffer, flags: GX2RResourceFlags::Type);
+    pub fn GX2RUnlockBufferEx(buffer: *mut GX2RBuffer, flags: GX2RResourceFlags);
 }
 extern "C" {
     pub fn GX2RSetVertexUniformBlock(buffer: *mut GX2RBuffer, location: u32, offset: u32);
@@ -5376,7 +5568,7 @@ extern "C" {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct GX2FetchShader {
-    pub type_: GX2FetchShaderType::Type,
+    pub type_: GX2FetchShaderType,
     pub regs: GX2FetchShader__bindgen_ty_1,
     pub size: u32,
     pub program: *mut ::core::ffi::c_void,
@@ -5385,9 +5577,18 @@ pub struct GX2FetchShader {
     pub divisors: [u32; 2usize],
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct GX2FetchShader__bindgen_ty_1 {
     pub sq_pgm_resources_fs: u32,
+}
+impl Default for GX2FetchShader {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -5396,23 +5597,41 @@ pub struct GX2UniformBlock {
     pub offset: u32,
     pub size: u32,
 }
+impl Default for GX2UniformBlock {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct GX2UniformVar {
     pub name: *const ::core::ffi::c_char,
-    pub type_: GX2ShaderVarType::Type,
+    pub type_: GX2ShaderVarType,
     pub count: u32,
     pub offset: u32,
     pub block: i32,
 }
+impl Default for GX2UniformVar {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct GX2UniformInitialValue {
     pub value: [f32; 4usize],
     pub offset: u32,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct GX2LoopVar {
     pub offset: u32,
     pub value: u32,
@@ -5421,16 +5640,34 @@ pub struct GX2LoopVar {
 #[derive(Debug, Copy, Clone)]
 pub struct GX2SamplerVar {
     pub name: *const ::core::ffi::c_char,
-    pub type_: GX2SamplerVarType::Type,
+    pub type_: GX2SamplerVarType,
     pub location: u32,
+}
+impl Default for GX2SamplerVar {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct GX2AttribVar {
     pub name: *const ::core::ffi::c_char,
-    pub type_: GX2ShaderVarType::Type,
+    pub type_: GX2ShaderVarType,
     pub count: u32,
     pub location: u32,
+}
+impl Default for GX2AttribVar {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -5438,7 +5675,7 @@ pub struct GX2VertexShader {
     pub regs: GX2VertexShader__bindgen_ty_1,
     pub size: u32,
     pub program: *mut ::core::ffi::c_void,
-    pub mode: GX2ShaderMode::Type,
+    pub mode: GX2ShaderMode,
     pub uniformBlockCount: u32,
     pub uniformBlocks: *mut GX2UniformBlock,
     pub uniformVarCount: u32,
@@ -5457,7 +5694,7 @@ pub struct GX2VertexShader {
     pub gx2rBuffer: GX2RBuffer,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct GX2VertexShader__bindgen_ty_1 {
     pub sq_pgm_resources_vs: u32,
     pub vgt_primitiveid_en: u32,
@@ -5472,13 +5709,22 @@ pub struct GX2VertexShader__bindgen_ty_1 {
     pub vgt_vertex_reuse_block_cntl: u32,
     pub vgt_hos_reuse_depth: u32,
 }
+impl Default for GX2VertexShader {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct GX2PixelShader {
     pub regs: GX2PixelShader__bindgen_ty_1,
     pub size: u32,
     pub program: *mut ::core::ffi::c_void,
-    pub mode: GX2ShaderMode::Type,
+    pub mode: GX2ShaderMode,
     pub uniformBlockCount: u32,
     pub uniformBlocks: *mut GX2UniformBlock,
     pub uniformVarCount: u32,
@@ -5492,7 +5738,7 @@ pub struct GX2PixelShader {
     pub gx2rBuffer: GX2RBuffer,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct GX2PixelShader__bindgen_ty_1 {
     pub sq_pgm_resources_ps: u32,
     pub sq_pgm_exports_ps: u32,
@@ -5505,6 +5751,15 @@ pub struct GX2PixelShader__bindgen_ty_1 {
     pub db_shader_control: u32,
     pub spi_input_z: u32,
 }
+impl Default for GX2PixelShader {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct GX2GeometryShader {
@@ -5513,7 +5768,7 @@ pub struct GX2GeometryShader {
     pub program: *mut ::core::ffi::c_void,
     pub vertexProgramSize: u32,
     pub vertexProgram: *mut ::core::ffi::c_void,
-    pub mode: GX2ShaderMode::Type,
+    pub mode: GX2ShaderMode,
     pub uniformBlockCount: u32,
     pub uniformBlocks: *mut GX2UniformBlock,
     pub uniformVarCount: u32,
@@ -5530,7 +5785,7 @@ pub struct GX2GeometryShader {
     pub gx2rBuffer: GX2RBuffer,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct GX2GeometryShader__bindgen_ty_1 {
     pub sq_pgm_resources_gs: u32,
     pub vgt_gs_out_prim_type: u32,
@@ -5543,17 +5798,35 @@ pub struct GX2GeometryShader__bindgen_ty_1 {
     pub spi_vs_out_id: [u32; 10usize],
     pub vgt_strmout_buffer_en: u32,
 }
+impl Default for GX2GeometryShader {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct GX2AttribStream {
     pub location: u32,
     pub buffer: u32,
     pub offset: u32,
-    pub format: GX2AttribFormat::Type,
-    pub type_: GX2AttribIndexType::Type,
+    pub format: GX2AttribFormat,
+    pub type_: GX2AttribIndexType,
     pub aluDivisor: u32,
     pub mask: u32,
-    pub endianSwap: GX2EndianSwapMode::Type,
+    pub endianSwap: GX2EndianSwapMode,
+}
+impl Default for GX2AttribStream {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 extern "C" {
     pub fn GX2CalcGeometryShaderInputRingBufferSize(ringItemSize: u32) -> u32;
@@ -5564,8 +5837,8 @@ extern "C" {
 extern "C" {
     pub fn GX2CalcFetchShaderSizeEx(
         attribs: u32,
-        fetchShaderType: GX2FetchShaderType::Type,
-        tesellationMode: GX2TessellationMode::Type,
+        fetchShaderType: GX2FetchShaderType,
+        tesellationMode: GX2TessellationMode,
     ) -> u32;
 }
 extern "C" {
@@ -5574,8 +5847,8 @@ extern "C" {
         buffer: *mut u8,
         attribCount: u32,
         attribs: *const GX2AttribStream,
-        type_: GX2FetchShaderType::Type,
-        tessMode: GX2TessellationMode::Type,
+        type_: GX2FetchShaderType,
+        tessMode: GX2TessellationMode,
     );
 }
 extern "C" {
@@ -5616,7 +5889,7 @@ extern "C" {
 }
 extern "C" {
     pub fn GX2SetShaderModeEx(
-        mode: GX2ShaderMode::Type,
+        mode: GX2ShaderMode,
         numVsGpr: u32,
         numVsStackEntries: u32,
         numGsGpr: u32,
@@ -5655,19 +5928,19 @@ extern "C" {
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct GX2Surface {
-    pub dim: GX2SurfaceDim::Type,
+    pub dim: GX2SurfaceDim,
     pub width: u32,
     pub height: u32,
     pub depth: u32,
     pub mipLevels: u32,
-    pub format: GX2SurfaceFormat::Type,
-    pub aa: GX2AAMode::Type,
+    pub format: GX2SurfaceFormat,
+    pub aa: GX2AAMode,
     pub __bindgen_anon_1: GX2Surface__bindgen_ty_1,
     pub imageSize: u32,
     pub image: *mut ::core::ffi::c_void,
     pub mipmapSize: u32,
     pub mipmaps: *mut ::core::ffi::c_void,
-    pub tileMode: GX2TileMode::Type,
+    pub tileMode: GX2TileMode,
     pub swizzle: u32,
     pub alignment: u32,
     pub pitch: u32,
@@ -5676,8 +5949,26 @@ pub struct GX2Surface {
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub union GX2Surface__bindgen_ty_1 {
-    pub use_: GX2SurfaceUse::Type,
-    pub resourceFlags: GX2RResourceFlags::Type,
+    pub use_: GX2SurfaceUse,
+    pub resourceFlags: GX2RResourceFlags,
+}
+impl Default for GX2Surface__bindgen_ty_1 {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
+impl Default for GX2Surface {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -5692,6 +5983,15 @@ pub struct GX2DepthBuffer {
     pub stencilClear: u32,
     pub regs: [u32; 7usize],
 }
+impl Default for GX2DepthBuffer {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct GX2ColorBuffer {
@@ -5703,8 +6003,17 @@ pub struct GX2ColorBuffer {
     pub aaSize: u32,
     pub regs: [u32; 5usize],
 }
+impl Default for GX2ColorBuffer {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct GX2Rect {
     pub left: i32,
     pub top: i32,
@@ -5712,7 +6021,7 @@ pub struct GX2Rect {
     pub bottom: i32,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct GX2Point {
     pub x: i32,
     pub y: i32,
@@ -5735,7 +6044,7 @@ extern "C" {
     );
 }
 extern "C" {
-    pub fn GX2SetColorBuffer(colorBuffer: *const GX2ColorBuffer, target: GX2RenderTarget::Type);
+    pub fn GX2SetColorBuffer(colorBuffer: *const GX2ColorBuffer, target: GX2RenderTarget);
 }
 extern "C" {
     pub fn GX2SetDepthBuffer(depthBuffer: *const GX2DepthBuffer);
@@ -5797,6 +6106,15 @@ pub struct GX2Texture {
     pub compMap: u32,
     pub regs: [u32; 5usize],
 }
+impl Default for GX2Texture {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 extern "C" {
     pub fn GX2InitTextureRegs(texture: *mut GX2Texture);
 }
@@ -5809,25 +6127,23 @@ extern "C" {
 extern "C" {
     pub fn GX2SetGeometryTexture(texture: *const GX2Texture, unit: u32);
 }
-pub mod GFDBlockType {
-    pub type Type = ::core::ffi::c_uint;
-    pub const GFD_BLOCK_END_OF_FILE: Type = 1;
-    pub const GFD_BLOCK_PADDING: Type = 2;
-    pub const GFD_BLOCK_VERTEX_SHADER_HEADER: Type = 3;
-    pub const GFD_BLOCK_VERTEX_SHADER_PROGRAM: Type = 5;
-    pub const GFD_BLOCK_PIXEL_SHADER_HEADER: Type = 6;
-    pub const GFD_BLOCK_PIXEL_SHADER_PROGRAM: Type = 7;
-    pub const GFD_BLOCK_GEOMETRY_SHADER_HEADER: Type = 8;
-    pub const GFD_BLOCK_GEOMETRY_SHADER_PROGRAM: Type = 9;
-    pub const GFD_BLOCK_GEOMETRY_SHADER_COPY_PROGRAM: Type = 10;
-    pub const GFD_BLOCK_TEXTURE_HEADER: Type = 11;
-    pub const GFD_BLOCK_TEXTURE_IMAGE: Type = 12;
-    pub const GFD_BLOCK_TEXTURE_MIPMAP: Type = 13;
-    pub const GFD_BLOCK_COMPUTE_SHADER_HEADER: Type = 14;
-    pub const GFD_BLOCK_COMPUTE_SHADER_PROGRAM: Type = 15;
-}
+pub const GFD_BLOCK_END_OF_FILE: GFDBlockType = 1;
+pub const GFD_BLOCK_PADDING: GFDBlockType = 2;
+pub const GFD_BLOCK_VERTEX_SHADER_HEADER: GFDBlockType = 3;
+pub const GFD_BLOCK_VERTEX_SHADER_PROGRAM: GFDBlockType = 5;
+pub const GFD_BLOCK_PIXEL_SHADER_HEADER: GFDBlockType = 6;
+pub const GFD_BLOCK_PIXEL_SHADER_PROGRAM: GFDBlockType = 7;
+pub const GFD_BLOCK_GEOMETRY_SHADER_HEADER: GFDBlockType = 8;
+pub const GFD_BLOCK_GEOMETRY_SHADER_PROGRAM: GFDBlockType = 9;
+pub const GFD_BLOCK_GEOMETRY_SHADER_COPY_PROGRAM: GFDBlockType = 10;
+pub const GFD_BLOCK_TEXTURE_HEADER: GFDBlockType = 11;
+pub const GFD_BLOCK_TEXTURE_IMAGE: GFDBlockType = 12;
+pub const GFD_BLOCK_TEXTURE_MIPMAP: GFDBlockType = 13;
+pub const GFD_BLOCK_COMPUTE_SHADER_HEADER: GFDBlockType = 14;
+pub const GFD_BLOCK_COMPUTE_SHADER_PROGRAM: GFDBlockType = 15;
+pub type GFDBlockType = ::core::ffi::c_uint;
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct GFDHeader {
     pub magic: u32,
     pub headerSize: u32,
@@ -5845,13 +6161,22 @@ pub struct GFDBlockHeader {
     pub headerSize: u32,
     pub majorVersion: u32,
     pub minorVersion: u32,
-    pub type_: GFDBlockType::Type,
+    pub type_: GFDBlockType,
     pub dataSize: u32,
     pub id: u32,
     pub index: u32,
 }
+impl Default for GFDBlockHeader {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct GFDRelocationHeader {
     pub magic: u32,
     pub headerSize: u32,
@@ -5961,19 +6286,19 @@ pub type __sigset_t = ::core::ffi::c_ulong;
 pub type suseconds_t = __suseconds_t;
 pub type time_t = __int_least64_t;
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct timeval {
     pub tv_sec: time_t,
     pub tv_usec: suseconds_t,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct timespec {
     pub tv_sec: time_t,
     pub tv_nsec: ::core::ffi::c_long,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct itimerspec {
     pub it_interval: timespec,
     pub it_value: timespec,
@@ -5982,7 +6307,7 @@ pub type sigset_t = __sigset_t;
 pub type __fd_mask = ::core::ffi::c_ulong;
 pub type fd_mask = __fd_mask;
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct fd_set {
     pub __fds_bits: [__fd_mask; 1usize],
 }
@@ -6013,6 +6338,15 @@ extern "C" {
 pub struct fiodgname_arg {
     pub len: ::core::ffi::c_int,
     pub buf: *mut ::core::ffi::c_void,
+}
+impl Default for fiodgname_arg {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 pub type u_int8_t = __uint8_t;
 pub type u_int16_t = __uint16_t;
@@ -6051,7 +6385,7 @@ pub type timer_t = __timer_t;
 pub type useconds_t = __useconds_t;
 pub type sbintime_t = __int64_t;
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct sched_param {
     pub sched_priority: ::core::ffi::c_int,
 }
@@ -6068,47 +6402,56 @@ pub struct pthread_attr_t {
     pub schedparam: sched_param,
     pub detachstate: ::core::ffi::c_int,
 }
+impl Default for pthread_attr_t {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 pub type pthread_mutex_t = __uint32_t;
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct pthread_mutexattr_t {
     pub is_initialized: ::core::ffi::c_int,
     pub recursive: ::core::ffi::c_int,
 }
 pub type pthread_cond_t = __uint32_t;
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct pthread_condattr_t {
     pub is_initialized: ::core::ffi::c_int,
     pub clock: clock_t,
 }
 pub type pthread_key_t = __uint32_t;
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct pthread_once_t {
     pub is_initialized: ::core::ffi::c_int,
     pub init_executed: ::core::ffi::c_int,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct timezone {
     pub tz_minuteswest: ::core::ffi::c_int,
     pub tz_dsttime: ::core::ffi::c_int,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct bintime {
     pub sec: time_t,
     pub frac: u64,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct itimerval {
     pub it_interval: timeval,
     pub it_value: timeval,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct tm {
     pub tm_sec: ::core::ffi::c_int,
     pub tm_min: ::core::ffi::c_int,
@@ -6195,12 +6538,30 @@ pub union sigval {
     pub sival_int: ::core::ffi::c_int,
     pub sival_ptr: *mut ::core::ffi::c_void,
 }
+impl Default for sigval {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct sigevent {
     pub sigev_notify: ::core::ffi::c_int,
     pub sigev_signo: ::core::ffi::c_int,
     pub sigev_value: sigval,
+}
+impl Default for sigevent {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -6209,9 +6570,18 @@ pub struct siginfo_t {
     pub si_code: ::core::ffi::c_int,
     pub si_value: sigval,
 }
+impl Default for siginfo_t {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 pub type _sig_func_ptr = ::core::option::Option<unsafe extern "C" fn(arg1: ::core::ffi::c_int)>;
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct sigaction {
     pub sa_handler: _sig_func_ptr,
     pub sa_mask: sigset_t,
@@ -6223,6 +6593,15 @@ pub struct sigaltstack {
     pub ss_sp: *mut ::core::ffi::c_void,
     pub ss_flags: ::core::ffi::c_int,
     pub ss_size: usize,
+}
+impl Default for sigaltstack {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 pub type stack_t = sigaltstack;
 extern "C" {
@@ -6395,19 +6774,19 @@ extern "C" {
 pub type socklen_t = u32;
 pub type sa_family_t = u16;
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct sockaddr {
     pub sa_family: sa_family_t,
     pub sa_data: __IncompleteArrayField<::core::ffi::c_char>,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct sockaddr_storage {
     pub ss_family: sa_family_t,
     pub ss_padding: [::core::ffi::c_char; 14usize],
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct linger {
     pub l_onoff: ::core::ffi::c_int,
     pub l_linger: ::core::ffi::c_int,
@@ -6519,9 +6898,9 @@ extern "C" {
 }
 extern "C" {
     pub fn GX2SetTessellation(
-        tessellationMode: GX2TessellationMode::Type,
-        primitiveMode: GX2PrimitiveMode::Type,
-        indexType: GX2IndexType::Type,
+        tessellationMode: GX2TessellationMode,
+        primitiveMode: GX2PrimitiveMode,
+        indexType: GX2IndexType,
     );
 }
 extern "C" {
@@ -6544,7 +6923,7 @@ extern "C" {
         depthBuffer: *mut GX2DepthBuffer,
         depth: f32,
         stencil: u8,
-        clearMode: GX2ClearFlags::Type,
+        clearMode: GX2ClearFlags,
     );
 }
 extern "C" {
@@ -6557,7 +6936,7 @@ extern "C" {
         alpha: f32,
         depth: f32,
         stencil: u8,
-        clearMode: GX2ClearFlags::Type,
+        clearMode: GX2ClearFlags,
     );
 }
 extern "C" {
@@ -6582,6 +6961,15 @@ pub struct GX2ShadowState {
     pub sampler: [u32; 162usize],
     pub __unk38: [::core::ffi::c_char; 120usize],
 }
+impl Default for GX2ShadowState {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct GX2ContextState {
@@ -6590,6 +6978,15 @@ pub struct GX2ContextState {
     pub shadowDisplayListSize: u32,
     pub __unk40: [::core::ffi::c_char; 1528usize],
     pub shadowDisplayList: [u32; 192usize],
+}
+impl Default for GX2ContextState {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 extern "C" {
     pub fn GX2SetupContextStateEx(state: *mut GX2ContextState, unk1: BOOL);
@@ -6608,19 +7005,16 @@ extern "C" {
     pub fn GX2SetDefaultState();
 }
 extern "C" {
-    pub fn GX2CopyColorBufferToScanBuffer(
-        buffer: *const GX2ColorBuffer,
-        scanTarget: GX2ScanTarget::Type,
-    );
+    pub fn GX2CopyColorBufferToScanBuffer(buffer: *const GX2ColorBuffer, scanTarget: GX2ScanTarget);
 }
 extern "C" {
     pub fn GX2SwapScanBuffers();
 }
 extern "C" {
-    pub fn GX2GetLastFrame(scanTarget: GX2ScanTarget::Type, texture: *mut GX2Texture) -> BOOL;
+    pub fn GX2GetLastFrame(scanTarget: GX2ScanTarget, texture: *mut GX2Texture) -> BOOL;
 }
 extern "C" {
-    pub fn GX2GetLastFrameGamma(scanTarget: GX2ScanTarget::Type, gammaOut: *mut f32) -> BOOL;
+    pub fn GX2GetLastFrameGamma(scanTarget: GX2ScanTarget, gammaOut: *mut f32) -> BOOL;
 }
 extern "C" {
     pub fn GX2GetSwapInterval() -> u32;
@@ -6638,18 +7032,18 @@ extern "C" {
 }
 extern "C" {
     pub fn GX2CalcTVSize(
-        tvRenderMode: GX2TVRenderMode::Type,
-        surfaceFormat: GX2SurfaceFormat::Type,
-        bufferingMode: GX2BufferingMode::Type,
+        tvRenderMode: GX2TVRenderMode,
+        surfaceFormat: GX2SurfaceFormat,
+        bufferingMode: GX2BufferingMode,
         size: *mut u32,
         unkOut: *mut u32,
     );
 }
 extern "C" {
     pub fn GX2CalcDRCSize(
-        drcRenderMode: GX2DrcRenderMode::Type,
-        surfaceFormat: GX2SurfaceFormat::Type,
-        bufferingMode: GX2BufferingMode::Type,
+        drcRenderMode: GX2DrcRenderMode,
+        surfaceFormat: GX2SurfaceFormat,
+        bufferingMode: GX2BufferingMode,
         size: *mut u32,
         unkOut: *mut u32,
     );
@@ -6658,18 +7052,18 @@ extern "C" {
     pub fn GX2SetTVBuffer(
         buffer: *mut ::core::ffi::c_void,
         size: u32,
-        tvRenderMode: GX2TVRenderMode::Type,
-        surfaceFormat: GX2SurfaceFormat::Type,
-        bufferingMode: GX2BufferingMode::Type,
+        tvRenderMode: GX2TVRenderMode,
+        surfaceFormat: GX2SurfaceFormat,
+        bufferingMode: GX2BufferingMode,
     );
 }
 extern "C" {
     pub fn GX2SetDRCBuffer(
         buffer: *mut ::core::ffi::c_void,
         size: u32,
-        drcRenderMode: GX2DrcRenderMode::Type,
-        surfaceFormat: GX2SurfaceFormat::Type,
-        bufferingMode: GX2BufferingMode::Type,
+        drcRenderMode: GX2DrcRenderMode,
+        surfaceFormat: GX2SurfaceFormat,
+        bufferingMode: GX2BufferingMode,
     );
 }
 extern "C" {
@@ -6679,16 +7073,16 @@ extern "C" {
     pub fn GX2SetDRCScale(x: u32, y: u32);
 }
 extern "C" {
-    pub fn GX2GetSystemTVAspectRatio() -> GX2AspectRatio::Type;
+    pub fn GX2GetSystemTVAspectRatio() -> GX2AspectRatio;
 }
 extern "C" {
-    pub fn GX2GetSystemTVScanMode() -> GX2TVScanMode::Type;
+    pub fn GX2GetSystemTVScanMode() -> GX2TVScanMode;
 }
 extern "C" {
-    pub fn GX2GetSystemDRCScanMode() -> GX2DrcRenderMode::Type;
+    pub fn GX2GetSystemDRCScanMode() -> GX2DrcRenderMode;
 }
 extern "C" {
-    pub fn GX2GetSystemDRCMode() -> GX2DrcRenderMode::Type;
+    pub fn GX2GetSystemDRCMode() -> GX2DrcRenderMode;
 }
 extern "C" {
     pub fn GX2SetDRCConnectCallback(
@@ -6714,22 +7108,16 @@ extern "C" {
 extern "C" {
     pub fn GX2TempGetGPUVersion() -> u32;
 }
-pub mod GX2DebugCaptureInterfaceVersion {
-    pub type Type = ::core::ffi::c_uint;
-    pub const GX2_DEBUG_CAPTURE_INTERFACE_VERSION: Type = 1;
-}
-pub mod GX2DebugCaptureStartFlags {
-    pub type Type = ::core::ffi::c_uint;
-    pub const GX2_DEBUG_CAPTURE_START_FLAGS_NONE: Type = 0;
-    pub const GX2_DEBUG_CAPTURE_START_FLAGS_DISABLE_GX2DRAWDONE: Type = 1;
-}
-pub mod GX2DebugCaptureEndFlags {
-    pub type Type = ::core::ffi::c_uint;
-    pub const GX2_DEBUG_CAPTURE_END_FLAGS_NONE: Type = 0;
-    pub const GX2_DEBUG_CAPTURE_END_FLAGS_DISABLE_GX2FLUSH: Type = 1;
-}
+pub const GX2_DEBUG_CAPTURE_INTERFACE_VERSION: GX2DebugCaptureInterfaceVersion = 1;
+pub type GX2DebugCaptureInterfaceVersion = ::core::ffi::c_uint;
+pub const GX2_DEBUG_CAPTURE_START_FLAGS_NONE: GX2DebugCaptureStartFlags = 0;
+pub const GX2_DEBUG_CAPTURE_START_FLAGS_DISABLE_GX2DRAWDONE: GX2DebugCaptureStartFlags = 1;
+pub type GX2DebugCaptureStartFlags = ::core::ffi::c_uint;
+pub const GX2_DEBUG_CAPTURE_END_FLAGS_NONE: GX2DebugCaptureEndFlags = 0;
+pub const GX2_DEBUG_CAPTURE_END_FLAGS_DISABLE_GX2FLUSH: GX2DebugCaptureEndFlags = 1;
+pub type GX2DebugCaptureEndFlags = ::core::ffi::c_uint;
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct GX2DebugCaptureInterface {
     pub version: u32,
     pub onShutdown: ::core::option::Option<unsafe extern "C" fn()>,
@@ -6761,11 +7149,11 @@ extern "C" {
 extern "C" {
     pub fn GX2DebugCaptureStart(
         filename: *const ::core::ffi::c_char,
-        flags: GX2DebugCaptureStartFlags::Type,
+        flags: GX2DebugCaptureStartFlags,
     );
 }
 extern "C" {
-    pub fn GX2DebugCaptureEnd(flags: GX2DebugCaptureEndFlags::Type);
+    pub fn GX2DebugCaptureEnd(flags: GX2DebugCaptureEndFlags);
 }
 extern "C" {
     pub fn GX2DebugCaptureFrame(filename: *const ::core::ffi::c_char);
@@ -6782,11 +7170,11 @@ extern "C" {
     );
 }
 extern "C" {
-    pub fn GX2DrawEx(mode: GX2PrimitiveMode::Type, count: u32, offset: u32, numInstances: u32);
+    pub fn GX2DrawEx(mode: GX2PrimitiveMode, count: u32, offset: u32, numInstances: u32);
 }
 extern "C" {
     pub fn GX2DrawEx2(
-        mode: GX2PrimitiveMode::Type,
+        mode: GX2PrimitiveMode,
         count: u32,
         offset: u32,
         numInstances: u32,
@@ -6795,9 +7183,9 @@ extern "C" {
 }
 extern "C" {
     pub fn GX2DrawIndexedEx(
-        mode: GX2PrimitiveMode::Type,
+        mode: GX2PrimitiveMode,
         count: u32,
-        indexType: GX2IndexType::Type,
+        indexType: GX2IndexType,
         indices: *const ::core::ffi::c_void,
         offset: u32,
         numInstances: u32,
@@ -6805,9 +7193,9 @@ extern "C" {
 }
 extern "C" {
     pub fn GX2DrawIndexedEx2(
-        mode: GX2PrimitiveMode::Type,
+        mode: GX2PrimitiveMode,
         count: u32,
-        indexType: GX2IndexType::Type,
+        indexType: GX2IndexType,
         indices: *const ::core::ffi::c_void,
         offset: u32,
         numInstances: u32,
@@ -6816,9 +7204,9 @@ extern "C" {
 }
 extern "C" {
     pub fn GX2DrawIndexedImmediateEx(
-        mode: GX2PrimitiveMode::Type,
+        mode: GX2PrimitiveMode,
         count: u32,
-        indexType: GX2IndexType::Type,
+        indexType: GX2IndexType,
         indices: *const ::core::ffi::c_void,
         offset: u32,
         numInstances: u32,
@@ -6851,22 +7239,20 @@ extern "C" {
 extern "C" {
     pub fn GX2CopyDisplayList(displayList: *const ::core::ffi::c_void, bytes: u32);
 }
-pub mod GX2_SQ_SEL {
-    pub type Type = ::core::ffi::c_uint;
-    pub const GX2_SQ_SEL_X: Type = 0;
-    pub const GX2_SQ_SEL_Y: Type = 1;
-    pub const GX2_SQ_SEL_Z: Type = 2;
-    pub const GX2_SQ_SEL_W: Type = 3;
-    pub const GX2_SQ_SEL_R: Type = 0;
-    pub const GX2_SQ_SEL_G: Type = 1;
-    pub const GX2_SQ_SEL_B: Type = 2;
-    pub const GX2_SQ_SEL_A: Type = 3;
-    pub const GX2_SQ_SEL_0: Type = 4;
-    pub const GX2_SQ_SEL_1: Type = 5;
-    pub const GX2_SQ_SEL_MASK: Type = 7;
-}
+pub const GX2_SQ_SEL_X: GX2_SQ_SEL = 0;
+pub const GX2_SQ_SEL_Y: GX2_SQ_SEL = 1;
+pub const GX2_SQ_SEL_Z: GX2_SQ_SEL = 2;
+pub const GX2_SQ_SEL_W: GX2_SQ_SEL = 3;
+pub const GX2_SQ_SEL_R: GX2_SQ_SEL = 0;
+pub const GX2_SQ_SEL_G: GX2_SQ_SEL = 1;
+pub const GX2_SQ_SEL_B: GX2_SQ_SEL = 2;
+pub const GX2_SQ_SEL_A: GX2_SQ_SEL = 3;
+pub const GX2_SQ_SEL_0: GX2_SQ_SEL = 4;
+pub const GX2_SQ_SEL_1: GX2_SQ_SEL = 5;
+pub const GX2_SQ_SEL_MASK: GX2_SQ_SEL = 7;
+pub type GX2_SQ_SEL = ::core::ffi::c_uint;
 pub type GX2EventCallbackFunction = ::core::option::Option<
-    unsafe extern "C" fn(arg1: GX2EventType::Type, arg2: *mut ::core::ffi::c_void),
+    unsafe extern "C" fn(arg1: GX2EventType, arg2: *mut ::core::ffi::c_void),
 >;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -6876,6 +7262,15 @@ pub struct GX2DisplayListOverrunData {
     pub newList: *mut ::core::ffi::c_void,
     pub newSize: u32,
     pub __unk41: [::core::ffi::c_char; 8usize],
+}
+impl Default for GX2DisplayListOverrunData {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 extern "C" {
     pub fn GX2DrawDone() -> BOOL;
@@ -6888,14 +7283,14 @@ extern "C" {
 }
 extern "C" {
     pub fn GX2SetEventCallback(
-        type_: GX2EventType::Type,
+        type_: GX2EventType,
         func: GX2EventCallbackFunction,
         userData: *mut ::core::ffi::c_void,
     );
 }
 extern "C" {
     pub fn GX2GetEventCallback(
-        type_: GX2EventType::Type,
+        type_: GX2EventType,
         funcOut: *mut GX2EventCallbackFunction,
         userDataOut: *mut *mut ::core::ffi::c_void,
     );
@@ -6918,11 +7313,7 @@ extern "C" {
     pub fn GX2WaitTimeStamp(time: OSTime) -> BOOL;
 }
 extern "C" {
-    pub fn GX2Invalidate(
-        mode: GX2InvalidateMode::Type,
-        buffer: *mut ::core::ffi::c_void,
-        size: u32,
-    );
+    pub fn GX2Invalidate(mode: GX2InvalidateMode, buffer: *mut ::core::ffi::c_void, size: u32);
 }
 pub type GX2ApertureHandle = u32;
 extern "C" {
@@ -6930,7 +7321,7 @@ extern "C" {
         surface: *mut GX2Surface,
         level: u32,
         depth: u32,
-        endian: GX2EndianSwapMode::Type,
+        endian: GX2EndianSwapMode,
         outHandle: *mut GX2ApertureHandle,
         outAddress: *mut *mut ::core::ffi::c_void,
     );
@@ -6939,29 +7330,38 @@ extern "C" {
     pub fn GX2FreeTilingAperture(handle: GX2ApertureHandle);
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct GX2AAMaskReg {
     pub pa_sc_aa_mask: u32,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct GX2AlphaTestReg {
     pub sx_alpha_test_control: u32,
     pub sx_alpha_ref: u32,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct GX2AlphaToMaskReg {
     pub db_alpha_to_mask: u32,
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct GX2BlendControlReg {
-    pub target: GX2RenderTarget::Type,
+    pub target: GX2RenderTarget,
     pub cb_blend_control: u32,
 }
+impl Default for GX2BlendControlReg {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct GX2BlendConstantColorReg {
     pub red: f32,
     pub green: f32,
@@ -6969,43 +7369,43 @@ pub struct GX2BlendConstantColorReg {
     pub alpha: f32,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct GX2ColorControlReg {
     pub cb_color_control: u32,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct GX2DepthStencilControlReg {
     pub db_depth_control: u32,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct GX2StencilMaskReg {
     pub db_stencilrefmask: u32,
     pub db_stencilrefmask_bf: u32,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct GX2LineWidthReg {
     pub pa_su_line_cntl: u32,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct GX2PointSizeReg {
     pub pa_su_point_size: u32,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct GX2PointLimitsReg {
     pub pa_su_point_minmax: u32,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct GX2PolygonControlReg {
     pub pa_su_sc_mode_cntl: u32,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct GX2PolygonOffsetReg {
     pub pa_su_poly_offset_front_scale: u32,
     pub pa_su_poly_offset_front_offset: u32,
@@ -7014,18 +7414,18 @@ pub struct GX2PolygonOffsetReg {
     pub pa_su_poly_offset_clamp: u32,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct GX2ScissorReg {
     pub pa_sc_generic_scissor_tl: u32,
     pub pa_sc_generic_scissor_br: u32,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct GX2TargetChannelMaskReg {
     pub cb_target_mask: u32,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct GX2ViewportReg {
     pub pa_cl_vport_xscale: u32,
     pub pa_cl_vport_xoffset: u32,
@@ -7065,13 +7465,13 @@ extern "C" {
     pub fn GX2SetAAMaskReg(reg: *const GX2AAMaskReg);
 }
 extern "C" {
-    pub fn GX2SetAlphaTest(alphaTest: BOOL, func: GX2CompareFunction::Type, ref_: f32);
+    pub fn GX2SetAlphaTest(alphaTest: BOOL, func: GX2CompareFunction, ref_: f32);
 }
 extern "C" {
     pub fn GX2InitAlphaTestReg(
         reg: *mut GX2AlphaTestReg,
         alphaTest: BOOL,
-        func: GX2CompareFunction::Type,
+        func: GX2CompareFunction,
         ref_: f32,
     );
 }
@@ -7079,7 +7479,7 @@ extern "C" {
     pub fn GX2GetAlphaTestReg(
         reg: *const GX2AlphaTestReg,
         alphaTest: *mut BOOL,
-        func: *mut GX2CompareFunction::Type,
+        func: *mut GX2CompareFunction,
         ref_: *mut f32,
     );
 }
@@ -7087,20 +7487,20 @@ extern "C" {
     pub fn GX2SetAlphaTestReg(reg: *const GX2AlphaTestReg);
 }
 extern "C" {
-    pub fn GX2SetAlphaToMask(alphaToMask: BOOL, mode: GX2AlphaToMaskMode::Type);
+    pub fn GX2SetAlphaToMask(alphaToMask: BOOL, mode: GX2AlphaToMaskMode);
 }
 extern "C" {
     pub fn GX2InitAlphaToMaskReg(
         reg: *mut GX2AlphaToMaskReg,
         alphaToMask: BOOL,
-        mode: GX2AlphaToMaskMode::Type,
+        mode: GX2AlphaToMaskMode,
     );
 }
 extern "C" {
     pub fn GX2GetAlphaToMaskReg(
         reg: *const GX2AlphaToMaskReg,
         alphaToMask: *mut BOOL,
-        mode: *mut GX2AlphaToMaskMode::Type,
+        mode: *mut GX2AlphaToMaskMode,
     );
 }
 extern "C" {
@@ -7132,40 +7532,40 @@ extern "C" {
 }
 extern "C" {
     pub fn GX2SetBlendControl(
-        target: GX2RenderTarget::Type,
-        colorSrcBlend: GX2BlendMode::Type,
-        colorDstBlend: GX2BlendMode::Type,
-        colorCombine: GX2BlendCombineMode::Type,
+        target: GX2RenderTarget,
+        colorSrcBlend: GX2BlendMode,
+        colorDstBlend: GX2BlendMode,
+        colorCombine: GX2BlendCombineMode,
         useAlphaBlend: BOOL,
-        alphaSrcBlend: GX2BlendMode::Type,
-        alphaDstBlend: GX2BlendMode::Type,
-        alphaCombine: GX2BlendCombineMode::Type,
+        alphaSrcBlend: GX2BlendMode,
+        alphaDstBlend: GX2BlendMode,
+        alphaCombine: GX2BlendCombineMode,
     );
 }
 extern "C" {
     pub fn GX2InitBlendControlReg(
         reg: *mut GX2BlendControlReg,
-        target: GX2RenderTarget::Type,
-        colorSrcBlend: GX2BlendMode::Type,
-        colorDstBlend: GX2BlendMode::Type,
-        colorCombine: GX2BlendCombineMode::Type,
+        target: GX2RenderTarget,
+        colorSrcBlend: GX2BlendMode,
+        colorDstBlend: GX2BlendMode,
+        colorCombine: GX2BlendCombineMode,
         useAlphaBlend: BOOL,
-        alphaSrcBlend: GX2BlendMode::Type,
-        alphaDstBlend: GX2BlendMode::Type,
-        alphaCombine: GX2BlendCombineMode::Type,
+        alphaSrcBlend: GX2BlendMode,
+        alphaDstBlend: GX2BlendMode,
+        alphaCombine: GX2BlendCombineMode,
     );
 }
 extern "C" {
     pub fn GX2GetBlendControlReg(
         reg: *mut GX2BlendControlReg,
-        target: *mut GX2RenderTarget::Type,
-        colorSrcBlend: *mut GX2BlendMode::Type,
-        colorDstBlend: *mut GX2BlendMode::Type,
-        colorCombine: *mut GX2BlendCombineMode::Type,
+        target: *mut GX2RenderTarget,
+        colorSrcBlend: *mut GX2BlendMode,
+        colorDstBlend: *mut GX2BlendMode,
+        colorCombine: *mut GX2BlendCombineMode,
         useAlphaBlend: *mut BOOL,
-        alphaSrcBlend: *mut GX2BlendMode::Type,
-        alphaDstBlend: *mut GX2BlendMode::Type,
-        alphaCombine: *mut GX2BlendCombineMode::Type,
+        alphaSrcBlend: *mut GX2BlendMode,
+        alphaDstBlend: *mut GX2BlendMode,
+        alphaCombine: *mut GX2BlendCombineMode,
     );
 }
 extern "C" {
@@ -7173,7 +7573,7 @@ extern "C" {
 }
 extern "C" {
     pub fn GX2SetColorControl(
-        rop3: GX2LogicOp::Type,
+        rop3: GX2LogicOp,
         targetBlendEnable: u8,
         multiWriteEnable: BOOL,
         colorWriteEnable: BOOL,
@@ -7182,7 +7582,7 @@ extern "C" {
 extern "C" {
     pub fn GX2InitColorControlReg(
         reg: *mut GX2ColorControlReg,
-        rop3: GX2LogicOp::Type,
+        rop3: GX2LogicOp,
         targetBlendEnable: u8,
         multiWriteEnable: BOOL,
         colorWriteEnable: BOOL,
@@ -7191,7 +7591,7 @@ extern "C" {
 extern "C" {
     pub fn GX2GetColorControlReg(
         reg: *mut GX2ColorControlReg,
-        rop3: *mut GX2LogicOp::Type,
+        rop3: *mut GX2LogicOp,
         targetBlendEnable: *mut u8,
         multiWriteEnable: *mut BOOL,
         colorWriteEnable: *mut BOOL,
@@ -7204,24 +7604,24 @@ extern "C" {
     pub fn GX2SetDepthOnlyControl(
         depthTest: BOOL,
         depthWrite: BOOL,
-        depthCompare: GX2CompareFunction::Type,
+        depthCompare: GX2CompareFunction,
     );
 }
 extern "C" {
     pub fn GX2SetDepthStencilControl(
         depthTest: BOOL,
         depthWrite: BOOL,
-        depthCompare: GX2CompareFunction::Type,
+        depthCompare: GX2CompareFunction,
         stencilTest: BOOL,
         backfaceStencil: BOOL,
-        frontStencilFunc: GX2CompareFunction::Type,
-        frontStencilZPass: GX2StencilFunction::Type,
-        frontStencilZFail: GX2StencilFunction::Type,
-        frontStencilFail: GX2StencilFunction::Type,
-        backStencilFunc: GX2CompareFunction::Type,
-        backStencilZPass: GX2StencilFunction::Type,
-        backStencilZFail: GX2StencilFunction::Type,
-        backStencilFail: GX2StencilFunction::Type,
+        frontStencilFunc: GX2CompareFunction,
+        frontStencilZPass: GX2StencilFunction,
+        frontStencilZFail: GX2StencilFunction,
+        frontStencilFail: GX2StencilFunction,
+        backStencilFunc: GX2CompareFunction,
+        backStencilZPass: GX2StencilFunction,
+        backStencilZFail: GX2StencilFunction,
+        backStencilFail: GX2StencilFunction,
     );
 }
 extern "C" {
@@ -7229,17 +7629,17 @@ extern "C" {
         reg: *mut GX2DepthStencilControlReg,
         depthTest: BOOL,
         depthWrite: BOOL,
-        depthCompare: GX2CompareFunction::Type,
+        depthCompare: GX2CompareFunction,
         stencilTest: BOOL,
         backfaceStencil: BOOL,
-        frontStencilFunc: GX2CompareFunction::Type,
-        frontStencilZPass: GX2StencilFunction::Type,
-        frontStencilZFail: GX2StencilFunction::Type,
-        frontStencilFail: GX2StencilFunction::Type,
-        backStencilFunc: GX2CompareFunction::Type,
-        backStencilZPass: GX2StencilFunction::Type,
-        backStencilZFail: GX2StencilFunction::Type,
-        backStencilFail: GX2StencilFunction::Type,
+        frontStencilFunc: GX2CompareFunction,
+        frontStencilZPass: GX2StencilFunction,
+        frontStencilZFail: GX2StencilFunction,
+        frontStencilFail: GX2StencilFunction,
+        backStencilFunc: GX2CompareFunction,
+        backStencilZPass: GX2StencilFunction,
+        backStencilZFail: GX2StencilFunction,
+        backStencilFail: GX2StencilFunction,
     );
 }
 extern "C" {
@@ -7247,17 +7647,17 @@ extern "C" {
         reg: *mut GX2DepthStencilControlReg,
         depthTest: *mut BOOL,
         depthWrite: *mut BOOL,
-        depthCompare: *mut GX2CompareFunction::Type,
+        depthCompare: *mut GX2CompareFunction,
         stencilTest: *mut BOOL,
         backfaceStencil: *mut BOOL,
-        frontStencilFunc: *mut GX2CompareFunction::Type,
-        frontStencilZPass: *mut GX2StencilFunction::Type,
-        frontStencilZFail: *mut GX2StencilFunction::Type,
-        frontStencilFail: *mut GX2StencilFunction::Type,
-        backStencilFunc: *mut GX2CompareFunction::Type,
-        backStencilZPass: *mut GX2StencilFunction::Type,
-        backStencilZFail: *mut GX2StencilFunction::Type,
-        backStencilFail: *mut GX2StencilFunction::Type,
+        frontStencilFunc: *mut GX2CompareFunction,
+        frontStencilZPass: *mut GX2StencilFunction,
+        frontStencilZFail: *mut GX2StencilFunction,
+        frontStencilFail: *mut GX2StencilFunction,
+        backStencilFunc: *mut GX2CompareFunction,
+        backStencilZPass: *mut GX2StencilFunction,
+        backStencilZFail: *mut GX2StencilFunction,
+        backStencilFail: *mut GX2StencilFunction,
     );
 }
 extern "C" {
@@ -7335,16 +7735,16 @@ extern "C" {
     pub fn GX2SetPointLimitsReg(reg: *const GX2PointLimitsReg);
 }
 extern "C" {
-    pub fn GX2SetCullOnlyControl(frontFace: GX2FrontFace::Type, cullFront: BOOL, cullBack: BOOL);
+    pub fn GX2SetCullOnlyControl(frontFace: GX2FrontFace, cullFront: BOOL, cullBack: BOOL);
 }
 extern "C" {
     pub fn GX2SetPolygonControl(
-        frontFace: GX2FrontFace::Type,
+        frontFace: GX2FrontFace,
         cullFront: BOOL,
         cullBack: BOOL,
         polyMode: BOOL,
-        polyModeFront: GX2PolygonMode::Type,
-        polyModeBack: GX2PolygonMode::Type,
+        polyModeFront: GX2PolygonMode,
+        polyModeBack: GX2PolygonMode,
         polyOffsetFrontEnable: BOOL,
         polyOffsetBackEnable: BOOL,
         polyOffsetParaEnable: BOOL,
@@ -7353,12 +7753,12 @@ extern "C" {
 extern "C" {
     pub fn GX2InitPolygonControlReg(
         reg: *mut GX2PolygonControlReg,
-        frontFace: GX2FrontFace::Type,
+        frontFace: GX2FrontFace,
         cullFront: BOOL,
         cullBack: BOOL,
         polyMode: BOOL,
-        polyModeFront: GX2PolygonMode::Type,
-        polyModeBack: GX2PolygonMode::Type,
+        polyModeFront: GX2PolygonMode,
+        polyModeBack: GX2PolygonMode,
         polyOffsetFrontEnable: BOOL,
         polyOffsetBackEnable: BOOL,
         polyOffsetParaEnable: BOOL,
@@ -7367,12 +7767,12 @@ extern "C" {
 extern "C" {
     pub fn GX2GetPolygonControlReg(
         reg: *mut GX2PolygonControlReg,
-        frontFace: *mut GX2FrontFace::Type,
+        frontFace: *mut GX2FrontFace,
         cullFront: *mut BOOL,
         cullBack: *mut BOOL,
         polyMode: *mut BOOL,
-        polyModeFront: *mut GX2PolygonMode::Type,
-        polyModeBack: *mut GX2PolygonMode::Type,
+        polyModeFront: *mut GX2PolygonMode,
+        polyModeBack: *mut GX2PolygonMode,
         polyOffsetFrontEnable: *mut BOOL,
         polyOffsetBackEnable: *mut BOOL,
         polyOffsetParaEnable: *mut BOOL,
@@ -7433,40 +7833,40 @@ extern "C" {
 }
 extern "C" {
     pub fn GX2SetTargetChannelMasks(
-        mask0: GX2ChannelMask::Type,
-        mask1: GX2ChannelMask::Type,
-        mask2: GX2ChannelMask::Type,
-        mask3: GX2ChannelMask::Type,
-        mask4: GX2ChannelMask::Type,
-        mask5: GX2ChannelMask::Type,
-        mask6: GX2ChannelMask::Type,
-        mask7: GX2ChannelMask::Type,
+        mask0: GX2ChannelMask,
+        mask1: GX2ChannelMask,
+        mask2: GX2ChannelMask,
+        mask3: GX2ChannelMask,
+        mask4: GX2ChannelMask,
+        mask5: GX2ChannelMask,
+        mask6: GX2ChannelMask,
+        mask7: GX2ChannelMask,
     );
 }
 extern "C" {
     pub fn GX2InitTargetChannelMasksReg(
         reg: *mut GX2TargetChannelMaskReg,
-        mask0: GX2ChannelMask::Type,
-        mask1: GX2ChannelMask::Type,
-        mask2: GX2ChannelMask::Type,
-        mask3: GX2ChannelMask::Type,
-        mask4: GX2ChannelMask::Type,
-        mask5: GX2ChannelMask::Type,
-        mask6: GX2ChannelMask::Type,
-        mask7: GX2ChannelMask::Type,
+        mask0: GX2ChannelMask,
+        mask1: GX2ChannelMask,
+        mask2: GX2ChannelMask,
+        mask3: GX2ChannelMask,
+        mask4: GX2ChannelMask,
+        mask5: GX2ChannelMask,
+        mask6: GX2ChannelMask,
+        mask7: GX2ChannelMask,
     );
 }
 extern "C" {
     pub fn GX2GetTargetChannelMasksReg(
         reg: *mut GX2TargetChannelMaskReg,
-        mask0: *mut GX2ChannelMask::Type,
-        mask1: *mut GX2ChannelMask::Type,
-        mask2: *mut GX2ChannelMask::Type,
-        mask3: *mut GX2ChannelMask::Type,
-        mask4: *mut GX2ChannelMask::Type,
-        mask5: *mut GX2ChannelMask::Type,
-        mask6: *mut GX2ChannelMask::Type,
-        mask7: *mut GX2ChannelMask::Type,
+        mask0: *mut GX2ChannelMask,
+        mask1: *mut GX2ChannelMask,
+        mask2: *mut GX2ChannelMask,
+        mask3: *mut GX2ChannelMask,
+        mask4: *mut GX2ChannelMask,
+        mask5: *mut GX2ChannelMask,
+        mask6: *mut GX2ChannelMask,
+        mask7: *mut GX2ChannelMask,
     );
 }
 extern "C" {
@@ -7511,19 +7911,17 @@ extern "C" {
 }
 pub type H264DECFptrOutputFn =
     ::core::option::Option<unsafe extern "C" fn(output: *mut H264DecodeOutput)>;
-pub mod H264Error {
-    pub type Type = ::core::ffi::c_uint;
-    pub const H264_ERROR_OK: Type = 0;
-    pub const H264_ERROR_INVALID_PPS: Type = 24;
-    pub const H264_ERROR_INVALID_SPS: Type = 26;
-    pub const H264_ERROR_INVALID_SLICEHEADER: Type = 61;
-    pub const H264_ERROR_GENERIC: Type = 16777216;
-    pub const H264_ERROR_INVALID_PARAMETER: Type = 16842752;
-    pub const H264_ERROR_OUT_OF_MEMORY: Type = 16908288;
-    pub const H264_ERROR_INVALID_PROFILE: Type = 17301504;
-}
+pub const H264_ERROR_OK: H264Error = 0;
+pub const H264_ERROR_INVALID_PPS: H264Error = 24;
+pub const H264_ERROR_INVALID_SPS: H264Error = 26;
+pub const H264_ERROR_INVALID_SLICEHEADER: H264Error = 61;
+pub const H264_ERROR_GENERIC: H264Error = 16777216;
+pub const H264_ERROR_INVALID_PARAMETER: H264Error = 16842752;
+pub const H264_ERROR_OUT_OF_MEMORY: H264Error = 16908288;
+pub const H264_ERROR_INVALID_PROFILE: H264Error = 17301504;
+pub type H264Error = ::core::ffi::c_uint;
 #[repr(C, packed)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct H264DecodedVuiParameters {
     pub aspect_ratio_info_present_flag: u8,
     pub aspect_ratio_idc: u8,
@@ -7587,12 +7985,30 @@ pub struct H264DecodeResult {
     pub vui_parameters: *mut H264DecodedVuiParameters,
     pub __unk48: [::core::ffi::c_char; 40usize],
 }
+impl Default for H264DecodeResult {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C, packed)]
 #[derive(Debug, Copy, Clone)]
 pub struct H264DecodeOutput {
     pub frameCount: i32,
     pub decodeResults: *mut *mut H264DecodeResult,
     pub userMemory: *mut ::core::ffi::c_void,
+}
+impl Default for H264DecodeOutput {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 extern "C" {
     pub fn H264DECCheckDecunitLength(
@@ -7601,21 +8017,21 @@ extern "C" {
         bufferLength: i32,
         offset: i32,
         outLength: *mut i32,
-    ) -> H264Error::Type;
+    ) -> H264Error;
 }
 extern "C" {
     pub fn H264DECCheckSkipableFrame(
         buffer: *const u8,
         bufferLength: i32,
         outSkippable: *mut BOOL,
-    ) -> H264Error::Type;
+    ) -> H264Error;
 }
 extern "C" {
     pub fn H264DECFindDecstartpoint(
         buffer: *const u8,
         bufferLength: i32,
         outOffset: *mut i32,
-    ) -> H264Error::Type;
+    ) -> H264Error;
 }
 extern "C" {
     pub fn H264DECFindIdrpoint(buffer: *const u8, bufferLength: i32, outOffset: *mut i32) -> i32;
@@ -7627,17 +8043,15 @@ extern "C" {
         offset: i32,
         outWidth: *mut i32,
         outHeight: *mut i32,
-    ) -> H264Error::Type;
+    ) -> H264Error;
 }
-pub mod H264Parameter {
-    pub type Type = ::core::ffi::c_uint;
-    pub const H264_PARAMETER_FRAME_POINTER_OUTPUT: Type = 1;
-    pub const H264_PARAMETER_OUTPUT_PER_FRAME: Type = 536870914;
-    pub const H264_PARAMETER_UNKNOWN_20000010: Type = 536870928;
-    pub const H264_PARAMETER_UNKNOWN_20000030: Type = 536870960;
-    pub const H264_PARAMETER_UNKNOWN_20000040: Type = 536870976;
-    pub const H264_PARAMETER_USER_MEMORY: Type = 1879048193;
-}
+pub const H264_PARAMETER_FRAME_POINTER_OUTPUT: H264Parameter = 1;
+pub const H264_PARAMETER_OUTPUT_PER_FRAME: H264Parameter = 536870914;
+pub const H264_PARAMETER_UNKNOWN_20000010: H264Parameter = 536870928;
+pub const H264_PARAMETER_UNKNOWN_20000030: H264Parameter = 536870960;
+pub const H264_PARAMETER_UNKNOWN_20000040: H264Parameter = 536870976;
+pub const H264_PARAMETER_USER_MEMORY: H264Parameter = 1879048193;
+pub type H264Parameter = ::core::ffi::c_uint;
 extern "C" {
     pub fn H264DECMemoryRequirement(
         profile: i32,
@@ -7645,47 +8059,44 @@ extern "C" {
         maxWidth: i32,
         maxHeight: i32,
         outMemoryRequirement: *mut u32,
-    ) -> H264Error::Type;
+    ) -> H264Error;
 }
 extern "C" {
-    pub fn H264DECInitParam(memorySize: i32, memory: *mut ::core::ffi::c_void) -> H264Error::Type;
+    pub fn H264DECInitParam(memorySize: i32, memory: *mut ::core::ffi::c_void) -> H264Error;
 }
 extern "C" {
     pub fn H264DECSetParam(
         memory: *mut ::core::ffi::c_void,
-        parameter: H264Parameter::Type,
+        parameter: H264Parameter,
         value: *mut ::core::ffi::c_void,
-    ) -> H264Error::Type;
+    ) -> H264Error;
 }
 extern "C" {
     pub fn H264DECSetParam_FPTR_OUTPUT(
         memory: *mut ::core::ffi::c_void,
         value: H264DECFptrOutputFn,
-    ) -> H264Error::Type;
+    ) -> H264Error;
 }
 extern "C" {
     pub fn H264DECSetParam_OUTPUT_PER_FRAME(
         memory: *mut ::core::ffi::c_void,
         value: u32,
-    ) -> H264Error::Type;
+    ) -> H264Error;
 }
 extern "C" {
     pub fn H264DECSetParam_USER_MEMORY(
         memory: *mut ::core::ffi::c_void,
         value: *mut ::core::ffi::c_void,
-    ) -> H264Error::Type;
+    ) -> H264Error;
 }
 extern "C" {
-    pub fn H264DECCheckMemSegmentation(
-        memory: *mut ::core::ffi::c_void,
-        size: u32,
-    ) -> H264Error::Type;
+    pub fn H264DECCheckMemSegmentation(memory: *mut ::core::ffi::c_void, size: u32) -> H264Error;
 }
 extern "C" {
-    pub fn H264DECOpen(memory: *mut ::core::ffi::c_void) -> H264Error::Type;
+    pub fn H264DECOpen(memory: *mut ::core::ffi::c_void) -> H264Error;
 }
 extern "C" {
-    pub fn H264DECBegin(memory: *mut ::core::ffi::c_void) -> H264Error::Type;
+    pub fn H264DECBegin(memory: *mut ::core::ffi::c_void) -> H264Error;
 }
 extern "C" {
     pub fn H264DECSetBitstream(
@@ -7693,33 +8104,31 @@ extern "C" {
         buffer: *mut u8,
         bufferLength: u32,
         timestamp: f64,
-    ) -> H264Error::Type;
+    ) -> H264Error;
 }
 extern "C" {
     pub fn H264DECExecute(
         memory: *mut ::core::ffi::c_void,
         frameBuffer: *mut ::core::ffi::c_void,
-    ) -> H264Error::Type;
+    ) -> H264Error;
 }
 extern "C" {
-    pub fn H264DECFlush(memory: *mut ::core::ffi::c_void) -> H264Error::Type;
+    pub fn H264DECFlush(memory: *mut ::core::ffi::c_void) -> H264Error;
 }
 extern "C" {
-    pub fn H264DECEnd(memory: *mut ::core::ffi::c_void) -> H264Error::Type;
+    pub fn H264DECEnd(memory: *mut ::core::ffi::c_void) -> H264Error;
 }
 extern "C" {
-    pub fn H264DECClose(memory: *mut ::core::ffi::c_void) -> H264Error::Type;
+    pub fn H264DECClose(memory: *mut ::core::ffi::c_void) -> H264Error;
 }
-pub mod HIDAttachEvent {
-    pub type Type = ::core::ffi::c_uint;
-    pub const HID_DEVICE_DETACH: Type = 0;
-    pub const HID_DEVICE_ATTACH: Type = 1;
-}
+pub const HID_DEVICE_DETACH: HIDAttachEvent = 0;
+pub const HID_DEVICE_ATTACH: HIDAttachEvent = 1;
+pub type HIDAttachEvent = ::core::ffi::c_uint;
 pub type HIDAttachCallback = ::core::option::Option<
     unsafe extern "C" fn(
         client: *mut HIDClient,
         device: *mut HIDDevice,
-        attach: HIDAttachEvent::Type,
+        attach: HIDAttachEvent,
     ) -> i32,
 >;
 pub type HIDCallback = ::core::option::Option<
@@ -7732,7 +8141,7 @@ pub type HIDCallback = ::core::option::Option<
     ),
 >;
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct HIDDevice {
     pub handle: u32,
     pub physicalDeviceInst: u32,
@@ -7750,6 +8159,15 @@ pub struct HIDDevice {
 pub struct HIDClient {
     pub next: *mut HIDClient,
     pub attachCallback: HIDAttachCallback,
+}
+impl Default for HIDClient {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 extern "C" {
     pub fn HIDSetup() -> i32;
@@ -7867,42 +8285,38 @@ extern "C" {
 }
 pub type OSExceptionCallbackFn =
     ::core::option::Option<unsafe extern "C" fn(context: *mut OSContext) -> BOOL>;
-pub mod OSExceptionMode {
-    pub type Type = ::core::ffi::c_uint;
-    pub const OS_EXCEPTION_MODE_SYSTEM: Type = 0;
-    pub const OS_EXCEPTION_MODE_THREAD: Type = 1;
-    pub const OS_EXCEPTION_MODE_GLOBAL: Type = 2;
-    pub const OS_EXCEPTION_MODE_THREAD_ALL_CORES: Type = 3;
-    pub const OS_EXCEPTION_MODE_GLOBAL_ALL_CORES: Type = 4;
-}
-pub mod OSExceptionType {
-    pub type Type = ::core::ffi::c_uint;
-    pub const OS_EXCEPTION_TYPE_SYSTEM_RESET: Type = 0;
-    pub const OS_EXCEPTION_TYPE_MACHINE_CHECK: Type = 1;
-    pub const OS_EXCEPTION_TYPE_DSI: Type = 2;
-    pub const OS_EXCEPTION_TYPE_ISI: Type = 3;
-    pub const OS_EXCEPTION_TYPE_EXTERNAL_INTERRUPT: Type = 4;
-    pub const OS_EXCEPTION_TYPE_ALIGNMENT: Type = 5;
-    pub const OS_EXCEPTION_TYPE_PROGRAM: Type = 6;
-    pub const OS_EXCEPTION_TYPE_FLOATING_POINT: Type = 7;
-    pub const OS_EXCEPTION_TYPE_DECREMENTER: Type = 8;
-    pub const OS_EXCEPTION_TYPE_SYSTEM_CALL: Type = 9;
-    pub const OS_EXCEPTION_TYPE_TRACE: Type = 10;
-    pub const OS_EXCEPTION_TYPE_PERFORMANCE_MONITOR: Type = 11;
-    pub const OS_EXCEPTION_TYPE_BREAKPOINT: Type = 12;
-    pub const OS_EXCEPTION_TYPE_SYSTEM_INTERRUPT: Type = 13;
-    pub const OS_EXCEPTION_TYPE_ICI: Type = 14;
-}
+pub const OS_EXCEPTION_MODE_SYSTEM: OSExceptionMode = 0;
+pub const OS_EXCEPTION_MODE_THREAD: OSExceptionMode = 1;
+pub const OS_EXCEPTION_MODE_GLOBAL: OSExceptionMode = 2;
+pub const OS_EXCEPTION_MODE_THREAD_ALL_CORES: OSExceptionMode = 3;
+pub const OS_EXCEPTION_MODE_GLOBAL_ALL_CORES: OSExceptionMode = 4;
+pub type OSExceptionMode = ::core::ffi::c_uint;
+pub const OS_EXCEPTION_TYPE_SYSTEM_RESET: OSExceptionType = 0;
+pub const OS_EXCEPTION_TYPE_MACHINE_CHECK: OSExceptionType = 1;
+pub const OS_EXCEPTION_TYPE_DSI: OSExceptionType = 2;
+pub const OS_EXCEPTION_TYPE_ISI: OSExceptionType = 3;
+pub const OS_EXCEPTION_TYPE_EXTERNAL_INTERRUPT: OSExceptionType = 4;
+pub const OS_EXCEPTION_TYPE_ALIGNMENT: OSExceptionType = 5;
+pub const OS_EXCEPTION_TYPE_PROGRAM: OSExceptionType = 6;
+pub const OS_EXCEPTION_TYPE_FLOATING_POINT: OSExceptionType = 7;
+pub const OS_EXCEPTION_TYPE_DECREMENTER: OSExceptionType = 8;
+pub const OS_EXCEPTION_TYPE_SYSTEM_CALL: OSExceptionType = 9;
+pub const OS_EXCEPTION_TYPE_TRACE: OSExceptionType = 10;
+pub const OS_EXCEPTION_TYPE_PERFORMANCE_MONITOR: OSExceptionType = 11;
+pub const OS_EXCEPTION_TYPE_BREAKPOINT: OSExceptionType = 12;
+pub const OS_EXCEPTION_TYPE_SYSTEM_INTERRUPT: OSExceptionType = 13;
+pub const OS_EXCEPTION_TYPE_ICI: OSExceptionType = 14;
+pub type OSExceptionType = ::core::ffi::c_uint;
 extern "C" {
     pub fn OSSetExceptionCallback(
-        exceptionType: OSExceptionType::Type,
+        exceptionType: OSExceptionType,
         callback: OSExceptionCallbackFn,
     ) -> OSExceptionCallbackFn;
 }
 extern "C" {
     pub fn OSSetExceptionCallbackEx(
-        mode: OSExceptionMode::Type,
-        exceptionType: OSExceptionType::Type,
+        mode: OSExceptionMode,
+        exceptionType: OSExceptionType,
         callback: OSExceptionCallbackFn,
     ) -> OSExceptionCallbackFn;
 }
@@ -7922,55 +8336,45 @@ pub type OSThreadCleanupCallbackFn = ::core::option::Option<
 pub type OSThreadDeallocatorFn = ::core::option::Option<
     unsafe extern "C" fn(thread: *mut OSThread, stack: *mut ::core::ffi::c_void),
 >;
-pub mod OSThreadSpecificID {
-    pub type Type = ::core::ffi::c_uint;
-    pub const OS_THREAD_SPECIFIC_0: Type = 0;
-    pub const OS_THREAD_SPECIFIC_1: Type = 1;
-    pub const OS_THREAD_SPECIFIC_2: Type = 2;
-    pub const OS_THREAD_SPECIFIC_3: Type = 3;
-    pub const OS_THREAD_SPECIFIC_4: Type = 4;
-    pub const OS_THREAD_SPECIFIC_5: Type = 5;
-    pub const OS_THREAD_SPECIFIC_6: Type = 6;
-    pub const OS_THREAD_SPECIFIC_7: Type = 7;
-    pub const OS_THREAD_SPECIFIC_8: Type = 8;
-    pub const OS_THREAD_SPECIFIC_9: Type = 9;
-    pub const OS_THREAD_SPECIFIC_10: Type = 10;
-    pub const OS_THREAD_SPECIFIC_11: Type = 11;
-    pub const OS_THREAD_SPECIFIC_12: Type = 12;
-    pub const OS_THREAD_SPECIFIC_13: Type = 13;
-    pub const OS_THREAD_SPECIFIC_WUT_RESERVED_0: Type = 14;
-    pub const OS_THREAD_SPECIFIC_WUT_RESERVED_1: Type = 15;
-}
-pub mod OS_THREAD_STATE {
-    pub type Type = ::core::ffi::c_uint;
-    pub const OS_THREAD_STATE_NONE: Type = 0;
-    pub const OS_THREAD_STATE_READY: Type = 1;
-    pub const OS_THREAD_STATE_RUNNING: Type = 2;
-    pub const OS_THREAD_STATE_WAITING: Type = 4;
-    pub const OS_THREAD_STATE_MORIBUND: Type = 8;
-}
-pub mod OS_THREAD_REQUEST {
-    pub type Type = ::core::ffi::c_uint;
-    pub const OS_THREAD_REQUEST_NONE: Type = 0;
-    pub const OS_THREAD_REQUEST_SUSPEND: Type = 1;
-    pub const OS_THREAD_REQUEST_CANCEL: Type = 2;
-}
-pub mod OS_THREAD_ATTRIB {
-    pub type Type = ::core::ffi::c_uint;
-    pub const OS_THREAD_ATTRIB_AFFINITY_CPU0: Type = 1;
-    pub const OS_THREAD_ATTRIB_AFFINITY_CPU1: Type = 2;
-    pub const OS_THREAD_ATTRIB_AFFINITY_CPU2: Type = 4;
-    pub const OS_THREAD_ATTRIB_AFFINITY_ANY: Type = 7;
-    pub const OS_THREAD_ATTRIB_DETACHED: Type = 8;
-    pub const OS_THREAD_ATTRIB_STACK_USAGE: Type = 32;
-    pub const OS_THREAD_ATTRIB_UNKNOWN: Type = 128;
-}
-pub mod OS_THREAD_TYPE {
-    pub type Type = ::core::ffi::c_uint;
-    pub const OS_THREAD_TYPE_DRIVER: Type = 0;
-    pub const OS_THREAD_TYPE_IO: Type = 1;
-    pub const OS_THREAD_TYPE_APP: Type = 2;
-}
+pub const OS_THREAD_SPECIFIC_0: OSThreadSpecificID = 0;
+pub const OS_THREAD_SPECIFIC_1: OSThreadSpecificID = 1;
+pub const OS_THREAD_SPECIFIC_2: OSThreadSpecificID = 2;
+pub const OS_THREAD_SPECIFIC_3: OSThreadSpecificID = 3;
+pub const OS_THREAD_SPECIFIC_4: OSThreadSpecificID = 4;
+pub const OS_THREAD_SPECIFIC_5: OSThreadSpecificID = 5;
+pub const OS_THREAD_SPECIFIC_6: OSThreadSpecificID = 6;
+pub const OS_THREAD_SPECIFIC_7: OSThreadSpecificID = 7;
+pub const OS_THREAD_SPECIFIC_8: OSThreadSpecificID = 8;
+pub const OS_THREAD_SPECIFIC_9: OSThreadSpecificID = 9;
+pub const OS_THREAD_SPECIFIC_10: OSThreadSpecificID = 10;
+pub const OS_THREAD_SPECIFIC_11: OSThreadSpecificID = 11;
+pub const OS_THREAD_SPECIFIC_12: OSThreadSpecificID = 12;
+pub const OS_THREAD_SPECIFIC_13: OSThreadSpecificID = 13;
+pub const OS_THREAD_SPECIFIC_WUT_RESERVED_0: OSThreadSpecificID = 14;
+pub const OS_THREAD_SPECIFIC_WUT_RESERVED_1: OSThreadSpecificID = 15;
+pub type OSThreadSpecificID = ::core::ffi::c_uint;
+pub const OS_THREAD_STATE_NONE: OS_THREAD_STATE = 0;
+pub const OS_THREAD_STATE_READY: OS_THREAD_STATE = 1;
+pub const OS_THREAD_STATE_RUNNING: OS_THREAD_STATE = 2;
+pub const OS_THREAD_STATE_WAITING: OS_THREAD_STATE = 4;
+pub const OS_THREAD_STATE_MORIBUND: OS_THREAD_STATE = 8;
+pub type OS_THREAD_STATE = ::core::ffi::c_uint;
+pub const OS_THREAD_REQUEST_NONE: OS_THREAD_REQUEST = 0;
+pub const OS_THREAD_REQUEST_SUSPEND: OS_THREAD_REQUEST = 1;
+pub const OS_THREAD_REQUEST_CANCEL: OS_THREAD_REQUEST = 2;
+pub type OS_THREAD_REQUEST = ::core::ffi::c_uint;
+pub const OS_THREAD_ATTRIB_AFFINITY_CPU0: OS_THREAD_ATTRIB = 1;
+pub const OS_THREAD_ATTRIB_AFFINITY_CPU1: OS_THREAD_ATTRIB = 2;
+pub const OS_THREAD_ATTRIB_AFFINITY_CPU2: OS_THREAD_ATTRIB = 4;
+pub const OS_THREAD_ATTRIB_AFFINITY_ANY: OS_THREAD_ATTRIB = 7;
+pub const OS_THREAD_ATTRIB_DETACHED: OS_THREAD_ATTRIB = 8;
+pub const OS_THREAD_ATTRIB_STACK_USAGE: OS_THREAD_ATTRIB = 32;
+pub const OS_THREAD_ATTRIB_UNKNOWN: OS_THREAD_ATTRIB = 128;
+pub type OS_THREAD_ATTRIB = ::core::ffi::c_uint;
+pub const OS_THREAD_TYPE_DRIVER: OS_THREAD_TYPE = 0;
+pub const OS_THREAD_TYPE_IO: OS_THREAD_TYPE = 1;
+pub const OS_THREAD_TYPE_APP: OS_THREAD_TYPE = 2;
+pub type OS_THREAD_TYPE = ::core::ffi::c_uint;
 #[repr(C, packed)]
 #[derive(Debug, Copy, Clone)]
 pub struct OSThreadGHSExceptionHandling {
@@ -7980,6 +8384,15 @@ pub struct OSThreadGHSExceptionHandling {
     pub eh_store_globals: [*mut ::core::ffi::c_void; 6usize],
     pub eh_store_globals_tdeh: [*mut ::core::ffi::c_void; 76usize],
 }
+impl Default for OSThreadGHSExceptionHandling {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct OSMutexQueue {
@@ -7988,17 +8401,44 @@ pub struct OSMutexQueue {
     pub parent: *mut ::core::ffi::c_void,
     pub __unk51: [::core::ffi::c_char; 4usize],
 }
+impl Default for OSMutexQueue {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct OSFastMutexQueue {
     pub head: *mut OSFastMutex,
     pub tail: *mut OSFastMutex,
 }
+impl Default for OSFastMutexQueue {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct OSTLSSection {
     pub data: *mut ::core::ffi::c_void,
     pub __unk52: [::core::ffi::c_char; 4usize],
+}
+impl Default for OSTLSSection {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -8059,6 +8499,15 @@ pub struct OSThread {
     pub alignCallback: [OSExceptionCallbackFn; 3usize],
     pub reserved: [u32; 5usize],
 }
+impl Default for OSThread {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 extern "C" {
     pub fn OSCancelThread(thread: *mut OSThread);
 }
@@ -8114,7 +8563,7 @@ extern "C" {
     pub fn OSGetThreadPriority(thread: *mut OSThread) -> i32;
 }
 extern "C" {
-    pub fn OSGetThreadSpecific(id: OSThreadSpecificID::Type) -> *mut ::core::ffi::c_void;
+    pub fn OSGetThreadSpecific(id: OSThreadSpecificID) -> *mut ::core::ffi::c_void;
 }
 extern "C" {
     pub fn OSIsThreadSuspended(thread: *mut OSThread) -> BOOL;
@@ -8164,7 +8613,7 @@ extern "C" {
     pub fn OSSetThreadRunQuantum(thread: *mut OSThread, quantum: u32) -> BOOL;
 }
 extern "C" {
-    pub fn OSSetThreadSpecific(id: OSThreadSpecificID::Type, value: *mut ::core::ffi::c_void);
+    pub fn OSSetThreadSpecific(id: OSThreadSpecificID, value: *mut ::core::ffi::c_void);
 }
 extern "C" {
     pub fn OSSetThreadStackUsage(thread: *mut OSThread) -> BOOL;
@@ -8192,39 +8641,31 @@ extern "C" {
 }
 pub type CAMHandle = ::core::ffi::c_int;
 pub type CAMError = ::core::ffi::c_int;
-pub mod CamError {
-    pub type Type = ::core::ffi::c_int;
-    pub const CAMERA_ERROR_OK: Type = 0;
-    pub const CAMERA_ERROR_INVALID_ARG: Type = -1;
-    pub const CAMERA_ERROR_INVALID_HANDLE: Type = -2;
-    pub const CAMERA_ERROR_TOO_MANY_SURFACES: Type = -4;
-    pub const CAMERA_ERROR_INSUFFICIENT_MEMORY: Type = -5;
-    pub const CAMERA_ERROR_NOT_READY: Type = -6;
-    pub const CAMERA_ERROR_UNINITIALIZED: Type = -8;
-    pub const CAMERA_ERROR_UVC: Type = -9;
-    pub const CAMERA_ERROR_UVD_CONTEXT: Type = -10;
-    pub const CAMERA_ERROR_DEVICE_IN_USE: Type = -12;
-    pub const CAMERA_ERROR_UVD_SESSION: Type = -13;
-    pub const CAMERA_ERROR_SEGMENT_VIOLATION: Type = -15;
-}
-pub mod CamFps {
-    pub type Type = ::core::ffi::c_uint;
-    pub const CAMERA_FPS_15: Type = 0;
-    pub const CAMERA_FPS_30: Type = 1;
-}
-pub mod CamStreamType {
-    pub type Type = ::core::ffi::c_uint;
-    pub const CAMERA_STREAM_TYPE_1: Type = 0;
-}
-pub mod CamEventType {
-    pub type Type = ::core::ffi::c_uint;
-    pub const CAMERA_DECODE_DONE: Type = 0;
-    pub const CAMERA_DRC_DETACH: Type = 1;
-}
+pub const CAMERA_ERROR_OK: CamError = 0;
+pub const CAMERA_ERROR_INVALID_ARG: CamError = -1;
+pub const CAMERA_ERROR_INVALID_HANDLE: CamError = -2;
+pub const CAMERA_ERROR_TOO_MANY_SURFACES: CamError = -4;
+pub const CAMERA_ERROR_INSUFFICIENT_MEMORY: CamError = -5;
+pub const CAMERA_ERROR_NOT_READY: CamError = -6;
+pub const CAMERA_ERROR_UNINITIALIZED: CamError = -8;
+pub const CAMERA_ERROR_UVC: CamError = -9;
+pub const CAMERA_ERROR_UVD_CONTEXT: CamError = -10;
+pub const CAMERA_ERROR_DEVICE_IN_USE: CamError = -12;
+pub const CAMERA_ERROR_UVD_SESSION: CamError = -13;
+pub const CAMERA_ERROR_SEGMENT_VIOLATION: CamError = -15;
+pub type CamError = ::core::ffi::c_int;
+pub const CAMERA_FPS_15: CamFps = 0;
+pub const CAMERA_FPS_30: CamFps = 1;
+pub type CamFps = ::core::ffi::c_uint;
+pub const CAMERA_STREAM_TYPE_1: CamStreamType = 0;
+pub type CamStreamType = ::core::ffi::c_uint;
+pub const CAMERA_DECODE_DONE: CamEventType = 0;
+pub const CAMERA_DRC_DETACH: CamEventType = 1;
+pub type CamEventType = ::core::ffi::c_uint;
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct CAMEventData {
-    pub eventType: CamEventType::Type,
+    pub eventType: CamEventType,
     pub __bindgen_anon_1: CAMEventData__bindgen_ty_1,
 }
 #[repr(C)]
@@ -8241,11 +8682,38 @@ pub struct CAMEventData__bindgen_ty_1__bindgen_ty_1 {
     pub handle: CAMHandle,
     pub failed: BOOL,
 }
+impl Default for CAMEventData__bindgen_ty_1__bindgen_ty_1 {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct CAMEventData__bindgen_ty_1__bindgen_ty_2 {
     pub connected: BOOL,
     pub handle: CAMHandle,
+}
+impl Default for CAMEventData__bindgen_ty_1 {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
+impl Default for CAMEventData {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 pub type CAMEventHandler =
     ::core::option::Option<unsafe extern "C" fn(camEventData: *mut CAMEventData)>;
@@ -8253,7 +8721,16 @@ pub type CAMEventHandler =
 #[derive(Debug, Copy, Clone)]
 pub struct CAMMode {
     pub forceDrc: BOOL,
-    pub fps: CamFps::Type,
+    pub fps: CamFps,
+}
+impl Default for CAMMode {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -8261,12 +8738,30 @@ pub struct CAMWorkMem {
     pub size: u32,
     pub pMem: *mut ::core::ffi::c_void,
 }
+impl Default for CAMWorkMem {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct CAMStreamInfo {
-    pub type_: CamStreamType::Type,
+    pub type_: CamStreamType,
     pub height: u32,
     pub width: u32,
+}
+impl Default for CAMStreamInfo {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -8277,6 +8772,15 @@ pub struct CAMSetupInfo {
     pub mode: CAMMode,
     pub threadAffinity: u32,
     pub __unk55: [::core::ffi::c_char; 16usize],
+}
+impl Default for CAMSetupInfo {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -8289,6 +8793,15 @@ pub struct CAMSurface {
     pub alignment: i32,
     pub tileMode: i32,
     pub pixelFormat: i32,
+}
+impl Default for CAMSurface {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 extern "C" {
     pub fn CAMInit(
@@ -8320,22 +8833,18 @@ pub type ProcUISaveCallbackEx =
     ::core::option::Option<unsafe extern "C" fn(arg1: *mut ::core::ffi::c_void) -> u32>;
 pub type ProcUICallback =
     ::core::option::Option<unsafe extern "C" fn(arg1: *mut ::core::ffi::c_void) -> u32>;
-pub mod ProcUICallbackType {
-    pub type Type = ::core::ffi::c_uint;
-    pub const PROCUI_CALLBACK_ACQUIRE: Type = 0;
-    pub const PROCUI_CALLBACK_RELEASE: Type = 1;
-    pub const PROCUI_CALLBACK_EXIT: Type = 2;
-    pub const PROCUI_CALLBACK_NET_IO_START: Type = 3;
-    pub const PROCUI_CALLBACK_NET_IO_STOP: Type = 4;
-    pub const PROCUI_CALLBACK_HOME_BUTTON_DENIED: Type = 5;
-}
-pub mod ProcUIStatus {
-    pub type Type = ::core::ffi::c_uint;
-    pub const PROCUI_STATUS_IN_FOREGROUND: Type = 0;
-    pub const PROCUI_STATUS_IN_BACKGROUND: Type = 1;
-    pub const PROCUI_STATUS_RELEASE_FOREGROUND: Type = 2;
-    pub const PROCUI_STATUS_EXITING: Type = 3;
-}
+pub const PROCUI_CALLBACK_ACQUIRE: ProcUICallbackType = 0;
+pub const PROCUI_CALLBACK_RELEASE: ProcUICallbackType = 1;
+pub const PROCUI_CALLBACK_EXIT: ProcUICallbackType = 2;
+pub const PROCUI_CALLBACK_NET_IO_START: ProcUICallbackType = 3;
+pub const PROCUI_CALLBACK_NET_IO_STOP: ProcUICallbackType = 4;
+pub const PROCUI_CALLBACK_HOME_BUTTON_DENIED: ProcUICallbackType = 5;
+pub type ProcUICallbackType = ::core::ffi::c_uint;
+pub const PROCUI_STATUS_IN_FOREGROUND: ProcUIStatus = 0;
+pub const PROCUI_STATUS_IN_BACKGROUND: ProcUIStatus = 1;
+pub const PROCUI_STATUS_RELEASE_FOREGROUND: ProcUIStatus = 2;
+pub const PROCUI_STATUS_EXITING: ProcUIStatus = 3;
+pub type ProcUIStatus = ::core::ffi::c_uint;
 extern "C" {
     pub fn ProcUIClearCallbacks();
 }
@@ -8358,11 +8867,11 @@ extern "C" {
     pub fn ProcUIIsRunning() -> BOOL;
 }
 extern "C" {
-    pub fn ProcUIProcessMessages(block: BOOL) -> ProcUIStatus::Type;
+    pub fn ProcUIProcessMessages(block: BOOL) -> ProcUIStatus;
 }
 extern "C" {
     pub fn ProcUIRegisterCallback(
-        type_: ProcUICallbackType::Type,
+        type_: ProcUICallbackType,
         callback: ProcUICallback,
         param: *mut ::core::ffi::c_void,
         priority: u32,
@@ -8370,7 +8879,7 @@ extern "C" {
 }
 extern "C" {
     pub fn ProcUIRegisterCallbackCore(
-        type_: ProcUICallbackType::Type,
+        type_: ProcUICallbackType,
         callback: ProcUICallback,
         param: *mut ::core::ffi::c_void,
         priority: u32,
@@ -8391,7 +8900,7 @@ extern "C" {
     pub fn ProcUIShutdown();
 }
 extern "C" {
-    pub fn ProcUISubProcessMessages(block: BOOL) -> ProcUIStatus::Type;
+    pub fn ProcUISubProcessMessages(block: BOOL) -> ProcUIStatus;
 }
 extern "C" {
     pub fn ProcUICalcMemorySize(numCallbacks: u32) -> u32;
@@ -8413,7 +8922,7 @@ pub type CCRCDCWpsStatusType = u32;
 pub type CCRCDCWakeState = u8;
 pub type CCRCDCUicConfigId = u8;
 #[repr(C, packed)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct CCRCDCRegisterCallbackData {
     pub attached: i32,
     pub chan: u32,
@@ -8422,116 +8931,98 @@ pub struct CCRCDCRegisterCallbackData {
 pub type CCRCDCRegisterCallbackFn = ::core::option::Option<
     unsafe extern "C" fn(arg1: *mut CCRCDCRegisterCallbackData, arg2: *mut ::core::ffi::c_void),
 >;
-pub mod CCRCDCDestinationEnum {
-    pub type Type = ::core::ffi::c_uint;
-    pub const CCR_CDC_DESTINATION_DRH: Type = 1;
-    pub const CCR_CDC_DESTINATION_DRC0: Type = 2;
-    pub const CCR_CDC_DESTINATION_DRC1: Type = 3;
-}
-pub mod CCRCDCWpsStatusEnum {
-    pub type Type = ::core::ffi::c_uint;
-    pub const CCR_CDC_WPS_STATUS_PAIRED: Type = 0;
-    pub const CCR_CDC_WPS_STATUS_SEARCHING: Type = 1;
-    pub const CCR_CDC_WPS_STATUS_PAIRING: Type = 2;
-}
-pub mod CCRCDCDrcStateEnum {
-    pub type Type = ::core::ffi::c_uint;
-    pub const CCR_CDC_DRC_STATE_ACTIVE: Type = 0;
-    pub const CCR_CDC_DRC_STATE_PAIRING: Type = 1;
-    pub const CCR_CDC_DRC_STATE_FWUPDATE: Type = 2;
-    pub const CCR_CDC_DRC_STATE_STANDALONE: Type = 3;
-    pub const CCR_CDC_DRC_STATE_BACKGROUND: Type = 4;
-    pub const CCR_CDC_DRC_STATE_SLEEP: Type = 5;
-    pub const CCR_CDC_DRC_STATE_STANDBY: Type = 6;
-    pub const CCR_CDC_DRC_STATE_WOWLSETTING: Type = 7;
-    pub const CCR_CDC_DRC_STATE_DKSETTING: Type = 8;
-    pub const CCR_CDC_DRC_STATE_UNKNOWN9: Type = 9;
-    pub const CCR_CDC_DRC_STATE_WIIACTIVE: Type = 10;
-    pub const CCR_CDC_DRC_STATE_LOW_BATTERY: Type = 11;
-    pub const CCR_CDC_DRC_STATE_SUBACTIVE: Type = 12;
-}
-pub mod CCRCDCWakeStateEnum {
-    pub type Type = ::core::ffi::c_uint;
-    pub const CCR_CDC_WAKE_STATE_ACTIVE: Type = 1;
-    pub const CCR_CDC_WAKE_STATE_BACKGROUND: Type = 2;
-}
-pub mod CCRCDCBoardVersion {
-    pub type Type = ::core::ffi::c_uint;
-    pub const CCR_CDC_BOARD_VERSION_DK1: Type = 0;
-    pub const CCR_CDC_BOARD_VERSION_DK1_EP_DK2: Type = 1;
-    pub const CCR_CDC_BOARD_VERSION_DP1: Type = 2;
-    pub const CCR_CDC_BOARD_VERSION_DP2: Type = 3;
-    pub const CCR_CDC_BOARD_VERSION_DK3: Type = 4;
-    pub const CCR_CDC_BOARD_VERSION_DK4: Type = 5;
-    pub const CCR_CDC_BOARD_VERSION_PREDP3_DP3: Type = 6;
-    pub const CCR_CDC_BOARD_VERSION_DK5: Type = 7;
-    pub const CCR_CDC_BOARD_VERSION_DP4: Type = 8;
-    pub const CCR_CDC_BOARD_VERSION_DKMP: Type = 9;
-    pub const CCR_CDC_BOARD_VERSION_DP5: Type = 10;
-    pub const CCR_CDC_BOARD_VERSION_MASS: Type = 11;
-    pub const CCR_CDC_BOARD_VERSION_DKMP2: Type = 12;
-    pub const CCR_CDC_BOARD_VERSION_DRC_I: Type = 13;
-    pub const CCR_CDC_BOARD_VERSION_DKTVMP: Type = 14;
-}
-pub mod CCRCDCChipVersion {
-    pub type Type = ::core::ffi::c_uint;
-    pub const CCR_CDC_CHIP_VERSION_TS: Type = 16;
-    pub const CCR_CDC_CHIP_VERSION_ES1: Type = 32;
-    pub const CCR_CDC_CHIP_VERSION_ES2: Type = 48;
-    pub const CCR_CDC_CHIP_VERSION_ES3: Type = 64;
-    pub const CCR_CDC_CHIP_VERSION_MS01: Type = 65;
-}
-pub mod CCRCDCUicConfigIdEnum {
-    pub type Type = ::core::ffi::c_uint;
-    pub const CCR_CDC_UIC_CONFIG_ID_LANGUAGE_BANK: Type = 0;
-    pub const CCR_CDC_UIC_CONFIG_ID_MIC_CONFIG: Type = 2;
-    pub const CCR_CDC_UIC_CONFIG_ID_ACC_CALIBRATION_VALUE: Type = 3;
-    pub const CCR_CDC_UIC_CONFIG_ID_TP_CALIBRATION_VALUE: Type = 5;
-    pub const CCR_CDC_UIC_CONFIG_ID_UNK7: Type = 7;
-    pub const CCR_CDC_UIC_CONFIG_ID_UNK8: Type = 8;
-    pub const CCR_CDC_UIC_CONFIG_ID_LANGUAGE_EXT_ID: Type = 9;
-    pub const CCR_CDC_UIC_CONFIG_ID_TV_CONTROL_ID: Type = 10;
-    pub const CCR_CDC_UIC_CONFIG_ID_EXT_ID_2: Type = 11;
-    pub const CCR_CDC_UIC_CONFIG_ID_EXT_ID_3: Type = 12;
-    pub const CCR_CDC_UIC_CONFIG_ID_EXT_ID_4: Type = 13;
-    pub const CCR_CDC_UIC_CONFIG_ID_INIT_BOOT_FLAG: Type = 14;
-    pub const CCR_CDC_UIC_CONFIG_ID_UNK15: Type = 15;
-    pub const CCR_CDC_UIC_CONFIG_ID_LCD_MODE: Type = 16;
-    pub const CCR_CDC_UIC_CONFIG_ID_RC_DATABASE_EXT_ID: Type = 17;
-    pub const CCR_CDC_UIC_CONFIG_ID_UNK18: Type = 18;
-    pub const CCR_CDC_UIC_CONFIG_ID_CAFFEINE_ENABLE_FLAG: Type = 19;
-    pub const CCR_CDC_UIC_CONFIG_ID_CAFFEINE_INITIAL_BOOT_FLAG: Type = 20;
-    pub const CCR_CDC_UIC_CONFIG_ID_CAFFEINE_CAFFEINE_SLOT: Type = 21;
-    pub const CCR_CDC_UIC_CONFIG_ID_CAFFEINE_NOTIFICATION_SOUND_MODE: Type = 22;
-    pub const CCR_CDC_UIC_CONFIG_ID_CAFFEINE_NOTIFICATION_INFO: Type = 23;
-    pub const CCR_CDC_UIC_CONFIG_ID_CAFFEINE_NOTIFICATION_READ_COUNT: Type = 24;
-}
-pub mod CCRCDCExt {
-    pub type Type = ::core::ffi::c_uint;
-    pub const CCR_CDC_EXT_LANGUAGE: Type = 0;
-    pub const CCR_CDC_EXT_RC_DATABASE: Type = 1;
-    pub const CCR_CDC_EXT_UNK2: Type = 2;
-    pub const CCR_CDC_EXT_UNK3: Type = 3;
-    pub const CCR_CDC_EXT_UNK4: Type = 4;
-}
-pub mod CCRCDCDrhStateEnum {
-    pub type Type = ::core::ffi::c_uint;
-    pub const CCR_CDC_SYS_DRH_STATE_NORADIO: Type = 0;
-    pub const CCR_CDC_SYS_DRH_STATE_WII: Type = 1;
-    pub const CCR_CDC_SYS_DRH_STATE_UNK2: Type = 2;
-    pub const CCR_CDC_SYS_DRH_STATE_NODRC: Type = 3;
-    pub const CCR_CDC_SYS_DRH_STATE_ECO: Type = 4;
-    pub const CCR_CDC_SYS_DRH_STATE_UNK7F: Type = 127;
-    pub const CCR_CDC_SYS_DRH_STATE_CAFE: Type = 255;
-}
+pub const CCR_CDC_DESTINATION_DRH: CCRCDCDestinationEnum = 1;
+pub const CCR_CDC_DESTINATION_DRC0: CCRCDCDestinationEnum = 2;
+pub const CCR_CDC_DESTINATION_DRC1: CCRCDCDestinationEnum = 3;
+pub type CCRCDCDestinationEnum = ::core::ffi::c_uint;
+pub const CCR_CDC_WPS_STATUS_PAIRED: CCRCDCWpsStatusEnum = 0;
+pub const CCR_CDC_WPS_STATUS_SEARCHING: CCRCDCWpsStatusEnum = 1;
+pub const CCR_CDC_WPS_STATUS_PAIRING: CCRCDCWpsStatusEnum = 2;
+pub type CCRCDCWpsStatusEnum = ::core::ffi::c_uint;
+pub const CCR_CDC_DRC_STATE_ACTIVE: CCRCDCDrcStateEnum = 0;
+pub const CCR_CDC_DRC_STATE_PAIRING: CCRCDCDrcStateEnum = 1;
+pub const CCR_CDC_DRC_STATE_FWUPDATE: CCRCDCDrcStateEnum = 2;
+pub const CCR_CDC_DRC_STATE_STANDALONE: CCRCDCDrcStateEnum = 3;
+pub const CCR_CDC_DRC_STATE_BACKGROUND: CCRCDCDrcStateEnum = 4;
+pub const CCR_CDC_DRC_STATE_SLEEP: CCRCDCDrcStateEnum = 5;
+pub const CCR_CDC_DRC_STATE_STANDBY: CCRCDCDrcStateEnum = 6;
+pub const CCR_CDC_DRC_STATE_WOWLSETTING: CCRCDCDrcStateEnum = 7;
+pub const CCR_CDC_DRC_STATE_DKSETTING: CCRCDCDrcStateEnum = 8;
+pub const CCR_CDC_DRC_STATE_UNKNOWN9: CCRCDCDrcStateEnum = 9;
+pub const CCR_CDC_DRC_STATE_WIIACTIVE: CCRCDCDrcStateEnum = 10;
+pub const CCR_CDC_DRC_STATE_LOW_BATTERY: CCRCDCDrcStateEnum = 11;
+pub const CCR_CDC_DRC_STATE_SUBACTIVE: CCRCDCDrcStateEnum = 12;
+pub type CCRCDCDrcStateEnum = ::core::ffi::c_uint;
+pub const CCR_CDC_WAKE_STATE_ACTIVE: CCRCDCWakeStateEnum = 1;
+pub const CCR_CDC_WAKE_STATE_BACKGROUND: CCRCDCWakeStateEnum = 2;
+pub type CCRCDCWakeStateEnum = ::core::ffi::c_uint;
+pub const CCR_CDC_BOARD_VERSION_DK1: CCRCDCBoardVersion = 0;
+pub const CCR_CDC_BOARD_VERSION_DK1_EP_DK2: CCRCDCBoardVersion = 1;
+pub const CCR_CDC_BOARD_VERSION_DP1: CCRCDCBoardVersion = 2;
+pub const CCR_CDC_BOARD_VERSION_DP2: CCRCDCBoardVersion = 3;
+pub const CCR_CDC_BOARD_VERSION_DK3: CCRCDCBoardVersion = 4;
+pub const CCR_CDC_BOARD_VERSION_DK4: CCRCDCBoardVersion = 5;
+pub const CCR_CDC_BOARD_VERSION_PREDP3_DP3: CCRCDCBoardVersion = 6;
+pub const CCR_CDC_BOARD_VERSION_DK5: CCRCDCBoardVersion = 7;
+pub const CCR_CDC_BOARD_VERSION_DP4: CCRCDCBoardVersion = 8;
+pub const CCR_CDC_BOARD_VERSION_DKMP: CCRCDCBoardVersion = 9;
+pub const CCR_CDC_BOARD_VERSION_DP5: CCRCDCBoardVersion = 10;
+pub const CCR_CDC_BOARD_VERSION_MASS: CCRCDCBoardVersion = 11;
+pub const CCR_CDC_BOARD_VERSION_DKMP2: CCRCDCBoardVersion = 12;
+pub const CCR_CDC_BOARD_VERSION_DRC_I: CCRCDCBoardVersion = 13;
+pub const CCR_CDC_BOARD_VERSION_DKTVMP: CCRCDCBoardVersion = 14;
+pub type CCRCDCBoardVersion = ::core::ffi::c_uint;
+pub const CCR_CDC_CHIP_VERSION_TS: CCRCDCChipVersion = 16;
+pub const CCR_CDC_CHIP_VERSION_ES1: CCRCDCChipVersion = 32;
+pub const CCR_CDC_CHIP_VERSION_ES2: CCRCDCChipVersion = 48;
+pub const CCR_CDC_CHIP_VERSION_ES3: CCRCDCChipVersion = 64;
+pub const CCR_CDC_CHIP_VERSION_MS01: CCRCDCChipVersion = 65;
+pub type CCRCDCChipVersion = ::core::ffi::c_uint;
+pub const CCR_CDC_UIC_CONFIG_ID_LANGUAGE_BANK: CCRCDCUicConfigIdEnum = 0;
+pub const CCR_CDC_UIC_CONFIG_ID_MIC_CONFIG: CCRCDCUicConfigIdEnum = 2;
+pub const CCR_CDC_UIC_CONFIG_ID_ACC_CALIBRATION_VALUE: CCRCDCUicConfigIdEnum = 3;
+pub const CCR_CDC_UIC_CONFIG_ID_TP_CALIBRATION_VALUE: CCRCDCUicConfigIdEnum = 5;
+pub const CCR_CDC_UIC_CONFIG_ID_UNK7: CCRCDCUicConfigIdEnum = 7;
+pub const CCR_CDC_UIC_CONFIG_ID_UNK8: CCRCDCUicConfigIdEnum = 8;
+pub const CCR_CDC_UIC_CONFIG_ID_LANGUAGE_EXT_ID: CCRCDCUicConfigIdEnum = 9;
+pub const CCR_CDC_UIC_CONFIG_ID_TV_CONTROL_ID: CCRCDCUicConfigIdEnum = 10;
+pub const CCR_CDC_UIC_CONFIG_ID_EXT_ID_2: CCRCDCUicConfigIdEnum = 11;
+pub const CCR_CDC_UIC_CONFIG_ID_EXT_ID_3: CCRCDCUicConfigIdEnum = 12;
+pub const CCR_CDC_UIC_CONFIG_ID_EXT_ID_4: CCRCDCUicConfigIdEnum = 13;
+pub const CCR_CDC_UIC_CONFIG_ID_INIT_BOOT_FLAG: CCRCDCUicConfigIdEnum = 14;
+pub const CCR_CDC_UIC_CONFIG_ID_UNK15: CCRCDCUicConfigIdEnum = 15;
+pub const CCR_CDC_UIC_CONFIG_ID_LCD_MODE: CCRCDCUicConfigIdEnum = 16;
+pub const CCR_CDC_UIC_CONFIG_ID_RC_DATABASE_EXT_ID: CCRCDCUicConfigIdEnum = 17;
+pub const CCR_CDC_UIC_CONFIG_ID_UNK18: CCRCDCUicConfigIdEnum = 18;
+pub const CCR_CDC_UIC_CONFIG_ID_CAFFEINE_ENABLE_FLAG: CCRCDCUicConfigIdEnum = 19;
+pub const CCR_CDC_UIC_CONFIG_ID_CAFFEINE_INITIAL_BOOT_FLAG: CCRCDCUicConfigIdEnum = 20;
+pub const CCR_CDC_UIC_CONFIG_ID_CAFFEINE_CAFFEINE_SLOT: CCRCDCUicConfigIdEnum = 21;
+pub const CCR_CDC_UIC_CONFIG_ID_CAFFEINE_NOTIFICATION_SOUND_MODE: CCRCDCUicConfigIdEnum = 22;
+pub const CCR_CDC_UIC_CONFIG_ID_CAFFEINE_NOTIFICATION_INFO: CCRCDCUicConfigIdEnum = 23;
+pub const CCR_CDC_UIC_CONFIG_ID_CAFFEINE_NOTIFICATION_READ_COUNT: CCRCDCUicConfigIdEnum = 24;
+pub type CCRCDCUicConfigIdEnum = ::core::ffi::c_uint;
+pub const CCR_CDC_EXT_LANGUAGE: CCRCDCExt = 0;
+pub const CCR_CDC_EXT_RC_DATABASE: CCRCDCExt = 1;
+pub const CCR_CDC_EXT_UNK2: CCRCDCExt = 2;
+pub const CCR_CDC_EXT_UNK3: CCRCDCExt = 3;
+pub const CCR_CDC_EXT_UNK4: CCRCDCExt = 4;
+pub type CCRCDCExt = ::core::ffi::c_uint;
+pub const CCR_CDC_SYS_DRH_STATE_NORADIO: CCRCDCDrhStateEnum = 0;
+pub const CCR_CDC_SYS_DRH_STATE_WII: CCRCDCDrhStateEnum = 1;
+pub const CCR_CDC_SYS_DRH_STATE_UNK2: CCRCDCDrhStateEnum = 2;
+pub const CCR_CDC_SYS_DRH_STATE_NODRC: CCRCDCDrhStateEnum = 3;
+pub const CCR_CDC_SYS_DRH_STATE_ECO: CCRCDCDrhStateEnum = 4;
+pub const CCR_CDC_SYS_DRH_STATE_UNK7F: CCRCDCDrhStateEnum = 127;
+pub const CCR_CDC_SYS_DRH_STATE_CAFE: CCRCDCDrhStateEnum = 255;
+pub type CCRCDCDrhStateEnum = ::core::ffi::c_uint;
 #[repr(C, packed)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct CCRCDCMacAddress {
     pub device: CCRCDCDestination,
     pub address: [u8; 6usize],
 }
 #[repr(C, packed)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct CCRCDCWpsArgs {
     pub hasArgs: u8,
     pub pin: [::core::ffi::c_char; 8usize],
@@ -8539,7 +9030,7 @@ pub struct CCRCDCWpsArgs {
     pub pairDestination: CCRCDCDestination,
 }
 #[repr(C, packed)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct CCRCDCSysMessage {
     pub message: u16,
     pub timeout: u16,
@@ -8547,13 +9038,22 @@ pub struct CCRCDCSysMessage {
 #[repr(C, packed)]
 #[derive(Debug, Copy, Clone)]
 pub struct CCRCDCSysInfo {
-    pub boardVersion: CCRCDCBoardVersion::Type,
-    pub chipVersion: CCRCDCChipVersion::Type,
+    pub boardVersion: CCRCDCBoardVersion,
+    pub chipVersion: CCRCDCChipVersion,
     pub lvcVersion: u32,
     pub umiVersion: u32,
     pub unknown: u32,
     pub sdCis: u32,
     pub splId: u32,
+}
+impl Default for CCRCDCSysInfo {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C, packed)]
 #[derive(Debug, Copy, Clone)]
@@ -8561,8 +9061,17 @@ pub struct CCRCDCEepromData {
     pub version: u32,
     pub data: [u8; 768usize],
 }
+impl Default for CCRCDCEepromData {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C, packed)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct CCRCDCWowlWakeDrcArg {
     pub __unk57: [::core::ffi::c_char; 6usize],
     pub state: CCRCDCWakeState,
@@ -8574,8 +9083,17 @@ pub struct CCRCDCUicConfig {
     pub size: u8,
     pub data: [u8; 256usize],
 }
+impl Default for CCRCDCUicConfig {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct CCRCDCFWInfo {
     pub imageSize: u32,
     pub blockSize: u32,
@@ -8584,18 +9102,18 @@ pub struct CCRCDCFWInfo {
     pub updateProgress: u32,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct CCRCDCSoftwareVersion {
     pub runningVersion: u32,
     pub activeVersion: u32,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct CCRCDCDrcState {
     pub state: u8,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct CCRCDCDrhState {
     pub state: u8,
 }
@@ -8728,11 +9246,7 @@ extern "C" {
     ) -> i32;
 }
 extern "C" {
-    pub fn CCRCDCSoftwareGetExtId(
-        dest: CCRCDCDestination,
-        ext: CCRCDCExt::Type,
-        outId: *mut u32,
-    ) -> i32;
+    pub fn CCRCDCSoftwareGetExtId(dest: CCRCDCDestination, ext: CCRCDCExt, outId: *mut u32) -> i32;
 }
 extern "C" {
     pub fn CCRCDCSoftwareExtUpdate(
@@ -8740,7 +9254,7 @@ extern "C" {
         path: *const ::core::ffi::c_char,
         imageSize: u32,
         extId: u32,
-        ext: CCRCDCExt::Type,
+        ext: CCRCDCExt,
         callback: IOSAsyncCallbackFn,
         userContext: *mut ::core::ffi::c_void,
     ) -> i32;
@@ -8790,40 +9304,34 @@ extern "C" {
 pub type CCRCDCIrdaCommand = u8;
 pub type CCRCDCIrdaBitrate = u8;
 pub type CCRCDCIrdaConnectionType = u8;
-pub mod CCRCDCIrdaCommandEnum {
-    pub type Type = ::core::ffi::c_uint;
-    pub const CCR_IRDA_COMMAND_CONNECT: Type = 0;
-    pub const CCR_IRDA_COMMAND_SEND: Type = 1;
-    pub const CCR_IRDA_COMMAND_RECEIVE: Type = 2;
-    pub const CCR_IRDA_COMMAND_DISCONNECT: Type = 3;
-}
-pub mod CCRCDCIrdaBitrateEnum {
-    pub type Type = ::core::ffi::c_uint;
-    pub const CCR_IRDA_BITRATE_115200: Type = 0;
-    pub const CCR_IRDA_BITRATE_96000: Type = 1;
-    pub const CCR_IRDA_BITRATE_72000: Type = 2;
-    pub const CCR_IRDA_BITRATE_57600: Type = 3;
-    pub const CCR_IRDA_BITRATE_48000: Type = 4;
-    pub const CCR_IRDA_BITRATE_38400: Type = 5;
-    pub const CCR_IRDA_BITRATE_36000: Type = 6;
-    pub const CCR_IRDA_BITRATE_24000: Type = 7;
-    pub const CCR_IRDA_BITRATE_19200: Type = 8;
-    pub const CCR_IRDA_BITRATE_18000: Type = 9;
-    pub const CCR_IRDA_BITRATE_12000: Type = 10;
-    pub const CCR_IRDA_BITRATE_9600: Type = 11;
-    pub const CCR_IRDA_BITRATE_7200: Type = 13;
-    pub const CCR_IRDA_BITRATE_6000: Type = 13;
-    pub const CCR_IRDA_BITRATE_4800: Type = 14;
-    pub const CCR_IRDA_BITRATE_3000: Type = 15;
-}
-pub mod CCRCDCIrdaConnectionTypeEnum {
-    pub type Type = ::core::ffi::c_uint;
-    pub const CCR_IRDA_CONNECTION_WAIT: Type = 0;
-    pub const CCR_IRDA_CONNECTION_REQUIRE: Type = 1;
-    pub const CCR_IRDA_CONNECTION_ANY: Type = 2;
-}
+pub const CCR_IRDA_COMMAND_CONNECT: CCRCDCIrdaCommandEnum = 0;
+pub const CCR_IRDA_COMMAND_SEND: CCRCDCIrdaCommandEnum = 1;
+pub const CCR_IRDA_COMMAND_RECEIVE: CCRCDCIrdaCommandEnum = 2;
+pub const CCR_IRDA_COMMAND_DISCONNECT: CCRCDCIrdaCommandEnum = 3;
+pub type CCRCDCIrdaCommandEnum = ::core::ffi::c_uint;
+pub const CCR_IRDA_BITRATE_115200: CCRCDCIrdaBitrateEnum = 0;
+pub const CCR_IRDA_BITRATE_96000: CCRCDCIrdaBitrateEnum = 1;
+pub const CCR_IRDA_BITRATE_72000: CCRCDCIrdaBitrateEnum = 2;
+pub const CCR_IRDA_BITRATE_57600: CCRCDCIrdaBitrateEnum = 3;
+pub const CCR_IRDA_BITRATE_48000: CCRCDCIrdaBitrateEnum = 4;
+pub const CCR_IRDA_BITRATE_38400: CCRCDCIrdaBitrateEnum = 5;
+pub const CCR_IRDA_BITRATE_36000: CCRCDCIrdaBitrateEnum = 6;
+pub const CCR_IRDA_BITRATE_24000: CCRCDCIrdaBitrateEnum = 7;
+pub const CCR_IRDA_BITRATE_19200: CCRCDCIrdaBitrateEnum = 8;
+pub const CCR_IRDA_BITRATE_18000: CCRCDCIrdaBitrateEnum = 9;
+pub const CCR_IRDA_BITRATE_12000: CCRCDCIrdaBitrateEnum = 10;
+pub const CCR_IRDA_BITRATE_9600: CCRCDCIrdaBitrateEnum = 11;
+pub const CCR_IRDA_BITRATE_7200: CCRCDCIrdaBitrateEnum = 13;
+pub const CCR_IRDA_BITRATE_6000: CCRCDCIrdaBitrateEnum = 13;
+pub const CCR_IRDA_BITRATE_4800: CCRCDCIrdaBitrateEnum = 14;
+pub const CCR_IRDA_BITRATE_3000: CCRCDCIrdaBitrateEnum = 15;
+pub type CCRCDCIrdaBitrateEnum = ::core::ffi::c_uint;
+pub const CCR_IRDA_CONNECTION_WAIT: CCRCDCIrdaConnectionTypeEnum = 0;
+pub const CCR_IRDA_CONNECTION_REQUIRE: CCRCDCIrdaConnectionTypeEnum = 1;
+pub const CCR_IRDA_CONNECTION_ANY: CCRCDCIrdaConnectionTypeEnum = 2;
+pub type CCRCDCIrdaConnectionTypeEnum = ::core::ffi::c_uint;
 #[repr(C, packed)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct CCRCDCIrdaConnectRequest {
     pub command: CCRCDCIrdaCommand,
     pub timeout: u16,
@@ -8833,7 +9341,7 @@ pub struct CCRCDCIrdaConnectRequest {
     pub type_: CCRCDCIrdaConnectionType,
 }
 #[repr(C, packed)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct CCRCDCIrdaConnectReply {
     pub result: u8,
 }
@@ -8843,13 +9351,22 @@ pub struct CCRCDCIrdaSendRequest {
     pub size: u16,
     pub data: __IncompleteArrayField<u8>,
 }
+impl Default for CCRCDCIrdaSendRequest {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C, packed)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct CCRCDCIrdaSendReply {
     pub result: u8,
 }
 #[repr(C, packed)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct CCRCDCIrdaReceiveRequest {
     pub command: CCRCDCIrdaCommand,
 }
@@ -8859,18 +9376,27 @@ pub struct CCRCDCIrdaReceiveReply {
     pub size: u16,
     pub data: __IncompleteArrayField<u8>,
 }
+impl Default for CCRCDCIrdaReceiveReply {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C, packed)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct CCRCDCIrdaDisconnectRequest {
     pub command: CCRCDCIrdaCommand,
 }
 #[repr(C, packed)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct CCRCDCIrdaDisconnectReply {
     pub result: u8,
 }
 #[repr(C, packed)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct CCRCDCIrdaSmallPacketHeader {
     pub magic: u8,
     pub sessionId: u8,
@@ -8935,7 +9461,7 @@ impl CCRCDCIrdaSmallPacketHeader {
     }
 }
 #[repr(C, packed)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct CCRCDCIrdaLargePacketHeader {
     pub magic: u8,
     pub sessionId: u8,
@@ -9039,68 +9565,66 @@ extern "C" {
 extern "C" {
     pub fn __CCRCDCIRCDisconnect(drcIndex: i32, result: *mut u8) -> i32;
 }
-pub mod IRCResult {
-    pub type Type = ::core::ffi::c_uint;
-    pub const IRC_RESULT_SUCCESS: Type = 0;
-    pub const IRC_RESULT_INVALID_RECEIVE_SIZE: Type = 3;
-    pub const IRC_RESULT_INVALID_PACKET: Type = 5;
-    pub const IRC_RESULT_NO_DATA: Type = 6;
-    pub const IRC_RESULT_ALREADY_CONNECTED: Type = 11;
-    pub const IRC_IR_UNAVAILABLE: Type = 12;
-    pub const IRC_RESULT_UNINITIALIZED: Type = 13;
-    pub const IRC_RESULT_NOT_CONNECTED: Type = 13;
-    pub const IRC_RESULT_CONNECT_FAILED: Type = 15;
-    pub const IRC_RESULT_RECEIVE_FAILED: Type = 16;
-    pub const IRC_RESULT_SEND_FAILED: Type = 17;
-    pub const IRC_RESULT_DISCONNECT_FAILED: Type = 18;
-}
+pub const IRC_RESULT_SUCCESS: IRCResult = 0;
+pub const IRC_RESULT_INVALID_RECEIVE_SIZE: IRCResult = 3;
+pub const IRC_RESULT_INVALID_PACKET: IRCResult = 5;
+pub const IRC_RESULT_NO_DATA: IRCResult = 6;
+pub const IRC_RESULT_ALREADY_CONNECTED: IRCResult = 11;
+pub const IRC_IR_UNAVAILABLE: IRCResult = 12;
+pub const IRC_RESULT_UNINITIALIZED: IRCResult = 13;
+pub const IRC_RESULT_NOT_CONNECTED: IRCResult = 13;
+pub const IRC_RESULT_CONNECT_FAILED: IRCResult = 15;
+pub const IRC_RESULT_RECEIVE_FAILED: IRCResult = 16;
+pub const IRC_RESULT_SEND_FAILED: IRCResult = 17;
+pub const IRC_RESULT_DISCONNECT_FAILED: IRCResult = 18;
+pub type IRCResult = ::core::ffi::c_uint;
 pub type IRCConnectCallback = ::core::option::Option<unsafe extern "C" fn()>;
 pub type IRCReceiveCallback = ::core::option::Option<
-    unsafe extern "C" fn(data: *mut ::core::ffi::c_void, size: u16, result: IRCResult::Type),
+    unsafe extern "C" fn(data: *mut ::core::ffi::c_void, size: u16, result: IRCResult),
 >;
 extern "C" {
-    pub fn IRCInit(channel: VPADChan::Type, targetId: u8) -> BOOL;
+    pub fn IRCInit(channel: VPADChan, targetId: u8) -> BOOL;
 }
 extern "C" {
     pub fn IRCConnect(
-        channel: VPADChan::Type,
+        channel: VPADChan,
         timeout: u16,
         type_: CCRCDCIrdaConnectionType,
         bitrate: CCRCDCIrdaBitrate,
         receiveSize: u32,
         callback: IRCConnectCallback,
-    ) -> IRCResult::Type;
+    ) -> IRCResult;
 }
 extern "C" {
-    pub fn IRCProc(channel: VPADChan::Type) -> IRCResult::Type;
+    pub fn IRCProc(channel: VPADChan) -> IRCResult;
 }
 extern "C" {
     pub fn IRCSend(
-        channel: VPADChan::Type,
+        channel: VPADChan,
         data: *mut ::core::ffi::c_void,
         dataSize: u32,
         receiveSize: u32,
-    ) -> IRCResult::Type;
+    ) -> IRCResult;
 }
 extern "C" {
-    pub fn IRCIsConnect(channel: VPADChan::Type) -> BOOL;
+    pub fn IRCIsConnect(channel: VPADChan) -> BOOL;
 }
 extern "C" {
-    pub fn IRCDisconnect(channel: VPADChan::Type) -> IRCResult::Type;
+    pub fn IRCDisconnect(channel: VPADChan) -> IRCResult;
 }
 extern "C" {
     pub fn IRCSetReceiveCallback(
-        channel: VPADChan::Type,
+        channel: VPADChan,
         receiveCallback: IRCReceiveCallback,
     ) -> IRCReceiveCallback;
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct in_addr {
     pub s_addr: in_addr_t,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct sockaddr_in {
     pub sin_family: sa_family_t,
     pub sin_port: in_port_t,
@@ -9108,19 +9632,19 @@ pub struct sockaddr_in {
     pub sin_zero: [::core::ffi::c_uchar; 8usize],
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct ip_mreq {
     pub imr_multiaddr: in_addr,
     pub imr_interface: in_addr,
 }
 #[repr(C, packed)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct KBDAttachEvent {
     pub channel: u8,
     pub __unk58: [::core::ffi::c_char; 3usize],
 }
 #[repr(C, packed)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct KBDKeyEvent {
     pub channel: u8,
     pub hidCode: u8,
@@ -9133,59 +9657,55 @@ pub struct KBDKeyEvent {
 pub type KDBAttachCallback =
     ::core::option::Option<unsafe extern "C" fn(channel: *mut KBDAttachEvent)>;
 pub type KDBKeyCallback = ::core::option::Option<unsafe extern "C" fn(event: *mut KBDKeyEvent)>;
-pub mod KDBCountry {
-    pub type Type = ::core::ffi::c_uint;
-    pub const KDB_COUNTRY_UNKNOWN_0: Type = 0;
-    pub const KDB_COUNTRY_UNKNOWN_1: Type = 1;
-    pub const KDB_COUNTRY_UNKNOWN_2: Type = 2;
-    pub const KDB_COUNTRY_UNKNOWN_3: Type = 3;
-    pub const KDB_COUNTRY_UNKNOWN_4: Type = 4;
-    pub const KDB_COUNTRY_UNKNOWN_5: Type = 5;
-    pub const KDB_COUNTRY_UNKNOWN_6: Type = 6;
-    pub const KDB_COUNTRY_UNKNOWN_7: Type = 7;
-    pub const KDB_COUNTRY_UNKNOWN_8: Type = 8;
-    pub const KDB_COUNTRY_UNKNOWN_9: Type = 9;
-    pub const KDB_COUNTRY_UNKNOWN_10: Type = 10;
-    pub const KDB_COUNTRY_UNKNOWN_11: Type = 11;
-    pub const KDB_COUNTRY_UNKNOWN_12: Type = 12;
-    pub const KDB_COUNTRY_UNKNOWN_13: Type = 13;
-    pub const KDB_COUNTRY_UNKNOWN_14: Type = 14;
-    pub const KDB_COUNTRY_UNKNOWN_15: Type = 15;
-    pub const KDB_COUNTRY_UNKNOWN_16: Type = 16;
-    pub const KDB_COUNTRY_UNKNOWN_17: Type = 17;
-    pub const KDB_COUNTRY_UNKNOWN_18: Type = 18;
-}
-pub mod KDBError {
-    pub type Type = ::core::ffi::c_uint;
-    pub const KDB_ERROR_NONE: Type = 0;
-    pub const KDB_ERROR_NOT_INITIALIZED: Type = 2;
-    pub const KDB_ERROR_ALREADY_INITIALIZED: Type = 3;
-    pub const KDB_ERROR_INVALID_COUNTRY: Type = 4;
-}
+pub const KDB_COUNTRY_UNKNOWN_0: KDBCountry = 0;
+pub const KDB_COUNTRY_UNKNOWN_1: KDBCountry = 1;
+pub const KDB_COUNTRY_UNKNOWN_2: KDBCountry = 2;
+pub const KDB_COUNTRY_UNKNOWN_3: KDBCountry = 3;
+pub const KDB_COUNTRY_UNKNOWN_4: KDBCountry = 4;
+pub const KDB_COUNTRY_UNKNOWN_5: KDBCountry = 5;
+pub const KDB_COUNTRY_UNKNOWN_6: KDBCountry = 6;
+pub const KDB_COUNTRY_UNKNOWN_7: KDBCountry = 7;
+pub const KDB_COUNTRY_UNKNOWN_8: KDBCountry = 8;
+pub const KDB_COUNTRY_UNKNOWN_9: KDBCountry = 9;
+pub const KDB_COUNTRY_UNKNOWN_10: KDBCountry = 10;
+pub const KDB_COUNTRY_UNKNOWN_11: KDBCountry = 11;
+pub const KDB_COUNTRY_UNKNOWN_12: KDBCountry = 12;
+pub const KDB_COUNTRY_UNKNOWN_13: KDBCountry = 13;
+pub const KDB_COUNTRY_UNKNOWN_14: KDBCountry = 14;
+pub const KDB_COUNTRY_UNKNOWN_15: KDBCountry = 15;
+pub const KDB_COUNTRY_UNKNOWN_16: KDBCountry = 16;
+pub const KDB_COUNTRY_UNKNOWN_17: KDBCountry = 17;
+pub const KDB_COUNTRY_UNKNOWN_18: KDBCountry = 18;
+pub type KDBCountry = ::core::ffi::c_uint;
+pub const KDB_ERROR_NONE: KDBError = 0;
+pub const KDB_ERROR_NOT_INITIALIZED: KDBError = 2;
+pub const KDB_ERROR_ALREADY_INITIALIZED: KDBError = 3;
+pub const KDB_ERROR_INVALID_COUNTRY: KDBError = 4;
+pub type KDBError = ::core::ffi::c_uint;
 extern "C" {
     pub fn KBDInit(
         unused: u32,
         attachCallback: KDBAttachCallback,
         detachCallback: KDBAttachCallback,
         keyCallback: KDBKeyCallback,
-    ) -> KDBError::Type;
+    ) -> KDBError;
 }
 extern "C" {
     pub fn KBDSetup(
         attachCallback: KDBAttachCallback,
         detachCallback: KDBAttachCallback,
         keyCallback: KDBKeyCallback,
-    ) -> KDBError::Type;
+    ) -> KDBError;
 }
 extern "C" {
-    pub fn KBDTeardown() -> KDBError::Type;
+    pub fn KBDTeardown() -> KDBError;
 }
 extern "C" {
-    pub fn KBDSetCountry(channel: u8, country: KDBCountry::Type) -> KDBError::Type;
+    pub fn KBDSetCountry(channel: u8, country: KDBCountry) -> KDBError;
 }
 pub type nfds_t = ::core::ffi::c_ulong;
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct pollfd {
     pub fd: ::core::ffi::c_int,
     pub events: ::core::ffi::c_int,
@@ -9198,19 +9718,17 @@ pub type DMAETimeStamp = u64;
 extern "C" {
     pub fn DMAEWaitDone(timestamp: DMAETimeStamp) -> BOOL;
 }
-pub mod DMAESwapMode {
-    pub type Type = ::core::ffi::c_uint;
-    pub const DMAE_SWAP_NONE: Type = 0;
-    pub const DMAE_SWAP_16: Type = 1;
-    pub const DMAE_SWAP_32: Type = 2;
-    pub const DMAE_SWAP_64: Type = 3;
-}
+pub const DMAE_SWAP_NONE: DMAESwapMode = 0;
+pub const DMAE_SWAP_16: DMAESwapMode = 1;
+pub const DMAE_SWAP_32: DMAESwapMode = 2;
+pub const DMAE_SWAP_64: DMAESwapMode = 3;
+pub type DMAESwapMode = ::core::ffi::c_uint;
 extern "C" {
     pub fn DMAECopyMem(
         dst: *mut ::core::ffi::c_void,
         src: *const ::core::ffi::c_void,
         wordCount: u32,
-        swap: DMAESwapMode::Type,
+        swap: DMAESwapMode,
     ) -> DMAETimeStamp;
 }
 extern "C" {
@@ -9262,40 +9780,34 @@ extern "C" {
         dst: *mut ::core::ffi::c_void,
     ) -> ::core::ffi::c_int;
 }
-pub mod SOMemOptRequest {
-    pub type Type = ::core::ffi::c_uint;
-    pub const SOMEMOPT_REQUEST_INIT: Type = 1;
-    pub const SOMEMOPT_REQUEST_GET_BYTES_USED: Type = 2;
-    pub const SOMEMOPT_REQUEST_WAIT_FOR_INIT: Type = 3;
-    pub const SOMEMOPT_REQUEST_CANCEL_WAIT: Type = 4;
-}
-pub mod SOMemOptFlags {
-    pub type Type = ::core::ffi::c_uint;
-    pub const SOMEMOPT_FLAGS_NONE: Type = 0;
-    pub const SOMEMOPT_FLAGS_BIG_BUFFERS: Type = 1;
-}
+pub const SOMEMOPT_REQUEST_INIT: SOMemOptRequest = 1;
+pub const SOMEMOPT_REQUEST_GET_BYTES_USED: SOMemOptRequest = 2;
+pub const SOMEMOPT_REQUEST_WAIT_FOR_INIT: SOMemOptRequest = 3;
+pub const SOMEMOPT_REQUEST_CANCEL_WAIT: SOMemOptRequest = 4;
+pub type SOMemOptRequest = ::core::ffi::c_uint;
+pub const SOMEMOPT_FLAGS_NONE: SOMemOptFlags = 0;
+pub const SOMEMOPT_FLAGS_BIG_BUFFERS: SOMemOptFlags = 1;
+pub type SOMemOptFlags = ::core::ffi::c_uint;
 extern "C" {
     pub fn somemopt(
-        request: SOMemOptRequest::Type,
+        request: SOMemOptRequest,
         buffer: *mut ::core::ffi::c_void,
         size: u32,
-        flags: SOMemOptFlags::Type,
+        flags: SOMemOptFlags,
     ) -> ::core::ffi::c_int;
 }
 extern "C" {
     pub fn __rplwrap_somemopt(
-        request: SOMemOptRequest::Type,
+        request: SOMemOptRequest,
         buffer: *mut ::core::ffi::c_void,
         size: u32,
-        flags: SOMemOptFlags::Type,
+        flags: SOMemOptFlags,
     ) -> ::core::ffi::c_int;
 }
-pub mod FFLCreateIDFlags {
-    pub type Type = ::core::ffi::c_uint;
-    pub const FFL_CREATE_ID_FLAG_WII_U: Type = 5;
-    pub const FFL_CREATE_ID_FLAG_TEMPORARY: Type = 2;
-    pub const FFL_CREATE_ID_FLAG_NORMAL: Type = 8;
-}
+pub const FFL_CREATE_ID_FLAG_WII_U: FFLCreateIDFlags = 5;
+pub const FFL_CREATE_ID_FLAG_TEMPORARY: FFLCreateIDFlags = 2;
+pub const FFL_CREATE_ID_FLAG_NORMAL: FFLCreateIDFlags = 8;
+pub type FFLCreateIDFlags = ::core::ffi::c_uint;
 #[repr(C, packed)]
 #[derive(Debug, Copy, Clone)]
 pub struct FFLCreateID {
@@ -9303,13 +9815,22 @@ pub struct FFLCreateID {
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 4usize]>,
     pub deviceHash: [u8; 6usize],
 }
+impl Default for FFLCreateID {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 impl FFLCreateID {
     #[inline]
-    pub fn flags(&self) -> FFLCreateIDFlags::Type {
+    pub fn flags(&self) -> FFLCreateIDFlags {
         unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 4u8) as u32) }
     }
     #[inline]
-    pub fn set_flags(&mut self, val: FFLCreateIDFlags::Type) {
+    pub fn set_flags(&mut self, val: FFLCreateIDFlags) {
         unsafe {
             let val: u32 = ::core::mem::transmute(val);
             self._bitfield_1.set(0usize, 4u8, val as u64)
@@ -9328,7 +9849,7 @@ impl FFLCreateID {
     }
     #[inline]
     pub fn new_bitfield_1(
-        flags: FFLCreateIDFlags::Type,
+        flags: FFLCreateIDFlags,
         timestamp: u32,
     ) -> __BindgenBitfieldUnit<[u8; 4usize]> {
         let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 4usize]> = Default::default();
@@ -9362,6 +9883,15 @@ pub struct FFLiMiiDataCore {
     pub hair_type: u8,
     pub _bitfield_align_4: [u8; 0],
     pub _bitfield_4: __BindgenBitfieldUnit<[u8; 20usize]>,
+}
+impl Default for FFLiMiiDataCore {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 impl FFLiMiiDataCore {
     #[inline]
@@ -10323,6 +10853,15 @@ pub struct FFLiMiiDataOfficial {
     pub core: FFLiMiiDataCore,
     pub creator_name: [u16; 10usize],
 }
+impl Default for FFLiMiiDataOfficial {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C, packed)]
 #[derive(Debug, Copy, Clone)]
 pub struct FFLStoreData {
@@ -10330,11 +10869,18 @@ pub struct FFLStoreData {
     pub unk_0x5C: u16,
     pub checksum: u16,
 }
-pub mod OSEventMode {
-    pub type Type = ::core::ffi::c_uint;
-    pub const OS_EVENT_MODE_MANUAL: Type = 0;
-    pub const OS_EVENT_MODE_AUTO: Type = 1;
+impl Default for FFLStoreData {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
+pub const OS_EVENT_MODE_MANUAL: OSEventMode = 0;
+pub const OS_EVENT_MODE_AUTO: OSEventMode = 1;
+pub type OSEventMode = ::core::ffi::c_uint;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct OSEvent {
@@ -10343,16 +10889,25 @@ pub struct OSEvent {
     pub __unk62: [::core::ffi::c_char; 4usize],
     pub value: BOOL,
     pub queue: OSThreadQueue,
-    pub mode: OSEventMode::Type,
+    pub mode: OSEventMode,
+}
+impl Default for OSEvent {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 extern "C" {
-    pub fn OSInitEvent(event: *mut OSEvent, value: BOOL, mode: OSEventMode::Type);
+    pub fn OSInitEvent(event: *mut OSEvent, value: BOOL, mode: OSEventMode);
 }
 extern "C" {
     pub fn OSInitEventEx(
         event: *mut OSEvent,
         value: BOOL,
-        mode: OSEventMode::Type,
+        mode: OSEventMode,
         name: *mut ::core::ffi::c_char,
     );
 }
@@ -10376,22 +10931,18 @@ pub type SYSArgType = u32;
 pub type SYSDeserializeCallback = ::core::option::Option<
     unsafe extern "C" fn(arg: *mut SYSDeserializeArg, userArg: *mut ::core::ffi::c_void),
 >;
-pub mod SYSArgIDEnum {
-    pub type Type = ::core::ffi::c_uint;
-    pub const SYS_ARG_ID_END: Type = 0;
-    pub const SYS_ARG_ID_ANCHOR: Type = 100;
-    pub const SYS_ARG_ID_RESULT: Type = 101;
-    pub const SYS_ARG_ID_URL: Type = 200;
-    pub const SYS_ARG_ID_MIV_DATA: Type = 300;
-    pub const SYS_ARG_ID_JOIN_PID: Type = 400;
-}
-pub mod SYSArgTypeEnum {
-    pub type Type = ::core::ffi::c_uint;
-    pub const SYS_ARG_TYPE_UINT32: Type = 1;
-    pub const SYS_ARG_TYPE_UINT64: Type = 2;
-    pub const SYS_ARG_TYPE_DATA: Type = 3;
-    pub const SYS_ARG_TYPE_STRING: Type = 4;
-}
+pub const SYS_ARG_ID_END: SYSArgIDEnum = 0;
+pub const SYS_ARG_ID_ANCHOR: SYSArgIDEnum = 100;
+pub const SYS_ARG_ID_RESULT: SYSArgIDEnum = 101;
+pub const SYS_ARG_ID_URL: SYSArgIDEnum = 200;
+pub const SYS_ARG_ID_MIV_DATA: SYSArgIDEnum = 300;
+pub const SYS_ARG_ID_JOIN_PID: SYSArgIDEnum = 400;
+pub type SYSArgIDEnum = ::core::ffi::c_uint;
+pub const SYS_ARG_TYPE_UINT32: SYSArgTypeEnum = 1;
+pub const SYS_ARG_TYPE_UINT64: SYSArgTypeEnum = 2;
+pub const SYS_ARG_TYPE_DATA: SYSArgTypeEnum = 3;
+pub const SYS_ARG_TYPE_STRING: SYSArgTypeEnum = 4;
+pub type SYSArgTypeEnum = ::core::ffi::c_uint;
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct SYSArgDataBlock {
@@ -10413,14 +10964,50 @@ pub struct SYSArgDataBlock__bindgen_ty_1__bindgen_ty_1 {
     pub ptr: *mut ::core::ffi::c_void,
     pub size: u32,
 }
+impl Default for SYSArgDataBlock__bindgen_ty_1__bindgen_ty_1 {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct SYSArgDataBlock__bindgen_ty_1__bindgen_ty_2 {
     pub ptr: *const ::core::ffi::c_char,
     pub size: u32,
 }
+impl Default for SYSArgDataBlock__bindgen_ty_1__bindgen_ty_2 {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
+impl Default for SYSArgDataBlock__bindgen_ty_1 {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
+impl Default for SYSArgDataBlock {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct SYSCallerInfo {
     pub upid: u32,
     pub __unk63: [::core::ffi::c_char; 4usize],
@@ -10433,17 +11020,44 @@ pub struct SYSDeserializeArg {
     pub size: u32,
     pub data: *mut ::core::ffi::c_void,
 }
+impl Default for SYSDeserializeArg {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct SYSStandardArgsOut {
     pub data: *const ::core::ffi::c_void,
     pub size: u32,
 }
+impl Default for SYSStandardArgsOut {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct SYSStandardArgsIn {
     pub argString: *const ::core::ffi::c_char,
     pub size: u32,
+}
+impl Default for SYSStandardArgsIn {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -10452,6 +11066,15 @@ pub struct SYSStandardArgs {
     pub anchorSize: u32,
     pub resultData: *mut ::core::ffi::c_void,
     pub resultSize: u32,
+}
+impl Default for SYSStandardArgs {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 extern "C" {
     pub fn SYSGetArguments(args: *mut SYSArgDataBlock, callerInfo: *mut SYSCallerInfo) -> i32;
@@ -10508,86 +11131,82 @@ extern "C" {
         standardArg: *mut SYSStandardArgs,
     ) -> BOOL;
 }
-pub mod ACPResult {
-    pub type Type = ::core::ffi::c_int;
-    pub const ACP_RESULT_SUCCESS: Type = 0;
-    pub const ACP_RESULT_INVALID: Type = -200;
-    pub const ACP_RESULT_INVALID_PARAMETER: Type = -201;
-    pub const ACP_RESULT_INVALID_FILE: Type = -202;
-    pub const ACP_RESULT_INVALID_XML_FILE: Type = -203;
-    pub const ACP_RESULT_FILE_ACCESS_MODE: Type = -204;
-    pub const ACP_RESULT_INVALID_NETWORK_TIME: Type = -205;
-    pub const ACP_RESULT_NOT_FOUND: Type = -500;
-    pub const ACP_RESULT_FILE_NOT_FOUND: Type = -501;
-    pub const ACP_RESULT_DIR_NOT_FOUND: Type = -502;
-    pub const ACP_RESULT_DEVICE_NOT_FOUND: Type = -503;
-    pub const ACP_RESULT_TITLE_NOT_FOUND: Type = -504;
-    pub const ACP_RESULT_APPLICATION_NOT_FOUND: Type = -505;
-    pub const ACP_RESULT_SYSTEM_CONFIG_NOT_FOUND: Type = -506;
-    pub const ACP_RESULT_XML_ITEM_NOT_FOUND: Type = -507;
-    pub const ACP_RESULT_ALREADY_EXISTS: Type = -600;
-    pub const ACP_RESULT_FILE_ALREADY_EXISTS: Type = -601;
-    pub const ACP_RESULT_DIR_ALREADY_EXISTS: Type = -602;
-    pub const ACP_RESULT_ALREADY_DONE: Type = -700;
-    pub const ACP_RESULT_AUTHENTICATION: Type = -1000;
-    pub const ACP_RESULT_INVALID_REGION: Type = -1001;
-    pub const ACP_RESULT_RESTRICTED_RATING: Type = -1002;
-    pub const ACP_RESULT_NOT_PRESENT_RATING: Type = -1003;
-    pub const ACP_RESULT_PENDING_RATING: Type = -1004;
-    pub const ACP_RESULT_NET_SETTING_REQUIRED: Type = -1005;
-    pub const ACP_RESULT_NET_ACCOUNT_REQUIRED: Type = -1006;
-    pub const ACP_RESULT_NET_ACCOUNT_ERROR: Type = -1007;
-    pub const ACP_RESULT_BROWSER_REQUIRED: Type = -1008;
-    pub const ACP_RESULT_OLV_REQUIRED: Type = -1009;
-    pub const ACP_RESULT_PINCODE_REQUIRED: Type = -1010;
-    pub const ACP_RESULT_INCORRECT_PINCODE: Type = -1011;
-    pub const ACP_RESULT_INVALID_LOGO: Type = -1012;
-    pub const ACP_RESULT_DEMO_EXPIRED_NUMBER: Type = -1013;
-    pub const ACP_RESULT_DRC_REQUIRED: Type = -1014;
-    pub const ACP_RESULT_NO_PERMISSION: Type = -1100;
-    pub const ACP_RESULT_NO_FILE_PERMISSION: Type = -1101;
-    pub const ACP_RESULT_NO_DIR_PERMISSION: Type = -1102;
-    pub const ACP_RESULT_BUSY: Type = -1300;
-    pub const ACP_RESULT_USB_STORAGE_NOT_READY: Type = -1301;
-    pub const ACP_RESULT_CANCELLED: Type = -1400;
-    pub const ACP_RESULT_RESOURCE: Type = -1500;
-    pub const ACP_RESULT_DEVICE_FULL: Type = -1501;
-    pub const ACP_RESULT_JOURNAL_FULL: Type = -1502;
-    pub const ACP_RESULT_SYSTEM_MEMORY: Type = -1503;
-    pub const ACP_RESULT_FS_RESOURCE: Type = -1504;
-    pub const ACP_RESULT_IPC_RESOURCE: Type = -1505;
-    pub const ACP_RESULT_NOT_INITIALISED: Type = -1600;
-    pub const ACP_RESULT_ACCOUNT_ERROR: Type = -1700;
-    pub const ACP_RESULT_UNSUPPORTED: Type = -1800;
-    pub const ACP_RESULT_DATA_CORRUPTED: Type = -2000;
-    pub const ACP_RESULT_DEVICE: Type = -2001;
-    pub const ACP_RESULT_SLC_DATA_CORRUPTED: Type = -2002;
-    pub const ACP_RESULT_MLC_DATA_CORRUPTED: Type = -2003;
-    pub const ACP_RESULT_USB_DATA_CORRUPTED: Type = -2004;
-    pub const ACP_RESULT_MEDIA: Type = -2100;
-    pub const ACP_RESULT_MEDIA_NOT_READY: Type = -2101;
-    pub const ACP_RESULT_MEDIA_BROKEN: Type = -2102;
-    pub const ACP_RESULT_ODD_MEDIA_NOT_READY: Type = -2103;
-    pub const ACP_RESULT_ODD_MEDIA_BROKEN: Type = -2104;
-    pub const ACP_RESULT_USB_MEDIA_NOT_READY: Type = -2105;
-    pub const ACP_RESULT_USB_MEDIA_BROKEN: Type = -2106;
-    pub const ACP_RESULT_MEDIA_WRITE_PROTECTED: Type = -2107;
-    pub const ACP_RESULT_USB_WRITE_PROTECTED: Type = -2108;
-    pub const ACP_RESULT_MII: Type = -2200;
-    pub const ACP_RESULT_ENCRYPTION_ERROR: Type = -2201;
-    pub const ACP_RESULT_GENERIC_ERROR: Type = -4096;
-}
-pub mod ACPDeviceType {
-    pub type Type = ::core::ffi::c_uint;
-    pub const ACP_DEVICE_TYPE_AUTO: Type = 1;
-    pub const ACP_DEVICE_TYPE_ODD: Type = 2;
-    pub const ACP_DEVICE_TYPE_HFIODISC: Type = 2;
-    pub const ACP_DEVICE_TYPE_MLC: Type = 3;
-    pub const ACP_DEVICE_TYPE_HFIOMLC: Type = 3;
-    pub const ACP_DEVICE_TYPE_USB: Type = 4;
-}
+pub const ACP_RESULT_SUCCESS: ACPResult = 0;
+pub const ACP_RESULT_INVALID: ACPResult = -200;
+pub const ACP_RESULT_INVALID_PARAMETER: ACPResult = -201;
+pub const ACP_RESULT_INVALID_FILE: ACPResult = -202;
+pub const ACP_RESULT_INVALID_XML_FILE: ACPResult = -203;
+pub const ACP_RESULT_FILE_ACCESS_MODE: ACPResult = -204;
+pub const ACP_RESULT_INVALID_NETWORK_TIME: ACPResult = -205;
+pub const ACP_RESULT_NOT_FOUND: ACPResult = -500;
+pub const ACP_RESULT_FILE_NOT_FOUND: ACPResult = -501;
+pub const ACP_RESULT_DIR_NOT_FOUND: ACPResult = -502;
+pub const ACP_RESULT_DEVICE_NOT_FOUND: ACPResult = -503;
+pub const ACP_RESULT_TITLE_NOT_FOUND: ACPResult = -504;
+pub const ACP_RESULT_APPLICATION_NOT_FOUND: ACPResult = -505;
+pub const ACP_RESULT_SYSTEM_CONFIG_NOT_FOUND: ACPResult = -506;
+pub const ACP_RESULT_XML_ITEM_NOT_FOUND: ACPResult = -507;
+pub const ACP_RESULT_ALREADY_EXISTS: ACPResult = -600;
+pub const ACP_RESULT_FILE_ALREADY_EXISTS: ACPResult = -601;
+pub const ACP_RESULT_DIR_ALREADY_EXISTS: ACPResult = -602;
+pub const ACP_RESULT_ALREADY_DONE: ACPResult = -700;
+pub const ACP_RESULT_AUTHENTICATION: ACPResult = -1000;
+pub const ACP_RESULT_INVALID_REGION: ACPResult = -1001;
+pub const ACP_RESULT_RESTRICTED_RATING: ACPResult = -1002;
+pub const ACP_RESULT_NOT_PRESENT_RATING: ACPResult = -1003;
+pub const ACP_RESULT_PENDING_RATING: ACPResult = -1004;
+pub const ACP_RESULT_NET_SETTING_REQUIRED: ACPResult = -1005;
+pub const ACP_RESULT_NET_ACCOUNT_REQUIRED: ACPResult = -1006;
+pub const ACP_RESULT_NET_ACCOUNT_ERROR: ACPResult = -1007;
+pub const ACP_RESULT_BROWSER_REQUIRED: ACPResult = -1008;
+pub const ACP_RESULT_OLV_REQUIRED: ACPResult = -1009;
+pub const ACP_RESULT_PINCODE_REQUIRED: ACPResult = -1010;
+pub const ACP_RESULT_INCORRECT_PINCODE: ACPResult = -1011;
+pub const ACP_RESULT_INVALID_LOGO: ACPResult = -1012;
+pub const ACP_RESULT_DEMO_EXPIRED_NUMBER: ACPResult = -1013;
+pub const ACP_RESULT_DRC_REQUIRED: ACPResult = -1014;
+pub const ACP_RESULT_NO_PERMISSION: ACPResult = -1100;
+pub const ACP_RESULT_NO_FILE_PERMISSION: ACPResult = -1101;
+pub const ACP_RESULT_NO_DIR_PERMISSION: ACPResult = -1102;
+pub const ACP_RESULT_BUSY: ACPResult = -1300;
+pub const ACP_RESULT_USB_STORAGE_NOT_READY: ACPResult = -1301;
+pub const ACP_RESULT_CANCELLED: ACPResult = -1400;
+pub const ACP_RESULT_RESOURCE: ACPResult = -1500;
+pub const ACP_RESULT_DEVICE_FULL: ACPResult = -1501;
+pub const ACP_RESULT_JOURNAL_FULL: ACPResult = -1502;
+pub const ACP_RESULT_SYSTEM_MEMORY: ACPResult = -1503;
+pub const ACP_RESULT_FS_RESOURCE: ACPResult = -1504;
+pub const ACP_RESULT_IPC_RESOURCE: ACPResult = -1505;
+pub const ACP_RESULT_NOT_INITIALISED: ACPResult = -1600;
+pub const ACP_RESULT_ACCOUNT_ERROR: ACPResult = -1700;
+pub const ACP_RESULT_UNSUPPORTED: ACPResult = -1800;
+pub const ACP_RESULT_DATA_CORRUPTED: ACPResult = -2000;
+pub const ACP_RESULT_DEVICE: ACPResult = -2001;
+pub const ACP_RESULT_SLC_DATA_CORRUPTED: ACPResult = -2002;
+pub const ACP_RESULT_MLC_DATA_CORRUPTED: ACPResult = -2003;
+pub const ACP_RESULT_USB_DATA_CORRUPTED: ACPResult = -2004;
+pub const ACP_RESULT_MEDIA: ACPResult = -2100;
+pub const ACP_RESULT_MEDIA_NOT_READY: ACPResult = -2101;
+pub const ACP_RESULT_MEDIA_BROKEN: ACPResult = -2102;
+pub const ACP_RESULT_ODD_MEDIA_NOT_READY: ACPResult = -2103;
+pub const ACP_RESULT_ODD_MEDIA_BROKEN: ACPResult = -2104;
+pub const ACP_RESULT_USB_MEDIA_NOT_READY: ACPResult = -2105;
+pub const ACP_RESULT_USB_MEDIA_BROKEN: ACPResult = -2106;
+pub const ACP_RESULT_MEDIA_WRITE_PROTECTED: ACPResult = -2107;
+pub const ACP_RESULT_USB_WRITE_PROTECTED: ACPResult = -2108;
+pub const ACP_RESULT_MII: ACPResult = -2200;
+pub const ACP_RESULT_ENCRYPTION_ERROR: ACPResult = -2201;
+pub const ACP_RESULT_GENERIC_ERROR: ACPResult = -4096;
+pub type ACPResult = ::core::ffi::c_int;
+pub const ACP_DEVICE_TYPE_AUTO: ACPDeviceType = 1;
+pub const ACP_DEVICE_TYPE_ODD: ACPDeviceType = 2;
+pub const ACP_DEVICE_TYPE_HFIODISC: ACPDeviceType = 2;
+pub const ACP_DEVICE_TYPE_MLC: ACPDeviceType = 3;
+pub const ACP_DEVICE_TYPE_HFIOMLC: ACPDeviceType = 3;
+pub const ACP_DEVICE_TYPE_USB: ACPDeviceType = 4;
+pub type ACPDeviceType = ::core::ffi::c_uint;
 extern "C" {
-    pub fn ACPCheckApplicationDeviceEmulation(emulation: *mut BOOL) -> ACPResult::Type;
+    pub fn ACPCheckApplicationDeviceEmulation(emulation: *mut BOOL) -> ACPResult;
 }
 pub type MCPError = i32;
 #[repr(C)]
@@ -10595,77 +11214,65 @@ pub type MCPError = i32;
 pub struct MCPDeviceList {
     _unused: [u8; 0],
 }
-pub mod MCPAppType {
-    pub type Type = ::core::ffi::c_uint;
-    pub const MCP_APP_TYPE_GAME_UPDATE: Type = 134217755;
-    pub const MCP_APP_TYPE_GAME_DLC: Type = 134217742;
-    pub const MCP_APP_TYPE_BOOT1: Type = 268435465;
-    pub const MCP_APP_TYPE_SYSTEM_LIBRARIES: Type = 268435466;
-    pub const MCP_APP_TYPE_BLUETOOTH_FIRMWARE: Type = 268435474;
-    pub const MCP_APP_TYPE_DRC_FIRMWARE: Type = 268435475;
-    pub const MCP_APP_TYPE_DRH_FIRMWARE: Type = 268435476;
-    pub const MCP_APP_TYPE_SYSTEM_VERSION: Type = 268435477;
-    pub const MCP_APP_TYPE_DRC_LANGUAGE: Type = 268435482;
-    pub const MCP_APP_TYPE_EXCEPTIONS_DATA: Type = 402653200;
-    pub const MCP_APP_TYPE_SHARED_DATA: Type = 402653212;
-    pub const MCP_APP_TYPE_CERT_STORE: Type = 402653214;
-    pub const MCP_APP_TYPE_PATCH_MAP_DATA: Type = 402653219;
-    pub const MCP_APP_TYPE_WAGONU_MIGRATION_LIST: Type = 402653225;
-    pub const MCP_APP_TYPE_CAFFEINE_TITLE_LIST: Type = 402653232;
-    pub const MCP_APP_TYPE_MCP_TITLE_LIST: Type = 402653233;
-    pub const MCP_APP_TYPE_GAME: Type = 2147483648;
-    pub const MCP_APP_TYPE_GAME_WII: Type = 2147483694;
-    pub const MCP_APP_TYPE_SYSTEM_MENU: Type = 2415919105;
-    pub const MCP_APP_TYPE_SYSTEM_UPDATER: Type = 2415919115;
-    pub const MCP_APP_TYPE_SYSTEM_APPS: Type = 2415919136;
-    pub const MCP_APP_TYPE_ACCOUNT_APPS: Type = 2415919137;
-    pub const MCP_APP_TYPE_SYSTEM_SETTINGS: Type = 2415919138;
-    pub const MCP_APP_TYPE_ECO_PROCESS: Type = 2415919151;
-    pub const MCP_APP_TYPE_EMANUAL: Type = 3489660931;
-    pub const MCP_APP_TYPE_HOME_MENU: Type = 3489660932;
-    pub const MCP_APP_TYPE_ERROR_DISPLAY: Type = 3489660933;
-    pub const MCP_APP_TYPE_BROWSER: Type = 3489660934;
-    pub const MCP_APP_TYPE_MIIVERSE_POST: Type = 3489660941;
-    pub const MCP_APP_TYPE_MIIVERSE: Type = 3489660950;
-    pub const MCP_APP_TYPE_ESHOP: Type = 3489660951;
-    pub const MCP_APP_TYPE_FRIEND_LIST: Type = 3489660952;
-    pub const MCP_APP_TYPE_DOWNLOAD_MANAGEMENT: Type = 3489660953;
-    pub const MCP_APP_TYPE_AOC_OVERLAY: Type = 3489660972;
-    pub const MCP_APP_TYPE_AMIIBO_SETTINGS: Type = 3489660979;
-}
-pub mod MCPDeviceType {
-    pub type Type = ::core::ffi::c_uint;
-    pub const MCP_DEVICE_TYPE_AUTO: Type = 1;
-    pub const MCP_DEVICE_TYPE_ODD: Type = 2;
-    pub const MCP_DEVICE_TYPE_MLC: Type = 3;
-    pub const MCP_DEVICE_TYPE_USB: Type = 4;
-}
-pub mod MCPDeviceFlags {
-    pub type Type = ::core::ffi::c_uint;
-    pub const MCP_DEVICE_FLAG_UNK_1: Type = 1;
-    pub const MCP_DEVICE_FLAG_UNK_2: Type = 2;
-    pub const MCP_DEVICE_FLAG_UNK_4: Type = 4;
-    pub const MCP_DEVICE_FLAG_UNK_8: Type = 8;
-}
-pub mod MCPInstallTarget {
-    pub type Type = ::core::ffi::c_uint;
-    pub const MCP_INSTALL_TARGET_MLC: Type = 0;
-    pub const MCP_INSTALL_TARGET_USB: Type = 1;
-}
-pub mod MCPRegion {
-    pub type Type = ::core::ffi::c_uint;
-    pub const MCP_REGION_JAPAN: Type = 1;
-    pub const MCP_REGION_USA: Type = 2;
-    pub const MCP_REGION_EUROPE: Type = 4;
-    pub const MCP_REGION_CHINA: Type = 16;
-    pub const MCP_REGION_KOREA: Type = 32;
-    pub const MCP_REGION_TAIWAN: Type = 64;
-}
-pub mod MCPCompatAVFile {
-    pub type Type = ::core::ffi::c_uint;
-    pub const MCP_COMPAT_AV_FILE_DMCU: Type = 0;
-    pub const MCP_COMPAT_AV_FILE_DEINT: Type = 1;
-}
+pub const MCP_APP_TYPE_GAME_UPDATE: MCPAppType = 134217755;
+pub const MCP_APP_TYPE_GAME_DLC: MCPAppType = 134217742;
+pub const MCP_APP_TYPE_BOOT1: MCPAppType = 268435465;
+pub const MCP_APP_TYPE_SYSTEM_LIBRARIES: MCPAppType = 268435466;
+pub const MCP_APP_TYPE_BLUETOOTH_FIRMWARE: MCPAppType = 268435474;
+pub const MCP_APP_TYPE_DRC_FIRMWARE: MCPAppType = 268435475;
+pub const MCP_APP_TYPE_DRH_FIRMWARE: MCPAppType = 268435476;
+pub const MCP_APP_TYPE_SYSTEM_VERSION: MCPAppType = 268435477;
+pub const MCP_APP_TYPE_DRC_LANGUAGE: MCPAppType = 268435482;
+pub const MCP_APP_TYPE_EXCEPTIONS_DATA: MCPAppType = 402653200;
+pub const MCP_APP_TYPE_SHARED_DATA: MCPAppType = 402653212;
+pub const MCP_APP_TYPE_CERT_STORE: MCPAppType = 402653214;
+pub const MCP_APP_TYPE_PATCH_MAP_DATA: MCPAppType = 402653219;
+pub const MCP_APP_TYPE_WAGONU_MIGRATION_LIST: MCPAppType = 402653225;
+pub const MCP_APP_TYPE_CAFFEINE_TITLE_LIST: MCPAppType = 402653232;
+pub const MCP_APP_TYPE_MCP_TITLE_LIST: MCPAppType = 402653233;
+pub const MCP_APP_TYPE_GAME: MCPAppType = 2147483648;
+pub const MCP_APP_TYPE_GAME_WII: MCPAppType = 2147483694;
+pub const MCP_APP_TYPE_SYSTEM_MENU: MCPAppType = 2415919105;
+pub const MCP_APP_TYPE_SYSTEM_UPDATER: MCPAppType = 2415919115;
+pub const MCP_APP_TYPE_SYSTEM_APPS: MCPAppType = 2415919136;
+pub const MCP_APP_TYPE_ACCOUNT_APPS: MCPAppType = 2415919137;
+pub const MCP_APP_TYPE_SYSTEM_SETTINGS: MCPAppType = 2415919138;
+pub const MCP_APP_TYPE_ECO_PROCESS: MCPAppType = 2415919151;
+pub const MCP_APP_TYPE_EMANUAL: MCPAppType = 3489660931;
+pub const MCP_APP_TYPE_HOME_MENU: MCPAppType = 3489660932;
+pub const MCP_APP_TYPE_ERROR_DISPLAY: MCPAppType = 3489660933;
+pub const MCP_APP_TYPE_BROWSER: MCPAppType = 3489660934;
+pub const MCP_APP_TYPE_MIIVERSE_POST: MCPAppType = 3489660941;
+pub const MCP_APP_TYPE_MIIVERSE: MCPAppType = 3489660950;
+pub const MCP_APP_TYPE_ESHOP: MCPAppType = 3489660951;
+pub const MCP_APP_TYPE_FRIEND_LIST: MCPAppType = 3489660952;
+pub const MCP_APP_TYPE_DOWNLOAD_MANAGEMENT: MCPAppType = 3489660953;
+pub const MCP_APP_TYPE_AOC_OVERLAY: MCPAppType = 3489660972;
+pub const MCP_APP_TYPE_AMIIBO_SETTINGS: MCPAppType = 3489660979;
+pub type MCPAppType = ::core::ffi::c_uint;
+pub const MCP_DEVICE_TYPE_AUTO: MCPDeviceType = 1;
+pub const MCP_DEVICE_TYPE_ODD: MCPDeviceType = 2;
+pub const MCP_DEVICE_TYPE_MLC: MCPDeviceType = 3;
+pub const MCP_DEVICE_TYPE_USB: MCPDeviceType = 4;
+pub type MCPDeviceType = ::core::ffi::c_uint;
+pub const MCP_DEVICE_FLAG_UNK_1: MCPDeviceFlags = 1;
+pub const MCP_DEVICE_FLAG_UNK_2: MCPDeviceFlags = 2;
+pub const MCP_DEVICE_FLAG_UNK_4: MCPDeviceFlags = 4;
+pub const MCP_DEVICE_FLAG_UNK_8: MCPDeviceFlags = 8;
+pub type MCPDeviceFlags = ::core::ffi::c_uint;
+pub const MCP_INSTALL_TARGET_MLC: MCPInstallTarget = 0;
+pub const MCP_INSTALL_TARGET_USB: MCPInstallTarget = 1;
+pub type MCPInstallTarget = ::core::ffi::c_uint;
+pub const MCP_REGION_JAPAN: MCPRegion = 1;
+pub const MCP_REGION_USA: MCPRegion = 2;
+pub const MCP_REGION_EUROPE: MCPRegion = 4;
+pub const MCP_REGION_CHINA: MCPRegion = 16;
+pub const MCP_REGION_KOREA: MCPRegion = 32;
+pub const MCP_REGION_TAIWAN: MCPRegion = 64;
+pub type MCPRegion = ::core::ffi::c_uint;
+pub const MCP_COMPAT_AV_FILE_DMCU: MCPCompatAVFile = 0;
+pub const MCP_COMPAT_AV_FILE_DEINT: MCPCompatAVFile = 1;
+pub type MCPCompatAVFile = ::core::ffi::c_uint;
 #[repr(C, packed)]
 #[derive(Debug, Copy, Clone)]
 pub struct MCPDevice {
@@ -10673,17 +11280,35 @@ pub struct MCPDevice {
     pub unk0x08: [::core::ffi::c_char; 128usize],
     pub filesystem: [::core::ffi::c_char; 8usize],
     pub path: [::core::ffi::c_char; 639usize],
-    pub flags: MCPDeviceFlags::Type,
+    pub flags: MCPDeviceFlags,
     pub uid: u32,
     pub index: u32,
+}
+impl Default for MCPDevice {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct MCPInstallInfo {
     pub __unk64: [::core::ffi::c_char; 639usize],
 }
+impl Default for MCPInstallInfo {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C, packed)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct MCPInstallProgress {
     pub inProgress: u32,
     pub tid: u64,
@@ -10697,13 +11322,22 @@ pub struct MCPInstallProgress {
 pub struct MCPInstallTitleInfo {
     pub __unk65: [::core::ffi::c_char; 639usize],
 }
+impl Default for MCPInstallTitleInfo {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C, packed)]
 #[derive(Debug, Copy, Clone)]
 pub struct MCPSysProdSettings {
-    pub product_area: MCPRegion::Type,
+    pub product_area: MCPRegion,
     pub eeprom_version: u16,
     pub __unk66: [::core::ffi::c_char; 2usize],
-    pub game_region: MCPRegion::Type,
+    pub game_region: MCPRegion,
     pub __unk67: [::core::ffi::c_char; 4usize],
     pub ntsc_pal: [::core::ffi::c_char; 5usize],
     pub wifi_5ghz_country_code: [::core::ffi::c_char; 4usize],
@@ -10714,8 +11348,17 @@ pub struct MCPSysProdSettings {
     pub model_number: [::core::ffi::c_char; 16usize],
     pub version: u32,
 }
+impl Default for MCPSysProdSettings {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct MCPSystemVersion {
     pub major: u32,
     pub minor: u32,
@@ -10728,12 +11371,21 @@ pub struct MCPTitleListType {
     pub titleId: u64,
     pub groupId: u32,
     pub path: [::core::ffi::c_char; 56usize],
-    pub appType: MCPAppType::Type,
+    pub appType: MCPAppType,
     pub titleVersion: u16,
     pub osVersion: u64,
     pub sdkVersion: u32,
     pub indexedDevice: [::core::ffi::c_char; 10usize],
     pub unk0x60: u8,
+}
+impl Default for MCPTitleListType {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 extern "C" {
     pub fn MCP_Open() -> MCPError;
@@ -10779,13 +11431,13 @@ extern "C" {
 extern "C" {
     pub fn MCP_InstallSetTargetDevice(
         handle: ::core::ffi::c_int,
-        device: MCPInstallTarget::Type,
+        device: MCPInstallTarget,
     ) -> MCPError;
 }
 extern "C" {
     pub fn MCP_InstallGetTargetDevice(
         handle: ::core::ffi::c_int,
-        deviceOut: *mut MCPInstallTarget::Type,
+        deviceOut: *mut MCPInstallTarget,
     ) -> MCPError;
 }
 extern "C" {
@@ -10829,7 +11481,7 @@ extern "C" {
 extern "C" {
     pub fn MCP_TitleListByAppType(
         handle: i32,
-        appType: MCPAppType::Type,
+        appType: MCPAppType,
         outTitleCount: *mut u32,
         titleList: *mut MCPTitleListType,
         titleListSizeBytes: u32,
@@ -10856,7 +11508,7 @@ extern "C" {
 extern "C" {
     pub fn MCP_TitleListByDeviceType(
         handle: i32,
-        deviceType: MCPDeviceType::Type,
+        deviceType: MCPDeviceType,
         outTitleCount: *mut u32,
         titleList: *mut MCPTitleListType,
         titleListSizeBytes: u32,
@@ -10865,7 +11517,7 @@ extern "C" {
 extern "C" {
     pub fn MCP_TitleListByAppAndDevice(
         handle: i32,
-        appType: MCPAppType::Type,
+        appType: MCPAppType,
         deviceName: *const ::core::ffi::c_char,
         outTitleCount: *mut u32,
         titleList: *mut MCPTitleListType,
@@ -10875,8 +11527,8 @@ extern "C" {
 extern "C" {
     pub fn MCP_TitleListByAppAndDeviceType(
         handle: i32,
-        appType: MCPAppType::Type,
-        deviceType: MCPDeviceType::Type,
+        appType: MCPAppType,
+        deviceType: MCPDeviceType,
         outTitleCount: *mut u32,
         titleList: *mut MCPTitleListType,
         titleListSizeBytes: u32,
@@ -10888,7 +11540,7 @@ extern "C" {
         uniqueId: u32,
         indexedDevice: *const ::core::ffi::c_char,
         unk0x60: u8,
-        appType: MCPAppType::Type,
+        appType: MCPAppType,
         outTitleCount: *mut u32,
         titleList: *mut MCPTitleListType,
         titleListSizeBytes: u32,
@@ -10906,7 +11558,7 @@ extern "C" {
         handle: i32,
         ptr: *mut ::core::ffi::c_void,
         size: *mut u32,
-        file: MCPCompatAVFile::Type,
+        file: MCPCompatAVFile,
     ) -> MCPError;
 }
 extern "C" {
@@ -11032,46 +11684,53 @@ pub struct ACPMetaXml {
     pub add_on_unique_id: [u32; 32usize],
     pub __unk69: [::core::ffi::c_char; 52usize],
 }
-extern "C" {
-    pub fn ACPAssignTitlePatch(titleInfo: *mut MCPTitleListType) -> ACPResult::Type;
+impl Default for ACPMetaXml {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 extern "C" {
-    pub fn ACPGetTitleIdOfMainApplication(titleId: *mut ACPTitleId) -> ACPResult::Type;
+    pub fn ACPAssignTitlePatch(titleInfo: *mut MCPTitleListType) -> ACPResult;
 }
 extern "C" {
-    pub fn __rplwrap_ACPGetTitleMetaXml(
-        titleId: ACPTitleId,
-        metaXml: *mut ACPMetaXml,
-    ) -> ACPResult::Type;
+    pub fn ACPGetTitleIdOfMainApplication(titleId: *mut ACPTitleId) -> ACPResult;
+}
+extern "C" {
+    pub fn __rplwrap_ACPGetTitleMetaXml(titleId: ACPTitleId, metaXml: *mut ACPMetaXml)
+        -> ACPResult;
 }
 extern "C" {
     pub fn __rplwrap_ACPGetTitleSaveMetaXml(
         titleId: u64,
         metaXml: *mut ACPMetaXml,
-        deviceType: ACPDeviceType::Type,
-    ) -> ACPResult::Type;
+        deviceType: ACPDeviceType,
+    ) -> ACPResult;
 }
 extern "C" {
     pub fn ACPGetTitleMetaDir(
         titleId: ACPTitleId,
         directory: *mut ::core::ffi::c_char,
         directoryLen: usize,
-    ) -> ACPResult::Type;
+    ) -> ACPResult;
 }
 extern "C" {
     pub fn ACPGetTitleMetaDirByDevice(
         titleId: ACPTitleId,
         directory: *mut ::core::ffi::c_char,
         directoryLen: usize,
-        deviceType: ACPDeviceType::Type,
-    ) -> ACPResult::Type;
+        deviceType: ACPDeviceType,
+    ) -> ACPResult;
 }
 extern "C" {
     pub fn ACPGetTitleMetaDirByTitleListType(
         titleListType: MCPTitleListType,
         directory: *mut ::core::ffi::c_char,
         directoryLen: usize,
-    ) -> ACPResult::Type;
+    ) -> ACPResult;
 }
 pub type ACPDrcLedStatus = u8;
 pub type ACPDrcLedPattern = u32;
@@ -11123,123 +11782,124 @@ pub struct ACPSaveDirInfo {
     pub path: [::core::ffi::c_char; 64usize],
     pub __unk72: [::core::ffi::c_char; 32usize],
 }
-extern "C" {
-    pub fn ACPCreateSaveDir(persistentId: u32, deviceType: ACPDeviceType::Type) -> ACPResult::Type;
+impl Default for ACPSaveDirInfo {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 extern "C" {
-    pub fn ACPIsExternalStorageRequired(required: *mut BOOL) -> ACPResult::Type;
+    pub fn ACPCreateSaveDir(persistentId: u32, deviceType: ACPDeviceType) -> ACPResult;
 }
 extern "C" {
-    pub fn ACPMountExternalStorage() -> ACPResult::Type;
+    pub fn ACPIsExternalStorageRequired(required: *mut BOOL) -> ACPResult;
 }
 extern "C" {
-    pub fn ACPMountSaveDir() -> ACPResult::Type;
+    pub fn ACPMountExternalStorage() -> ACPResult;
+}
+extern "C" {
+    pub fn ACPMountSaveDir() -> ACPResult;
 }
 extern "C" {
     pub fn ACPRemoveSaveDir(
         persistentId: u32,
         titleId: u64,
-        deviceType: ACPDeviceType::Type,
-    ) -> ACPResult::Type;
+        deviceType: ACPDeviceType,
+    ) -> ACPResult;
 }
 extern "C" {
     pub fn ACPRemoveSaveDirWithoutFlush(
         persistentId: u32,
         titleId: u64,
-        deviceType: ACPDeviceType::Type,
-    ) -> ACPResult::Type;
+        deviceType: ACPDeviceType,
+    ) -> ACPResult;
 }
 extern "C" {
     pub fn ACPRemoveSaveDirWithoutMetaCheck(
         persistentId: u32,
         titleId: u64,
-        deviceType: ACPDeviceType::Type,
-    ) -> ACPResult::Type;
+        deviceType: ACPDeviceType,
+    ) -> ACPResult;
 }
 extern "C" {
-    pub fn ACPRepairSaveMetaDir() -> ACPResult::Type;
+    pub fn ACPRepairSaveMetaDir() -> ACPResult;
 }
 extern "C" {
-    pub fn ACPUnmountExternalStorage() -> ACPResult::Type;
+    pub fn ACPUnmountExternalStorage() -> ACPResult;
 }
 extern "C" {
-    pub fn ACPUnmountSaveDir() -> ACPResult::Type;
+    pub fn ACPUnmountSaveDir() -> ACPResult;
 }
 extern "C" {
     pub fn ACPGetSaveDataTitleIdList(
-        deviceType: ACPDeviceType::Type,
+        deviceType: ACPDeviceType,
         titlesOut: *mut u64,
         maxCount: u32,
         countOut: *mut u32,
-    ) -> ACPResult::Type;
+    ) -> ACPResult;
 }
 extern "C" {
     pub fn ACPGetTitleSaveDirEx(
         titleId: u64,
-        deviceType: ACPDeviceType::Type,
+        deviceType: ACPDeviceType,
         u1: u32,
         saveDirInfo: *mut ACPSaveDirInfo,
         maxCount: u32,
         countOut: *mut u32,
-    ) -> ACPResult::Type;
+    ) -> ACPResult;
 }
 extern "C" {
     pub fn ACPGetTitleSaveDirExWithoutMetaCheck(
         titleId: u64,
-        deviceType: ACPDeviceType::Type,
+        deviceType: ACPDeviceType,
         u1: u32,
         saveDirInfo: *mut ACPSaveDirInfo,
         maxCount: u32,
         countOut: *mut u32,
-    ) -> ACPResult::Type;
+    ) -> ACPResult;
 }
-pub mod HPADChan {
-    pub type Type = ::core::ffi::c_uint;
-    pub const HPAD_CHAN_0: Type = 0;
-    pub const HPAD_CHAN_1: Type = 1;
-    pub const HPAD_CHAN_2: Type = 2;
-    pub const HPAD_CHAN_3: Type = 3;
-    pub const HPAD_CHAN_4: Type = 4;
-    pub const HPAD_CHAN_5: Type = 5;
-    pub const HPAD_CHAN_6: Type = 6;
-    pub const HPAD_CHAN_7: Type = 7;
-}
-pub mod HPADGGGGChan {
-    pub type Type = ::core::ffi::c_uint;
-    pub const HPAD_GGGG_CHAN_0: Type = 0;
-    pub const HPAD_GGGG_CHAN_1: Type = 1;
-}
-pub mod HPADButtons {
-    pub type Type = ::core::ffi::c_uint;
-    pub const HPAD_BUTTON_A: Type = 1;
-    pub const HPAD_BUTTON_B: Type = 2;
-    pub const HPAD_BUTTON_X: Type = 4;
-    pub const HPAD_BUTTON_Y: Type = 8;
-    pub const HPAD_BUTTON_LEFT: Type = 16;
-    pub const HPAD_BUTTON_RIGHT: Type = 32;
-    pub const HPAD_BUTTON_DOWN: Type = 64;
-    pub const HPAD_BUTTON_UP: Type = 128;
-    pub const HPAD_BUTTON_START: Type = 256;
-    pub const HPAD_TRIGGER_Z: Type = 512;
-    pub const HPAD_TRIGGER_R: Type = 1024;
-    pub const HPAD_TRIGGER_L: Type = 2048;
-    pub const HPAD_STICK_EMULATION_LEFT: Type = 4096;
-    pub const HPAD_STICK_EMULATION_RIGHT: Type = 8192;
-    pub const HPAD_STICK_EMULATION_DOWN: Type = 16384;
-    pub const HPAD_STICK_EMULATION_UP: Type = 32768;
-    pub const HPAD_SUBSTICK_EMULATION_LEFT: Type = 65536;
-    pub const HPAD_SUBSTICK_EMULATION_RIGHT: Type = 131072;
-    pub const HPAD_SUBSTICK_EMULATION_DOWN: Type = 262144;
-    pub const HPAD_SUBSTICK_EMULATION_UP: Type = 524288;
-}
-pub mod HPADMotorCommand {
-    pub type Type = ::core::ffi::c_uint;
-    pub const HPAD_MOTOR_COMMAND_STOP: Type = 0;
-    pub const HPAD_MOTOR_COMMAND_RUMBLE: Type = 1;
-    pub const HPAD_MOTOR_COMMAND_STOP_HARD: Type = 2;
-}
+pub const HPAD_CHAN_0: HPADChan = 0;
+pub const HPAD_CHAN_1: HPADChan = 1;
+pub const HPAD_CHAN_2: HPADChan = 2;
+pub const HPAD_CHAN_3: HPADChan = 3;
+pub const HPAD_CHAN_4: HPADChan = 4;
+pub const HPAD_CHAN_5: HPADChan = 5;
+pub const HPAD_CHAN_6: HPADChan = 6;
+pub const HPAD_CHAN_7: HPADChan = 7;
+pub type HPADChan = ::core::ffi::c_uint;
+pub const HPAD_GGGG_CHAN_0: HPADGGGGChan = 0;
+pub const HPAD_GGGG_CHAN_1: HPADGGGGChan = 1;
+pub type HPADGGGGChan = ::core::ffi::c_uint;
+pub const HPAD_BUTTON_A: HPADButtons = 1;
+pub const HPAD_BUTTON_B: HPADButtons = 2;
+pub const HPAD_BUTTON_X: HPADButtons = 4;
+pub const HPAD_BUTTON_Y: HPADButtons = 8;
+pub const HPAD_BUTTON_LEFT: HPADButtons = 16;
+pub const HPAD_BUTTON_RIGHT: HPADButtons = 32;
+pub const HPAD_BUTTON_DOWN: HPADButtons = 64;
+pub const HPAD_BUTTON_UP: HPADButtons = 128;
+pub const HPAD_BUTTON_START: HPADButtons = 256;
+pub const HPAD_TRIGGER_Z: HPADButtons = 512;
+pub const HPAD_TRIGGER_R: HPADButtons = 1024;
+pub const HPAD_TRIGGER_L: HPADButtons = 2048;
+pub const HPAD_STICK_EMULATION_LEFT: HPADButtons = 4096;
+pub const HPAD_STICK_EMULATION_RIGHT: HPADButtons = 8192;
+pub const HPAD_STICK_EMULATION_DOWN: HPADButtons = 16384;
+pub const HPAD_STICK_EMULATION_UP: HPADButtons = 32768;
+pub const HPAD_SUBSTICK_EMULATION_LEFT: HPADButtons = 65536;
+pub const HPAD_SUBSTICK_EMULATION_RIGHT: HPADButtons = 131072;
+pub const HPAD_SUBSTICK_EMULATION_DOWN: HPADButtons = 262144;
+pub const HPAD_SUBSTICK_EMULATION_UP: HPADButtons = 524288;
+pub type HPADButtons = ::core::ffi::c_uint;
+pub const HPAD_MOTOR_COMMAND_STOP: HPADMotorCommand = 0;
+pub const HPAD_MOTOR_COMMAND_RUMBLE: HPADMotorCommand = 1;
+pub const HPAD_MOTOR_COMMAND_STOP_HARD: HPADMotorCommand = 2;
+pub type HPADMotorCommand = ::core::ffi::c_uint;
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct HPADStatus {
     pub hold: i32,
     pub trigger: i32,
@@ -11255,22 +11915,21 @@ pub struct HPADStatus {
     pub error: i32,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct HPADGGGGStatus {
     pub connected: BOOL,
     pub powerSupplyConnected: BOOL,
     pub active: BOOL,
 }
 pub type HPADConnectCallback =
-    ::core::option::Option<unsafe extern "C" fn(chan: HPADChan::Type, status: i32)>;
+    ::core::option::Option<unsafe extern "C" fn(chan: HPADChan, status: i32)>;
 pub type HPADGGGGConnectCallback =
-    ::core::option::Option<unsafe extern "C" fn(chan: HPADGGGGChan::Type, connected: BOOL)>;
+    ::core::option::Option<unsafe extern "C" fn(chan: HPADGGGGChan, connected: BOOL)>;
 pub type HPADPowerSupplyCallback =
-    ::core::option::Option<unsafe extern "C" fn(chan: HPADGGGGChan::Type, connected: BOOL)>;
-pub type HPADSamplingCallback =
-    ::core::option::Option<unsafe extern "C" fn(chan: HPADGGGGChan::Type)>;
+    ::core::option::Option<unsafe extern "C" fn(chan: HPADGGGGChan, connected: BOOL)>;
+pub type HPADSamplingCallback = ::core::option::Option<unsafe extern "C" fn(chan: HPADGGGGChan)>;
 pub type HPADResetCallback =
-    ::core::option::Option<unsafe extern "C" fn(chan: HPADGGGGChan::Type, status: i32)>;
+    ::core::option::Option<unsafe extern "C" fn(chan: HPADGGGGChan, status: i32)>;
 extern "C" {
     pub fn HPADInit() -> i32;
 }
@@ -11278,52 +11937,52 @@ extern "C" {
     pub fn HPADShutdown() -> i32;
 }
 extern "C" {
-    pub fn __rplwrap_HPADRead(chan: HPADChan::Type, buffers: *mut HPADStatus, count: i32) -> i32;
+    pub fn __rplwrap_HPADRead(chan: HPADChan, buffers: *mut HPADStatus, count: i32) -> i32;
 }
 extern "C" {
-    pub fn HPADControlMotor(chan: HPADChan::Type, command: HPADMotorCommand::Type) -> i32;
+    pub fn HPADControlMotor(chan: HPADChan, command: HPADMotorCommand) -> i32;
 }
 extern "C" {
-    pub fn HPADRecalibrate(chan: HPADChan::Type) -> i32;
+    pub fn HPADRecalibrate(chan: HPADChan) -> i32;
 }
 extern "C" {
     pub fn HPADSetConnectCallback(
-        chan: HPADChan::Type,
+        chan: HPADChan,
         callback: HPADConnectCallback,
     ) -> HPADConnectCallback;
 }
 extern "C" {
-    pub fn HPADGetGGGGStatus(chan: HPADGGGGChan::Type, status: *mut HPADGGGGStatus) -> i32;
+    pub fn HPADGetGGGGStatus(chan: HPADGGGGChan, status: *mut HPADGGGGStatus) -> i32;
 }
 extern "C" {
     pub fn HPADSetGgggConnectCallback(
-        chan: HPADGGGGChan::Type,
+        chan: HPADGGGGChan,
         callback: HPADGGGGConnectCallback,
     ) -> HPADGGGGConnectCallback;
 }
 extern "C" {
     pub fn HPADSetPowerSupplyCallback(
-        chan: HPADGGGGChan::Type,
+        chan: HPADGGGGChan,
         callback: HPADPowerSupplyCallback,
     ) -> HPADPowerSupplyCallback;
 }
 extern "C" {
     pub fn HPADSetSamplingCallback(
-        chan: HPADGGGGChan::Type,
+        chan: HPADGGGGChan,
         callback: HPADSamplingCallback,
     ) -> HPADSamplingCallback;
 }
 extern "C" {
-    pub fn HPADResetDevice(chan: HPADGGGGChan::Type, callback: HPADResetCallback) -> i32;
+    pub fn HPADResetDevice(chan: HPADGGGGChan, callback: HPADResetCallback) -> i32;
 }
 extern "C" {
     pub fn BETA_DEBUG_DUMP();
 }
 extern "C" {
-    pub fn BETA_DEBUG_GET_QUEUE_SIZE(chan: HPADGGGGChan::Type) -> i32;
+    pub fn BETA_DEBUG_GET_QUEUE_SIZE(chan: HPADGGGGChan) -> i32;
 }
 extern "C" {
-    pub fn BETA_DEBUG_SEND_REPT_ID(chan: HPADGGGGChan::Type, reptId: u32);
+    pub fn BETA_DEBUG_SEND_REPT_ID(chan: HPADGGGGChan, reptId: u32);
 }
 extern "C" {
     pub fn BETA_DEBUG_GET_RAW_DATA();
@@ -11333,7 +11992,7 @@ extern "C" {
 }
 #[repr(C)]
 #[repr(align(16))]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct OSSpinLock {
     pub owner: u32,
     pub __unk74: [::core::ffi::c_char; 4usize],
@@ -11376,6 +12035,15 @@ pub struct MEMMemoryLink {
     pub prev: *mut ::core::ffi::c_void,
     pub next: *mut ::core::ffi::c_void,
 }
+impl Default for MEMMemoryLink {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct MEMMemoryList {
@@ -11383,6 +12051,15 @@ pub struct MEMMemoryList {
     pub tail: *mut ::core::ffi::c_void,
     pub count: u16,
     pub offsetToMemoryLink: u16,
+}
+impl Default for MEMMemoryList {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 extern "C" {
     pub fn MEMInitList(list: *mut MEMMemoryList, offsetToMemoryLink: u16);
@@ -11419,37 +12096,29 @@ extern "C" {
     pub fn MEMGetNthListObject(list: *mut MEMMemoryList, n: u16) -> *mut ::core::ffi::c_void;
 }
 pub type MEMHeapHandle = *mut MEMHeapHeader;
-pub mod MEMBaseHeapType {
-    pub type Type = ::core::ffi::c_uint;
-    pub const MEM_BASE_HEAP_MEM1: Type = 0;
-    pub const MEM_BASE_HEAP_MEM2: Type = 1;
-    pub const MEM_BASE_HEAP_FG: Type = 8;
-}
-pub mod MEMHeapFillType {
-    pub type Type = ::core::ffi::c_uint;
-    pub const MEM_HEAP_FILL_TYPE_UNUSED: Type = 0;
-    pub const MEM_HEAP_FILL_TYPE_ALLOCATED: Type = 1;
-    pub const MEM_HEAP_FILL_TYPE_FREED: Type = 2;
-}
-pub mod MEMHeapTag {
-    pub type Type = ::core::ffi::c_uint;
-    pub const MEM_BLOCK_HEAP_TAG: Type = 1112296264;
-    pub const MEM_EXPANDED_HEAP_TAG: Type = 1163415624;
-    pub const MEM_FRAME_HEAP_TAG: Type = 1179798856;
-    pub const MEM_UNIT_HEAP_TAG: Type = 1431196744;
-    pub const MEM_USER_HEAP_TAG: Type = 1431523912;
-}
-pub mod MEMHeapFlags {
-    pub type Type = ::core::ffi::c_uint;
-    pub const MEM_HEAP_FLAG_ZERO_ALLOCATED: Type = 1;
-    pub const MEM_HEAP_FLAG_DEBUG_MODE: Type = 2;
-    pub const MEM_HEAP_FLAG_USE_LOCK: Type = 4;
-}
+pub const MEM_BASE_HEAP_MEM1: MEMBaseHeapType = 0;
+pub const MEM_BASE_HEAP_MEM2: MEMBaseHeapType = 1;
+pub const MEM_BASE_HEAP_FG: MEMBaseHeapType = 8;
+pub type MEMBaseHeapType = ::core::ffi::c_uint;
+pub const MEM_HEAP_FILL_TYPE_UNUSED: MEMHeapFillType = 0;
+pub const MEM_HEAP_FILL_TYPE_ALLOCATED: MEMHeapFillType = 1;
+pub const MEM_HEAP_FILL_TYPE_FREED: MEMHeapFillType = 2;
+pub type MEMHeapFillType = ::core::ffi::c_uint;
+pub const MEM_BLOCK_HEAP_TAG: MEMHeapTag = 1112296264;
+pub const MEM_EXPANDED_HEAP_TAG: MEMHeapTag = 1163415624;
+pub const MEM_FRAME_HEAP_TAG: MEMHeapTag = 1179798856;
+pub const MEM_UNIT_HEAP_TAG: MEMHeapTag = 1431196744;
+pub const MEM_USER_HEAP_TAG: MEMHeapTag = 1431523912;
+pub type MEMHeapTag = ::core::ffi::c_uint;
+pub const MEM_HEAP_FLAG_ZERO_ALLOCATED: MEMHeapFlags = 1;
+pub const MEM_HEAP_FLAG_DEBUG_MODE: MEMHeapFlags = 2;
+pub const MEM_HEAP_FLAG_USE_LOCK: MEMHeapFlags = 4;
+pub type MEMHeapFlags = ::core::ffi::c_uint;
 #[repr(C)]
 #[repr(align(16))]
 #[derive(Debug, Copy, Clone)]
 pub struct MEMHeapHeader {
-    pub tag: MEMHeapTag::Type,
+    pub tag: MEMHeapTag,
     pub link: MEMMemoryLink,
     pub list: MEMMemoryList,
     pub dataStart: *mut ::core::ffi::c_void,
@@ -11458,17 +12127,23 @@ pub struct MEMHeapHeader {
     pub flags: u32,
     pub __unk76: [::core::ffi::c_char; 12usize],
 }
-extern "C" {
-    pub fn MEMGetArena(handle: MEMHeapHandle) -> MEMBaseHeapType::Type;
+impl Default for MEMHeapHeader {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 extern "C" {
-    pub fn MEMGetBaseHeapHandle(type_: MEMBaseHeapType::Type) -> MEMHeapHandle;
+    pub fn MEMGetArena(handle: MEMHeapHandle) -> MEMBaseHeapType;
 }
 extern "C" {
-    pub fn MEMSetBaseHeapHandle(
-        type_: MEMBaseHeapType::Type,
-        handle: MEMHeapHandle,
-    ) -> MEMHeapHandle;
+    pub fn MEMGetBaseHeapHandle(type_: MEMBaseHeapType) -> MEMHeapHandle;
+}
+extern "C" {
+    pub fn MEMSetBaseHeapHandle(type_: MEMBaseHeapType, handle: MEMHeapHandle) -> MEMHeapHandle;
 }
 extern "C" {
     pub fn MEMCreateUserHeapHandle(heap: *mut ::core::ffi::c_void, size: u32) -> MEMHeapHandle;
@@ -11483,10 +12158,10 @@ extern "C" {
     pub fn MEMFindParentHeap(handle: MEMHeapHandle) -> MEMHeapHandle;
 }
 extern "C" {
-    pub fn MEMGetFillValForHeap(type_: MEMHeapFillType::Type) -> u32;
+    pub fn MEMGetFillValForHeap(type_: MEMHeapFillType) -> u32;
 }
 extern "C" {
-    pub fn MEMSetFillValForHeap(type_: MEMHeapFillType::Type, value: u32);
+    pub fn MEMSetFillValForHeap(type_: MEMHeapFillType, value: u32);
 }
 extern "C" {
     pub fn MEMCheckHeap(handle: MEMHeapHandle) -> BOOL;
@@ -11552,27 +12227,21 @@ extern "C" {
 extern "C" {
     pub fn ACGetAssignedAddress(ip: *mut u32) -> NNResult;
 }
-pub mod CCRSysPairingState {
-    pub type Type = ::core::ffi::c_uint;
-    pub const CCR_SYS_PAIRING_FINISHED: Type = 0;
-    pub const CCR_SYS_PAIRING_IN_PROGRESS: Type = 1;
-    pub const CCR_SYS_PAIRING_TIMED_OUT: Type = 2;
-}
-pub mod CCRSysInitBootFlag {
-    pub type Type = ::core::ffi::c_uint;
-    pub const CCR_SYS_BOOT_FLAG_NONE: Type = 0;
-    pub const CCR_SYS_BOOT_FLAG_FIRST_BOOT: Type = 1;
-}
-pub mod CCRSysLCDMode {
-    pub type Type = ::core::ffi::c_uint;
-    pub const CCR_SYS_LCD_MODE_BRIGHTNESS_1: Type = 1;
-    pub const CCR_SYS_LCD_MODE_BRIGHTNESS_2: Type = 2;
-    pub const CCR_SYS_LCD_MODE_BRIGHTNESS_3: Type = 3;
-    pub const CCR_SYS_LCD_MODE_BRIGHTNESS_4: Type = 4;
-    pub const CCR_SYS_LCD_MODE_BRIGHTNESS_5: Type = 5;
-}
+pub const CCR_SYS_PAIRING_FINISHED: CCRSysPairingState = 0;
+pub const CCR_SYS_PAIRING_IN_PROGRESS: CCRSysPairingState = 1;
+pub const CCR_SYS_PAIRING_TIMED_OUT: CCRSysPairingState = 2;
+pub type CCRSysPairingState = ::core::ffi::c_uint;
+pub const CCR_SYS_BOOT_FLAG_NONE: CCRSysInitBootFlag = 0;
+pub const CCR_SYS_BOOT_FLAG_FIRST_BOOT: CCRSysInitBootFlag = 1;
+pub type CCRSysInitBootFlag = ::core::ffi::c_uint;
+pub const CCR_SYS_LCD_MODE_BRIGHTNESS_1: CCRSysLCDMode = 1;
+pub const CCR_SYS_LCD_MODE_BRIGHTNESS_2: CCRSysLCDMode = 2;
+pub const CCR_SYS_LCD_MODE_BRIGHTNESS_3: CCRSysLCDMode = 3;
+pub const CCR_SYS_LCD_MODE_BRIGHTNESS_4: CCRSysLCDMode = 4;
+pub const CCR_SYS_LCD_MODE_BRIGHTNESS_5: CCRSysLCDMode = 5;
+pub type CCRSysLCDMode = ::core::ffi::c_uint;
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct CCRSysUpdateState {
     pub state: u32,
     pub progress: u32,
@@ -11599,7 +12268,7 @@ extern "C" {
     pub fn CCRSysStopPairing() -> i32;
 }
 extern "C" {
-    pub fn CCRSysGetPairingState() -> CCRSysPairingState::Type;
+    pub fn CCRSysGetPairingState() -> CCRSysPairingState;
 }
 extern "C" {
     pub fn CCRSysGetPincode(pin: *mut u32) -> i32;
@@ -11645,16 +12314,16 @@ extern "C" {
     pub fn CCRSysCaffeineSetCaffeineSlot(slot: u32) -> i32;
 }
 extern "C" {
-    pub fn CCRSysSetInitBootFlag(flag: CCRSysInitBootFlag::Type) -> i32;
+    pub fn CCRSysSetInitBootFlag(flag: CCRSysInitBootFlag) -> i32;
 }
 extern "C" {
     pub fn CCRSysInitializeSettings() -> i32;
 }
 extern "C" {
-    pub fn CCRSysSetCurrentLCDMode(mode: CCRSysLCDMode::Type) -> i32;
+    pub fn CCRSysSetCurrentLCDMode(mode: CCRSysLCDMode) -> i32;
 }
 extern "C" {
-    pub fn CCRSysGetCurrentLCDMode(mode: *mut CCRSysLCDMode::Type) -> i32;
+    pub fn CCRSysGetCurrentLCDMode(mode: *mut CCRSysLCDMode) -> i32;
 }
 #[repr(C, packed)]
 #[derive(Debug, Copy, Clone)]
@@ -11662,6 +12331,15 @@ pub struct CCRAppLaunchParam {
     pub launchInfoDatabaseEntryId: u64,
     pub uuid: [::core::ffi::c_char; 16usize],
     pub __unk77: [::core::ffi::c_char; 231usize],
+}
+impl Default for CCRAppLaunchParam {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 extern "C" {
     pub fn CCRSysCaffeineGetAppLaunchParam(data: *mut CCRAppLaunchParam);
@@ -11678,14 +12356,12 @@ extern "C" {
 extern "C" {
     pub fn CCRSysCaffeineSetEnableFlag(enabled: i32) -> i32;
 }
-pub mod TEMPTargetPreference {
-    pub type Type = ::core::ffi::c_uint;
-    pub const TEMP_PREF_DEFAULT: Type = 0;
-    pub const TEMP_PREF_USB: Type = 1;
-}
+pub const TEMP_PREF_DEFAULT: TEMPTargetPreference = 0;
+pub const TEMP_PREF_USB: TEMPTargetPreference = 1;
+pub type TEMPTargetPreference = ::core::ffi::c_uint;
 pub type TEMPDirId = u64;
 extern "C" {
-    pub fn TEMPInit() -> FSStatus::Type;
+    pub fn TEMPInit() -> FSStatus;
 }
 extern "C" {
     pub fn TEMPShutdown();
@@ -11693,26 +12369,26 @@ extern "C" {
 extern "C" {
     pub fn TEMPCreateAndInitTempDir(
         maxSize: u32,
-        pref: TEMPTargetPreference::Type,
+        pref: TEMPTargetPreference,
         outDir: *mut TEMPDirId,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
-    pub fn TEMPShutdownTempDir(tempId: TEMPDirId) -> FSStatus::Type;
+    pub fn TEMPShutdownTempDir(tempId: TEMPDirId) -> FSStatus;
 }
 extern "C" {
     pub fn TEMPGetDirGlobalPath(
         dirId: TEMPDirId,
         path: *mut ::core::ffi::c_char,
         pathLen: u32,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn TEMPGetDirPath(
         dirId: TEMPDirId,
         path: *mut ::core::ffi::c_char,
         pathLen: u32,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn TEMPChangeDir(
@@ -11720,8 +12396,8 @@ extern "C" {
         block: *mut FSCmdBlock,
         dirId: TEMPDirId,
         path: *const ::core::ffi::c_char,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn TEMPChangeDirAsync(
@@ -11729,9 +12405,9 @@ extern "C" {
         block: *mut FSCmdBlock,
         dirId: TEMPDirId,
         path: *const ::core::ffi::c_char,
-        errorMask: FSErrorFlag::Type,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn TEMPChangeOthersMode(
@@ -11739,9 +12415,9 @@ extern "C" {
         block: *mut FSCmdBlock,
         dirId: TEMPDirId,
         path: *const ::core::ffi::c_char,
-        mode: FSMode::Type,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        mode: FSMode,
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn TEMPChangeOthersModeAsync(
@@ -11749,10 +12425,10 @@ extern "C" {
         block: *mut FSCmdBlock,
         dirId: TEMPDirId,
         path: *const ::core::ffi::c_char,
-        mode: FSMode::Type,
-        errorMask: FSErrorFlag::Type,
+        mode: FSMode,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn TEMPGetFreeSpaceSize(
@@ -11760,8 +12436,8 @@ extern "C" {
         block: *mut FSCmdBlock,
         dirId: TEMPDirId,
         outSize: *mut u64,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn TEMPGetFreeSpaceSizeAsync(
@@ -11769,9 +12445,9 @@ extern "C" {
         block: *mut FSCmdBlock,
         dirId: TEMPDirId,
         outSize: *mut u64,
-        errorMask: FSErrorFlag::Type,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn TEMPGetStat(
@@ -11780,8 +12456,8 @@ extern "C" {
         dirId: TEMPDirId,
         path: *const ::core::ffi::c_char,
         stat: *mut FSStat,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn TEMPGetStatAsync(
@@ -11790,9 +12466,9 @@ extern "C" {
         dirId: TEMPDirId,
         path: *const ::core::ffi::c_char,
         stat: *mut FSStat,
-        errorMask: FSErrorFlag::Type,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn TEMPMakeDir(
@@ -11800,8 +12476,8 @@ extern "C" {
         block: *mut FSCmdBlock,
         dirId: TEMPDirId,
         path: *const ::core::ffi::c_char,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn TEMPMakeDirAsync(
@@ -11809,9 +12485,9 @@ extern "C" {
         block: *mut FSCmdBlock,
         dirId: TEMPDirId,
         path: *const ::core::ffi::c_char,
-        errorMask: FSErrorFlag::Type,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn TEMPOpenDir(
@@ -11820,8 +12496,8 @@ extern "C" {
         dirId: TEMPDirId,
         path: *const ::core::ffi::c_char,
         handle: *mut FSDirectoryHandle,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn TEMPOpenDirAsync(
@@ -11830,9 +12506,9 @@ extern "C" {
         dirId: TEMPDirId,
         path: *const ::core::ffi::c_char,
         handle: *mut FSDirectoryHandle,
-        errorMask: FSErrorFlag::Type,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn TEMPOpenFile(
@@ -11842,8 +12518,8 @@ extern "C" {
         path: *const ::core::ffi::c_char,
         mode: *const ::core::ffi::c_char,
         handle: *mut FSFileHandle,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn TEMPOpenFileAsync(
@@ -11853,9 +12529,9 @@ extern "C" {
         path: *const ::core::ffi::c_char,
         mode: *const ::core::ffi::c_char,
         outHandle: *mut FSFileHandle,
-        errorMask: FSErrorFlag::Type,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn TEMPRemove(
@@ -11863,8 +12539,8 @@ extern "C" {
         block: *mut FSCmdBlock,
         dirId: TEMPDirId,
         path: *const ::core::ffi::c_char,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn TEMPRemoveAsync(
@@ -11872,9 +12548,9 @@ extern "C" {
         block: *mut FSCmdBlock,
         dirId: TEMPDirId,
         path: *const ::core::ffi::c_char,
-        errorMask: FSErrorFlag::Type,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn TEMPRename(
@@ -11883,8 +12559,8 @@ extern "C" {
         dirId: TEMPDirId,
         oldPath: *const ::core::ffi::c_char,
         newPath: *const ::core::ffi::c_char,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn TEMPRenameAsync(
@@ -11893,21 +12569,21 @@ extern "C" {
         dirId: TEMPDirId,
         oldPath: *const ::core::ffi::c_char,
         newPath: *const ::core::ffi::c_char,
-        errorMask: FSErrorFlag::Type,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
-    pub fn TEMPMountTempDir(dirId: TEMPDirId) -> FSStatus::Type;
+    pub fn TEMPMountTempDir(dirId: TEMPDirId) -> FSStatus;
 }
 extern "C" {
-    pub fn TEMPUnmountTempDir(dirId: TEMPDirId) -> FSStatus::Type;
+    pub fn TEMPUnmountTempDir(dirId: TEMPDirId) -> FSStatus;
 }
 extern "C" {
-    pub fn TEMPOpenNewFile() -> FSStatus::Type;
+    pub fn TEMPOpenNewFile() -> FSStatus;
 }
 extern "C" {
-    pub fn TEMPOpenNewFileAsync() -> FSStatus::Type;
+    pub fn TEMPOpenNewFileAsync() -> FSStatus;
 }
 extern "C" {
     pub fn PDMInitialize() -> u32;
@@ -11924,32 +12600,30 @@ extern "C" {
 extern "C" {
     pub fn PDMNotifySetTimeEndEvent();
 }
-pub mod SAVEStatus {
-    pub type Type = ::core::ffi::c_int;
-    pub const SAVE_STATUS_OK: Type = 0;
-    pub const SAVE_STATUS_NOT_FOUND: Type = -6;
-    pub const SAVE_STATUS_STORAGE_FULL: Type = -12;
-}
+pub const SAVE_STATUS_OK: SAVEStatus = 0;
+pub const SAVE_STATUS_NOT_FOUND: SAVEStatus = -6;
+pub const SAVE_STATUS_STORAGE_FULL: SAVEStatus = -12;
+pub type SAVEStatus = ::core::ffi::c_int;
 extern "C" {
-    pub fn SAVEInit() -> SAVEStatus::Type;
+    pub fn SAVEInit() -> SAVEStatus;
 }
 extern "C" {
     pub fn SAVEShutdown();
 }
 extern "C" {
-    pub fn SAVEInitSaveDir(slotNo: u8) -> SAVEStatus::Type;
+    pub fn SAVEInitSaveDir(slotNo: u8) -> SAVEStatus;
 }
 extern "C" {
-    pub fn SAVEInitCommonSaveDir() -> SAVEStatus::Type;
+    pub fn SAVEInitCommonSaveDir() -> SAVEStatus;
 }
 extern "C" {
-    pub fn SAVEInitAccountSaveDir(slotNo: u8) -> SAVEStatus::Type;
+    pub fn SAVEInitAccountSaveDir(slotNo: u8) -> SAVEStatus;
 }
 extern "C" {
     pub fn SAVEInitNoDeleteGroupSaveDir();
 }
 extern "C" {
-    pub fn SAVEUpdateSaveDir() -> SAVEStatus::Type;
+    pub fn SAVEUpdateSaveDir() -> SAVEStatus;
 }
 extern "C" {
     pub fn SAVEChangeDir(
@@ -11957,8 +12631,8 @@ extern "C" {
         block: *mut FSCmdBlock,
         slotNo: u8,
         path: *const ::core::ffi::c_char,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn SAVEChangeDirAsync(
@@ -11966,9 +12640,9 @@ extern "C" {
         block: *mut FSCmdBlock,
         slotNo: u8,
         path: *const ::core::ffi::c_char,
-        errorMask: FSErrorFlag::Type,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn SAVEChangeGroupAndOthersMode(
@@ -11976,9 +12650,9 @@ extern "C" {
         block: *mut FSCmdBlock,
         slotNo: u8,
         path: *const ::core::ffi::c_char,
-        mode: FSMode::Type,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        mode: FSMode,
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn SAVEChangeGroupAndOthersModeAsync(
@@ -11986,10 +12660,10 @@ extern "C" {
         block: *mut FSCmdBlock,
         slotNo: u8,
         path: *const ::core::ffi::c_char,
-        mode: FSMode::Type,
-        errorMask: FSErrorFlag::Type,
+        mode: FSMode,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn SAVEChangeGroupMode(
@@ -11997,9 +12671,9 @@ extern "C" {
         block: *mut FSCmdBlock,
         slotNo: u8,
         path: *const ::core::ffi::c_char,
-        mode: FSMode::Type,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        mode: FSMode,
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn SAVEChangeGroupModeAsync(
@@ -12007,33 +12681,33 @@ extern "C" {
         block: *mut FSCmdBlock,
         slotNo: u8,
         path: *const ::core::ffi::c_char,
-        mode: FSMode::Type,
-        errorMask: FSErrorFlag::Type,
+        mode: FSMode,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn SAVECheckSaveDirRequiredUpdate(
         unk1: *mut ::core::ffi::c_int,
         unk2: *mut u64,
-    ) -> SAVEStatus::Type;
+    ) -> SAVEStatus;
 }
 extern "C" {
     pub fn SAVEFlushQuota(
         client: *mut FSClient,
         block: *mut FSCmdBlock,
         slotNo: u8,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn SAVEFlushQuotaAsync(
         client: *mut FSClient,
         block: *mut FSCmdBlock,
         slotNo: u8,
-        errorMask: FSErrorFlag::Type,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn SAVEGetFreeSpaceSize(
@@ -12041,8 +12715,8 @@ extern "C" {
         block: *mut FSCmdBlock,
         slotNo: u8,
         outSize: *mut u64,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn SAVEGetFreeSpaceSizeAsync(
@@ -12050,18 +12724,18 @@ extern "C" {
         block: *mut FSCmdBlock,
         slotNo: u8,
         outSize: *mut i64,
-        errorMask: FSErrorFlag::Type,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
-    pub fn SAVEGetFreeSpaceSizeOfDevice(deviceType: ACPDeviceType::Type) -> SAVEStatus::Type;
+    pub fn SAVEGetFreeSpaceSizeOfDevice(deviceType: ACPDeviceType) -> SAVEStatus;
 }
 extern "C" {
     pub fn SAVEGetNoDeleteGroupSaveDirPath(
         buffer: *mut ::core::ffi::c_char,
         bufferSize: u32,
-    ) -> SAVEStatus::Type;
+    ) -> SAVEStatus;
 }
 extern "C" {
     pub fn SAVEGetNoDeleteSaveDataPath(
@@ -12069,7 +12743,7 @@ extern "C" {
         path: *const ::core::ffi::c_char,
         buffer: *mut ::core::ffi::c_char,
         bufferSize: u32,
-    ) -> SAVEStatus::Type;
+    ) -> SAVEStatus;
 }
 extern "C" {
     pub fn SAVEGetSharedDataTitlePath(
@@ -12077,7 +12751,7 @@ extern "C" {
         path: *const ::core::ffi::c_char,
         buffer: *mut ::core::ffi::c_char,
         bufferSize: u32,
-    ) -> SAVEStatus::Type;
+    ) -> SAVEStatus;
 }
 extern "C" {
     pub fn SAVEGetSharedSaveDataPath(
@@ -12085,7 +12759,7 @@ extern "C" {
         path: *const ::core::ffi::c_char,
         buffer: *mut ::core::ffi::c_char,
         bufferSize: u32,
-    ) -> SAVEStatus::Type;
+    ) -> SAVEStatus;
 }
 extern "C" {
     pub fn SAVEGetStat(
@@ -12093,8 +12767,8 @@ extern "C" {
         block: *mut FSCmdBlock,
         slotNo: u8,
         stat: *mut FSStat,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn SAVEGetStatAsync(
@@ -12102,9 +12776,9 @@ extern "C" {
         block: *mut FSCmdBlock,
         slotNo: u8,
         stat: *mut FSStat,
-        errorMask: FSErrorFlag::Type,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn SAVEGetStatOtherApplication(
@@ -12113,8 +12787,8 @@ extern "C" {
         titleId: u64,
         path: *const ::core::ffi::c_char,
         stat: *mut FSStat,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn SAVEGetStatOtherApplicationAsync(
@@ -12123,9 +12797,9 @@ extern "C" {
         titleId: u64,
         path: *const ::core::ffi::c_char,
         stat: *mut FSStat,
-        errorMask: FSErrorFlag::Type,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn SAVEGetStatOtherDemoApplication(
@@ -12135,8 +12809,8 @@ extern "C" {
         slotNo: u8,
         path: *const ::core::ffi::c_char,
         stat: *mut FSStat,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn SAVEGetStatOtherDemoApplicationAsync(
@@ -12146,9 +12820,9 @@ extern "C" {
         slotNo: u8,
         path: *const ::core::ffi::c_char,
         stat: *mut FSStat,
-        errorMask: FSErrorFlag::Type,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn SAVEGetStatOtherDemoApplicationVariation(
@@ -12159,8 +12833,8 @@ extern "C" {
         slotNo: u8,
         path: *const ::core::ffi::c_char,
         stat: *mut FSStat,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn SAVEGetStatOtherDemoApplicationVariationAsync(
@@ -12171,9 +12845,9 @@ extern "C" {
         slotNo: u8,
         path: *const ::core::ffi::c_char,
         stat: *mut FSStat,
-        errorMask: FSErrorFlag::Type,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn SAVEGetStatOtherNormalApplication(
@@ -12183,8 +12857,8 @@ extern "C" {
         slotNo: u8,
         path: *const ::core::ffi::c_char,
         stat: *mut FSStat,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn SAVEGetStatOtherNormalApplicationAsync(
@@ -12194,9 +12868,9 @@ extern "C" {
         slotNo: u8,
         path: *const ::core::ffi::c_char,
         stat: *mut FSStat,
-        errorMask: FSErrorFlag::Type,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn SAVEGetStatOtherNormalApplicationVariation(
@@ -12207,8 +12881,8 @@ extern "C" {
         slotNo: u8,
         path: *const ::core::ffi::c_char,
         stat: *mut FSStat,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn SAVEGetStatOtherNormalApplicationVariationAsync(
@@ -12219,9 +12893,9 @@ extern "C" {
         slotNo: u8,
         path: *const ::core::ffi::c_char,
         stat: *mut FSStat,
-        errorMask: FSErrorFlag::Type,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn SAVEInitSaveDirByAppMeta(
@@ -12232,7 +12906,7 @@ extern "C" {
         iconPath: *const ::core::ffi::c_char,
         iconBuffer: *mut u8,
         iconBufferSize: u32,
-    ) -> SAVEStatus::Type;
+    ) -> SAVEStatus;
 }
 extern "C" {
     pub fn SAVEMakeDir(
@@ -12240,8 +12914,8 @@ extern "C" {
         block: *mut FSCmdBlock,
         slotNo: u8,
         path: *const ::core::ffi::c_char,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn SAVEMakeDirAsync(
@@ -12249,9 +12923,9 @@ extern "C" {
         block: *mut FSCmdBlock,
         slotNo: u8,
         path: *const ::core::ffi::c_char,
-        errorMask: FSErrorFlag::Type,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn SAVEOpenDir(
@@ -12260,8 +12934,8 @@ extern "C" {
         slotNo: u8,
         path: *const ::core::ffi::c_char,
         handle: *mut FSDirectoryHandle,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn SAVEOpenDirAsync(
@@ -12270,9 +12944,9 @@ extern "C" {
         slotNo: u8,
         path: *const ::core::ffi::c_char,
         handle: *mut FSDirectoryHandle,
-        errorMask: FSErrorFlag::Type,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn SAVEOpenDirOtherApplication(
@@ -12282,8 +12956,8 @@ extern "C" {
         slotNo: u8,
         path: *const ::core::ffi::c_char,
         handle: *mut FSDirectoryHandle,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn SAVEOpenDirOtherApplicationAsync(
@@ -12293,8 +12967,8 @@ extern "C" {
         slotNo: u8,
         path: *const ::core::ffi::c_char,
         handle: *mut FSDirectoryHandle,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn SAVEOpenDirOtherDemoApplication(
@@ -12304,8 +12978,8 @@ extern "C" {
         slotNo: u8,
         path: *const ::core::ffi::c_char,
         handle: *mut FSDirectoryHandle,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn SAVEOpenDirOtherDemoApplicationAsync(
@@ -12315,8 +12989,8 @@ extern "C" {
         slotNo: u8,
         path: *const ::core::ffi::c_char,
         handle: *mut FSDirectoryHandle,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn SAVEOpenDirOtherDemoApplicationVariation(
@@ -12327,8 +13001,8 @@ extern "C" {
         slotNo: u8,
         path: *const ::core::ffi::c_char,
         handle: *mut FSDirectoryHandle,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn SAVEOpenDirOtherDemoApplicationVariationAsync(
@@ -12339,8 +13013,8 @@ extern "C" {
         slotNo: u8,
         path: *const ::core::ffi::c_char,
         handle: *mut FSDirectoryHandle,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn SAVEOpenDirOtherNormalApplication(
@@ -12350,8 +13024,8 @@ extern "C" {
         slotNo: u8,
         path: *const ::core::ffi::c_char,
         handle: *mut FSDirectoryHandle,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn SAVEOpenDirOtherNormalApplicationAsync(
@@ -12361,8 +13035,8 @@ extern "C" {
         slotNo: u8,
         path: *const ::core::ffi::c_char,
         handle: *mut FSDirectoryHandle,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn SAVEOpenDirOtherNormalApplicationVariation(
@@ -12373,8 +13047,8 @@ extern "C" {
         slotNo: u8,
         path: *const ::core::ffi::c_char,
         handle: *mut FSDirectoryHandle,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn SAVEOpenDirOtherNormalApplicationVariationAsync(
@@ -12385,8 +13059,8 @@ extern "C" {
         slotNo: u8,
         path: *const ::core::ffi::c_char,
         handle: *mut FSDirectoryHandle,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn SAVEOpenFile(
@@ -12396,8 +13070,8 @@ extern "C" {
         path: *const ::core::ffi::c_char,
         mode: *const ::core::ffi::c_char,
         handle: *mut FSFileHandle,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn SAVEOpenFileAsync(
@@ -12407,9 +13081,9 @@ extern "C" {
         path: *const ::core::ffi::c_char,
         mode: *const ::core::ffi::c_char,
         outHandle: *mut FSFileHandle,
-        errorMask: FSErrorFlag::Type,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn SAVEOpenFileOtherApplication(
@@ -12420,8 +13094,8 @@ extern "C" {
         path: *const ::core::ffi::c_char,
         mode: *const ::core::ffi::c_char,
         handle: *mut FSFileHandle,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn SAVEOpenFileOtherApplicationAsync(
@@ -12432,9 +13106,9 @@ extern "C" {
         path: *const ::core::ffi::c_char,
         mode: *const ::core::ffi::c_char,
         outHandle: *mut FSFileHandle,
-        errorMask: FSErrorFlag::Type,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn SAVEOpenFileOtherDemoApplication(
@@ -12445,8 +13119,8 @@ extern "C" {
         path: *const ::core::ffi::c_char,
         mode: *const ::core::ffi::c_char,
         handle: *mut FSFileHandle,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn SAVEOpenFileOtherDemoApplicationAsync(
@@ -12457,9 +13131,9 @@ extern "C" {
         path: *const ::core::ffi::c_char,
         mode: *const ::core::ffi::c_char,
         outHandle: *mut FSFileHandle,
-        errorMask: FSErrorFlag::Type,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn SAVEOpenFileOtherDemoApplicationVariation(
@@ -12471,8 +13145,8 @@ extern "C" {
         path: *const ::core::ffi::c_char,
         mode: *const ::core::ffi::c_char,
         handle: *mut FSFileHandle,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn SAVEOpenFileOtherDemoApplicationVariationAsync(
@@ -12484,9 +13158,9 @@ extern "C" {
         path: *const ::core::ffi::c_char,
         mode: *const ::core::ffi::c_char,
         outHandle: *mut FSFileHandle,
-        errorMask: FSErrorFlag::Type,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn SAVEOpenFileOtherNormalApplication(
@@ -12497,8 +13171,8 @@ extern "C" {
         path: *const ::core::ffi::c_char,
         mode: *const ::core::ffi::c_char,
         handle: *mut FSFileHandle,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn SAVEOpenFileOtherNormalApplicationAsync(
@@ -12509,9 +13183,9 @@ extern "C" {
         path: *const ::core::ffi::c_char,
         mode: *const ::core::ffi::c_char,
         outHandle: *mut FSFileHandle,
-        errorMask: FSErrorFlag::Type,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn SAVEOpenFileOtherNormalApplicationVariation(
@@ -12523,8 +13197,8 @@ extern "C" {
         path: *const ::core::ffi::c_char,
         mode: *const ::core::ffi::c_char,
         handle: *mut FSFileHandle,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn SAVEOpenFileOtherNormalApplicationVariationAsync(
@@ -12536,9 +13210,9 @@ extern "C" {
         path: *const ::core::ffi::c_char,
         mode: *const ::core::ffi::c_char,
         outHandle: *mut FSFileHandle,
-        errorMask: FSErrorFlag::Type,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn SAVERemove(
@@ -12546,8 +13220,8 @@ extern "C" {
         block: *mut FSCmdBlock,
         slotNo: u8,
         path: *const ::core::ffi::c_char,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn SAVERemoveAsync(
@@ -12555,9 +13229,9 @@ extern "C" {
         block: *mut FSCmdBlock,
         slotNo: u8,
         path: *const ::core::ffi::c_char,
-        errorMask: FSErrorFlag::Type,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn SAVERename(
@@ -12566,8 +13240,8 @@ extern "C" {
         slotNo: u8,
         oldPath: *const ::core::ffi::c_char,
         newPath: *const ::core::ffi::c_char,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn SAVERenameAsync(
@@ -12576,33 +13250,31 @@ extern "C" {
         slotNo: u8,
         oldPath: *const ::core::ffi::c_char,
         newPath: *const ::core::ffi::c_char,
-        errorMask: FSErrorFlag::Type,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn SAVERollbackQuota(
         client: *mut FSClient,
         block: *mut FSCmdBlock,
         slotNo: u8,
-        errorMask: FSErrorFlag::Type,
-    ) -> FSStatus::Type;
+        errorMask: FSErrorFlag,
+    ) -> FSStatus;
 }
 extern "C" {
     pub fn SAVERollbackQuotaAsync(
         client: *mut FSClient,
         block: *mut FSCmdBlock,
         slotNo: u8,
-        errorMask: FSErrorFlag::Type,
+        errorMask: FSErrorFlag,
         asyncData: *mut FSAsyncData,
-    ) -> FSStatus::Type;
+    ) -> FSStatus;
 }
-pub mod CmptScreenType {
-    pub type Type = ::core::ffi::c_uint;
-    pub const CMPT_SCREEN_TYPE_TV: Type = 1;
-    pub const CMPT_SCREEN_TYPE_DRC: Type = 2;
-    pub const CMPT_SCREEN_TYPE_BOTH: Type = 3;
-}
+pub const CMPT_SCREEN_TYPE_TV: CmptScreenType = 1;
+pub const CMPT_SCREEN_TYPE_DRC: CmptScreenType = 2;
+pub const CMPT_SCREEN_TYPE_BOTH: CmptScreenType = 3;
+pub type CmptScreenType = ::core::ffi::c_uint;
 extern "C" {
     pub fn CMPTGetDataSize(outSize: *mut u32) -> i32;
 }
@@ -12620,7 +13292,7 @@ extern "C" {
     pub fn CMPTLaunchDataManager(dataBuffer: *mut ::core::ffi::c_void, bufferSize: u32) -> i32;
 }
 extern "C" {
-    pub fn CMPTAcctSetScreenType(type_: CmptScreenType::Type) -> i32;
+    pub fn CMPTAcctSetScreenType(type_: CmptScreenType) -> i32;
 }
 extern "C" {
     pub fn CMPTCheckScreenState() -> i32;
@@ -12631,6 +13303,15 @@ pub struct SysAppEManualArgs {
     pub stdArgs: SYSStandardArgsIn,
     pub titleId: u64,
 }
+impl Default for SysAppEManualArgs {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct SysAppEShopArgs {
@@ -12638,12 +13319,30 @@ pub struct SysAppEShopArgs {
     pub query: *mut ::core::ffi::c_char,
     pub querySize: u32,
 }
+impl Default for SysAppEShopArgs {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct SysAppBrowserArgs {
     pub stdArgs: SYSStandardArgsIn,
     pub url: *mut ::core::ffi::c_char,
     pub urlSize: u32,
+}
+impl Default for SysAppBrowserArgs {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -12653,23 +13352,30 @@ pub struct SysAppBrowserArgsWithCallback {
     pub cbUrlSize: u32,
     pub hbmDisable: BOOL,
 }
-pub mod SysAppPFID {
-    pub type Type = ::core::ffi::c_uint;
-    pub const SYSAPP_PFID_WII_U_MENU: Type = 2;
-    pub const SYSAPP_PFID_TVII: Type = 3;
-    pub const SYSAPP_PFID_EMANUAL: Type = 4;
-    pub const SYSAPP_PFID_HOME_MENU: Type = 5;
-    pub const SYSAPP_PFID_MINI_MIIVERSE: Type = 7;
-    pub const SYSAPP_PFID_BROWSER: Type = 8;
-    pub const SYSAPP_PFID_MIIVERSE: Type = 9;
-    pub const SYSAPP_PFID_ESHOP: Type = 10;
-    pub const SYSAPP_PFID_FRIENDLIST: Type = 11;
-    pub const SYSAPP_PFID_DOWNLOAD_MANAGEMENT: Type = 12;
-    pub const SYSAPP_PFID_DOWNLOAD_GAME: Type = 15;
-    pub const SYSAPP_PFID_MINTU: Type = 16;
-    pub const SYSAPP_PFID_CABINETU: Type = 17;
-    pub const SYSAPP_PFID_TEST_OVERLAY: Type = 31;
+impl Default for SysAppBrowserArgsWithCallback {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
+pub const SYSAPP_PFID_WII_U_MENU: SysAppPFID = 2;
+pub const SYSAPP_PFID_TVII: SysAppPFID = 3;
+pub const SYSAPP_PFID_EMANUAL: SysAppPFID = 4;
+pub const SYSAPP_PFID_HOME_MENU: SysAppPFID = 5;
+pub const SYSAPP_PFID_MINI_MIIVERSE: SysAppPFID = 7;
+pub const SYSAPP_PFID_BROWSER: SysAppPFID = 8;
+pub const SYSAPP_PFID_MIIVERSE: SysAppPFID = 9;
+pub const SYSAPP_PFID_ESHOP: SysAppPFID = 10;
+pub const SYSAPP_PFID_FRIENDLIST: SysAppPFID = 11;
+pub const SYSAPP_PFID_DOWNLOAD_MANAGEMENT: SysAppPFID = 12;
+pub const SYSAPP_PFID_DOWNLOAD_GAME: SysAppPFID = 15;
+pub const SYSAPP_PFID_MINTU: SysAppPFID = 16;
+pub const SYSAPP_PFID_CABINETU: SysAppPFID = 17;
+pub const SYSAPP_PFID_TEST_OVERLAY: SysAppPFID = 31;
+pub type SysAppPFID = ::core::ffi::c_uint;
 extern "C" {
     pub fn SYSSwitchToSyncControllerOnHBM() -> i32;
 }
@@ -12715,13 +13421,13 @@ extern "C" {
     pub fn _SYSSwitchToOverlayFromHBM(arg1: i32) -> i32;
 }
 extern "C" {
-    pub fn SYSSwitchTo(pfid: SysAppPFID::Type) -> i32;
+    pub fn SYSSwitchTo(pfid: SysAppPFID) -> i32;
 }
 extern "C" {
-    pub fn _SYSSwitchTo(pfid: SysAppPFID::Type) -> i32;
+    pub fn _SYSSwitchTo(pfid: SysAppPFID) -> i32;
 }
 extern "C" {
-    pub fn _SYSDirectlySwitchTo(pfid: SysAppPFID::Type) -> i32;
+    pub fn _SYSDirectlySwitchTo(pfid: SysAppPFID) -> i32;
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -12729,6 +13435,15 @@ pub struct SysAppMiiMakerArgs {
     pub stdArgs: SYSStandardArgsIn,
     pub slotId: u32,
     pub mii: *mut FFLStoreData,
+}
+impl Default for SysAppMiiMakerArgs {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -12738,29 +13453,45 @@ pub struct _SysAppMiiMakerArgs {
     pub slotId: u32,
     pub mii: *mut FFLStoreData,
 }
-pub mod SYSSettingsJumpToTarget {
-    pub type Type = ::core::ffi::c_uint;
-    pub const SYS_SETTINGS_JUMP_TO_NONE: Type = 0;
-    pub const SYS_SETTINGS_JUMP_TO_INTERNET: Type = 1;
-    pub const SYS_SETTINGS_JUMP_TO_DATA_MANAGEMENT: Type = 2;
-    pub const SYS_SETTINGS_JUMP_TO_TV_REMOTE: Type = 3;
-    pub const SYS_SETTINGS_JUMP_TO_DATE_TIME: Type = 4;
-    pub const SYS_SETTINGS_JUMP_TO_COUNTRY: Type = 5;
-    pub const SYS_SETTINGS_JUMP_TO_SYSTEM_UPDATE: Type = 6;
-    pub const SYS_SETTINGS_JUMP_TO_INITIAL_SETTINGS: Type = 100;
-    pub const SYS_SETTINGS_JUMP_TO_UNKNOWN: Type = 101;
-    pub const SYS_SETTINGS_JUMP_TO_WIPE_CONSOLE: Type = 102;
-    pub const SYS_SETTINGS_JUMP_TO_QUICK_START_SETTINGS: Type = 103;
-    pub const SYS_SETTINGS_JUMP_TO_TV_CONNECTION_TYPE: Type = 104;
-    pub const SYS_SETTINGS_JUMP_TO_DATA_MANAGEMENT_2: Type = 105;
-    pub const SYS_SETTINGS_JUMP_TO_SOFTWARE_TRANSFER: Type = 255;
+impl Default for _SysAppMiiMakerArgs {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
+pub const SYS_SETTINGS_JUMP_TO_NONE: SYSSettingsJumpToTarget = 0;
+pub const SYS_SETTINGS_JUMP_TO_INTERNET: SYSSettingsJumpToTarget = 1;
+pub const SYS_SETTINGS_JUMP_TO_DATA_MANAGEMENT: SYSSettingsJumpToTarget = 2;
+pub const SYS_SETTINGS_JUMP_TO_TV_REMOTE: SYSSettingsJumpToTarget = 3;
+pub const SYS_SETTINGS_JUMP_TO_DATE_TIME: SYSSettingsJumpToTarget = 4;
+pub const SYS_SETTINGS_JUMP_TO_COUNTRY: SYSSettingsJumpToTarget = 5;
+pub const SYS_SETTINGS_JUMP_TO_SYSTEM_UPDATE: SYSSettingsJumpToTarget = 6;
+pub const SYS_SETTINGS_JUMP_TO_INITIAL_SETTINGS: SYSSettingsJumpToTarget = 100;
+pub const SYS_SETTINGS_JUMP_TO_UNKNOWN: SYSSettingsJumpToTarget = 101;
+pub const SYS_SETTINGS_JUMP_TO_WIPE_CONSOLE: SYSSettingsJumpToTarget = 102;
+pub const SYS_SETTINGS_JUMP_TO_QUICK_START_SETTINGS: SYSSettingsJumpToTarget = 103;
+pub const SYS_SETTINGS_JUMP_TO_TV_CONNECTION_TYPE: SYSSettingsJumpToTarget = 104;
+pub const SYS_SETTINGS_JUMP_TO_DATA_MANAGEMENT_2: SYSSettingsJumpToTarget = 105;
+pub const SYS_SETTINGS_JUMP_TO_SOFTWARE_TRANSFER: SYSSettingsJumpToTarget = 255;
+pub type SYSSettingsJumpToTarget = ::core::ffi::c_uint;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct SysAppSettingsArgs {
     pub stdArgs: SYSStandardArgsIn,
-    pub jumpTo: SYSSettingsJumpToTarget::Type,
+    pub jumpTo: SYSSettingsJumpToTarget,
     pub firstBootKind: u32,
+}
+impl Default for SysAppSettingsArgs {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -12768,11 +13499,29 @@ pub struct SysAppParentalArgs {
     pub stdArgs: SYSStandardArgsIn,
     pub mode: u32,
 }
+impl Default for SysAppParentalArgs {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct SysAppNotificationArgs {
     pub stdArgs: SYSStandardArgsIn,
     pub notificationFile: u32,
+}
+impl Default for SysAppNotificationArgs {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 extern "C" {
     pub fn SYSRelaunchTitle(argc: u32, pa_Argv: *mut *mut ::core::ffi::c_char);
@@ -12807,26 +13556,24 @@ extern "C" {
 extern "C" {
     pub fn _SYSLaunchTitleByPathFromLauncher(path: *const ::core::ffi::c_char, unused: u32);
 }
-pub mod SYSTEM_APP_ID {
-    pub type Type = ::core::ffi::c_uint;
-    pub const SYSTEM_APP_ID_WII_U_MENU: Type = 0;
-    pub const SYSTEM_APP_ID_SYSTEM_SETTINGS: Type = 1;
-    pub const SYSTEM_APP_ID_PARENTAL_CONTROLS: Type = 2;
-    pub const SYSTEM_APP_ID_USER_SETTINGS: Type = 3;
-    pub const SYSTEM_APP_ID_MII_MAKER: Type = 4;
-    pub const SYSTEM_APP_ID_ACCOUNT_SETTINGS: Type = 5;
-    pub const SYSTEM_APP_ID_DAILY_LOG: Type = 6;
-    pub const SYSTEM_APP_ID_NOTIFICATIONS: Type = 7;
-    pub const SYSTEM_APP_ID_HEALTH_AND_SAFETY: Type = 8;
-    pub const SYSTEM_APP_ID_ELECTRONIC_MANUAL: Type = 9;
-    pub const SYSTEM_APP_ID_WIIU_CHAT: Type = 10;
-    pub const SYSTEM_APP_ID_SOFTWARE_DATA_TRANSFER: Type = 11;
+pub const SYSTEM_APP_ID_WII_U_MENU: SYSTEM_APP_ID = 0;
+pub const SYSTEM_APP_ID_SYSTEM_SETTINGS: SYSTEM_APP_ID = 1;
+pub const SYSTEM_APP_ID_PARENTAL_CONTROLS: SYSTEM_APP_ID = 2;
+pub const SYSTEM_APP_ID_USER_SETTINGS: SYSTEM_APP_ID = 3;
+pub const SYSTEM_APP_ID_MII_MAKER: SYSTEM_APP_ID = 4;
+pub const SYSTEM_APP_ID_ACCOUNT_SETTINGS: SYSTEM_APP_ID = 5;
+pub const SYSTEM_APP_ID_DAILY_LOG: SYSTEM_APP_ID = 6;
+pub const SYSTEM_APP_ID_NOTIFICATIONS: SYSTEM_APP_ID = 7;
+pub const SYSTEM_APP_ID_HEALTH_AND_SAFETY: SYSTEM_APP_ID = 8;
+pub const SYSTEM_APP_ID_ELECTRONIC_MANUAL: SYSTEM_APP_ID = 9;
+pub const SYSTEM_APP_ID_WIIU_CHAT: SYSTEM_APP_ID = 10;
+pub const SYSTEM_APP_ID_SOFTWARE_DATA_TRANSFER: SYSTEM_APP_ID = 11;
+pub type SYSTEM_APP_ID = ::core::ffi::c_uint;
+extern "C" {
+    pub static SYSTEM_APP_ID_UPDATER: SYSTEM_APP_ID;
 }
 extern "C" {
-    pub static SYSTEM_APP_ID_UPDATER: SYSTEM_APP_ID::Type;
-}
-extern "C" {
-    pub static SYSTEM_APP_ID_HOME_MENU: SYSTEM_APP_ID::Type;
+    pub static SYSTEM_APP_ID_HOME_MENU: SYSTEM_APP_ID;
 }
 extern "C" {
     pub fn SYSCheckTitleExists(TitleId: u64) -> BOOL;
@@ -12844,12 +13591,12 @@ extern "C" {
     pub fn SYSGetCallerPFID() -> i32;
 }
 extern "C" {
-    pub fn _SYSGetSystemApplicationTitleId(id: SYSTEM_APP_ID::Type) -> u64;
+    pub fn _SYSGetSystemApplicationTitleId(id: SYSTEM_APP_ID) -> u64;
 }
 extern "C" {
     pub fn _SYSGetSystemApplicationTitleIdByProdArea(
-        id: SYSTEM_APP_ID::Type,
-        prod_area: MCPRegion::Type,
+        id: SYSTEM_APP_ID,
+        prod_area: MCPRegion,
     ) -> u64;
 }
 extern "C" {
@@ -12875,11 +13622,9 @@ extern "C" {
 extern "C" {
     pub fn WHBLogPrintf(fmt: *const ::core::ffi::c_char, ...) -> BOOL;
 }
-pub mod WHBFileError {
-    pub type Type = ::core::ffi::c_int;
-    pub const WHB_FILE_OK: Type = 0;
-    pub const WHB_FILE_FATAL_ERROR: Type = -1;
-}
+pub const WHB_FILE_OK: WHBFileError = 0;
+pub const WHB_FILE_FATAL_ERROR: WHBFileError = -1;
+pub type WHBFileError = ::core::ffi::c_int;
 extern "C" {
     pub fn WHBDeInitFileSystem() -> BOOL;
 }
@@ -12974,6 +13719,15 @@ pub struct WHBGfxShaderGroup {
     pub numAttributes: u32,
     pub attributes: [GX2AttribStream; 16usize],
 }
+impl Default for WHBGfxShaderGroup {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 extern "C" {
     pub fn WHBGfxInit() -> BOOL;
 }
@@ -13032,7 +13786,7 @@ extern "C" {
         name: *const ::core::ffi::c_char,
         buffer: u32,
         offset: u32,
-        format: GX2AttribFormat::Type,
+        format: GX2AttribFormat,
     ) -> BOOL;
 }
 extern "C" {
@@ -13065,137 +13819,129 @@ extern "C" {
 extern "C" {
     pub fn WHBGfxGetDRCContextState() -> *mut GX2ContextState;
 }
-pub mod TVEPort {
-    pub type Type = ::core::ffi::c_uint;
-    pub const TVE_PORT_HDMI: Type = 0;
-    pub const TVE_PORT_COMPONENT: Type = 1;
-    pub const TVE_PORT_COMPOSITE: Type = 2;
-    pub const TVE_PORT_SCART: Type = 3;
-}
-pub mod TVEHdmiState {
-    pub type Type = ::core::ffi::c_uint;
-    pub const TVE_HDMI_STATE_NONE: Type = 0;
-    pub const TVE_HDMI_STATE_HTPG_OFF: Type = 1;
-    pub const TVE_HDMI_STATE_RXWAIT: Type = 2;
-    pub const TVE_HDMI_STATE_EDID_COMP: Type = 3;
-    pub const TVE_HDMI_STATE_DUMMY_TMDS: Type = 4;
-    pub const TVE_HDMI_STATE_W4WK: Type = 5;
-    pub const TVE_HDMI_STATE_1STA: Type = 6;
-    pub const TVE_HDMI_STATE_2NDA: Type = 7;
-    pub const TVE_HDMI_STATE_3RDA: Type = 8;
-    pub const TVE_HDMI_STATE_STAV_OFF: Type = 9;
-    pub const TVE_HDMI_STATE_DONE: Type = 10;
-    pub const TVE_HDMI_STATE_OTHER: Type = 11;
-    pub const TVE_HDMI_STATE_TMDSDOWN: Type = 12;
-    pub const TVE_HDMI_STATE_SHUTDOWN: Type = 13;
-    pub const TVE_HDMI_STATE_WII: Type = 14;
-    pub const TVE_HDMI_STATE_ERR_NRESET: Type = 15;
-    pub const TVE_HDMI_STATE_ERR_INT_LINE: Type = 16;
-    pub const TVE_HDMI_STATE_ERR_KEY_LOAD: Type = 17;
-    pub const TVE_HDMI_STATE_ERR_EDID_READ: Type = 18;
-    pub const TVE_HDMI_STATE_ERR_HOTPLUG: Type = 19;
-    pub const TVE_HDMI_STATE_ERR_VSYNC: Type = 20;
-    pub const TVE_HDMI_STATE_ERR_HDCP: Type = 21;
-    pub const TVE_HDMI_STATE_ERR_SYS: Type = 22;
-    pub const TVE_HDMI_STATE_ERR_CEC: Type = 23;
-    pub const TVE_HDMI_STATE_ERR_W41A: Type = 24;
-    pub const TVE_HDMI_STATE_ERR_W4ED: Type = 25;
-    pub const TVE_HDMI_STATE_UNKNOWN_1A: Type = 26;
-}
+pub const TVE_PORT_HDMI: TVEPort = 0;
+pub const TVE_PORT_COMPONENT: TVEPort = 1;
+pub const TVE_PORT_COMPOSITE: TVEPort = 2;
+pub const TVE_PORT_SCART: TVEPort = 3;
+pub type TVEPort = ::core::ffi::c_uint;
+pub const TVE_HDMI_STATE_NONE: TVEHdmiState = 0;
+pub const TVE_HDMI_STATE_HTPG_OFF: TVEHdmiState = 1;
+pub const TVE_HDMI_STATE_RXWAIT: TVEHdmiState = 2;
+pub const TVE_HDMI_STATE_EDID_COMP: TVEHdmiState = 3;
+pub const TVE_HDMI_STATE_DUMMY_TMDS: TVEHdmiState = 4;
+pub const TVE_HDMI_STATE_W4WK: TVEHdmiState = 5;
+pub const TVE_HDMI_STATE_1STA: TVEHdmiState = 6;
+pub const TVE_HDMI_STATE_2NDA: TVEHdmiState = 7;
+pub const TVE_HDMI_STATE_3RDA: TVEHdmiState = 8;
+pub const TVE_HDMI_STATE_STAV_OFF: TVEHdmiState = 9;
+pub const TVE_HDMI_STATE_DONE: TVEHdmiState = 10;
+pub const TVE_HDMI_STATE_OTHER: TVEHdmiState = 11;
+pub const TVE_HDMI_STATE_TMDSDOWN: TVEHdmiState = 12;
+pub const TVE_HDMI_STATE_SHUTDOWN: TVEHdmiState = 13;
+pub const TVE_HDMI_STATE_WII: TVEHdmiState = 14;
+pub const TVE_HDMI_STATE_ERR_NRESET: TVEHdmiState = 15;
+pub const TVE_HDMI_STATE_ERR_INT_LINE: TVEHdmiState = 16;
+pub const TVE_HDMI_STATE_ERR_KEY_LOAD: TVEHdmiState = 17;
+pub const TVE_HDMI_STATE_ERR_EDID_READ: TVEHdmiState = 18;
+pub const TVE_HDMI_STATE_ERR_HOTPLUG: TVEHdmiState = 19;
+pub const TVE_HDMI_STATE_ERR_VSYNC: TVEHdmiState = 20;
+pub const TVE_HDMI_STATE_ERR_HDCP: TVEHdmiState = 21;
+pub const TVE_HDMI_STATE_ERR_SYS: TVEHdmiState = 22;
+pub const TVE_HDMI_STATE_ERR_CEC: TVEHdmiState = 23;
+pub const TVE_HDMI_STATE_ERR_W41A: TVEHdmiState = 24;
+pub const TVE_HDMI_STATE_ERR_W4ED: TVEHdmiState = 25;
+pub const TVE_HDMI_STATE_UNKNOWN_1A: TVEHdmiState = 26;
+pub type TVEHdmiState = ::core::ffi::c_uint;
 extern "C" {
     pub fn TVEGetAnalogStat(outState: *mut u32);
 }
 extern "C" {
-    pub fn TVEGetCurrentPort() -> TVEPort::Type;
+    pub fn TVEGetCurrentPort() -> TVEPort;
 }
 extern "C" {
-    pub fn TVEGetHDMIErrorStat(outState: *mut TVEHdmiState::Type);
+    pub fn TVEGetHDMIErrorStat(outState: *mut TVEHdmiState);
 }
-pub mod TVECECLogicalAddress {
-    pub type Type = ::core::ffi::c_uint;
-    pub const TVE_CEC_DEVICE_TV: Type = 0;
-    pub const TVE_CEC_DEVICE_RECORDING_DEVICE_1: Type = 1;
-    pub const TVE_CEC_DEVICE_RECORDING_DEVICE_2: Type = 2;
-    pub const TVE_CEC_DEVICE_TUNER_1: Type = 3;
-    pub const TVE_CEC_DEVICE_PLAYBACK_DEVICE_1: Type = 4;
-    pub const TVE_CEC_DEVICE_AUDIO_SYSTEM: Type = 5;
-    pub const TVE_CEC_DEVICE_TUNER_2: Type = 6;
-    pub const TVE_CEC_DEVICE_TUNER_3: Type = 7;
-    pub const TVE_CEC_DEVICE_PLAYBACK_DEVICE_2: Type = 8;
-    pub const TVE_CEC_DEVICE_RECORDING_DEVICE_3: Type = 9;
-    pub const TVE_CEC_DEVICE_TUNER_4: Type = 10;
-    pub const TVE_CEC_DEVICE_PLAYBACK_DEVICE_3: Type = 11;
-    pub const TVE_CEC_DEVICE_RESERVED_1: Type = 12;
-    pub const TVE_CEC_DEVICE_RESERVED_2: Type = 13;
-    pub const TVE_CEC_DEVICE_FREE_USE: Type = 14;
-    pub const TVE_CEC_DEVICE_UNREGISTERED: Type = 15;
-    pub const TVE_CEC_DEVICE_BROADCAST: Type = 15;
-}
-pub mod TVECECOpCode {
-    pub type Type = ::core::ffi::c_uint;
-    pub const TVE_CEC_OPCODE_FEATURE_ABORT: Type = 0;
-    pub const TVE_CEC_OPCODE_IMAGE_VIEW_ON: Type = 4;
-    pub const TVE_CEC_OPCODE_TUNER_STEP_INCREMENT: Type = 5;
-    pub const TVE_CEC_OPCODE_TUNER_STEP_DECREMENT: Type = 6;
-    pub const TVE_CEC_OPCODE_TUNER_DEVICE_STATUS: Type = 7;
-    pub const TVE_CEC_OPCODE_GIVE_TUNER_DEVICE_STATUS: Type = 8;
-    pub const TVE_CEC_OPCODE_RECORD_ON: Type = 9;
-    pub const TVE_CEC_OPCODE_RECORD_STATUS: Type = 10;
-    pub const TVE_CEC_OPCODE_RECORD_OFF: Type = 11;
-    pub const TVE_CEC_OPCODE_TEXT_VIEW_ON: Type = 13;
-    pub const TVE_CEC_OPCODE_RECORD_TV_SCREEN: Type = 15;
-    pub const TVE_CEC_OPCODE_GIVE_DECK_STATUS: Type = 26;
-    pub const TVE_CEC_OPCODE_DECK_STATUS: Type = 27;
-    pub const TVE_CEC_OPCODE_SET_MENU_LANGUAGE: Type = 50;
-    pub const TVE_CEC_OPCODE_CLEAR_ANALOGUE_TIMER: Type = 51;
-    pub const TVE_CEC_OPCODE_SET_ANALOGUE_TIMER: Type = 52;
-    pub const TVE_CEC_OPCODE_TIMER_STATUS: Type = 53;
-    pub const TVE_CEC_OPCODE_STANDBY: Type = 54;
-    pub const TVE_CEC_OPCODE_PLAY: Type = 65;
-    pub const TVE_CEC_OPCODE_DECK_CONTROL: Type = 66;
-    pub const TVE_CEC_OPCODE_TIMER_CLEARED_STATUS: Type = 67;
-    pub const TVE_CEC_OPCODE_USER_CONTROL_PRESSED: Type = 68;
-    pub const TVE_CEC_OPCODE_USER_CONTROL_RELEASE: Type = 69;
-    pub const TVE_CEC_OPCODE_GIVE_OSD_NAME: Type = 70;
-    pub const TVE_CEC_OPCODE_SET_OSD_NAME: Type = 71;
-    pub const TVE_CEC_OPCODE_SET_OSD_STRING: Type = 100;
-    pub const TVE_CEC_OPCODE_SET_TIMER_PROGRAM_TITLE: Type = 103;
-    pub const TVE_CEC_OPCODE_SYSTEM_AUDIO_MODE_REQUEST: Type = 112;
-    pub const TVE_CEC_OPCODE_GIVE_AUDIO_STATUS: Type = 113;
-    pub const TVE_CEC_OPCODE_SET_SYSTEM_AUDIO_MODE: Type = 114;
-    pub const TVE_CEC_OPCODE_REPORT_AUDIO_STATUS: Type = 122;
-    pub const TVE_CEC_OPCODE_GIVE_SYSTEM_AUDIO_MODE_STATUS: Type = 125;
-    pub const TVE_CEC_OPCODE_SYSTEM_AUDIO_MODE_STATUS: Type = 126;
-    pub const TVE_CEC_OPCODE_ROUTING_CHANGE: Type = 128;
-    pub const TVE_CEC_OPCODE_ROUTING_INFORMATION: Type = 129;
-    pub const TVE_CEC_OPCODE_ACTIVE_SOURCE: Type = 130;
-    pub const TVE_CEC_OPCODE_GIVE_PHYSICAL_ADDRESS: Type = 131;
-    pub const TVE_CEC_OPCODE_REPORT_PHYSICAL_ADDRESS: Type = 132;
-    pub const TVE_CEC_OPCODE_REQUEST_ACTIVE_SOURCE: Type = 133;
-    pub const TVE_CEC_OPCODE_SET_STREAM_PATH: Type = 134;
-    pub const TVE_CEC_OPCODE_DEVICE_VENDOR_ID: Type = 135;
-    pub const TVE_CEC_OPCODE_VENDOR_COMMAND: Type = 137;
-    pub const TVE_CEC_OPCODE_VENDOR_REMOTE_BUTTON_DOWN: Type = 138;
-    pub const TVE_CEC_OPCODE_VENDOR_REMOTE_BUTTON_UP: Type = 139;
-    pub const TVE_CEC_OPCODE_GIVE_DEVICE_VENDOR_ID: Type = 140;
-    pub const TVE_CEC_OPCODE_MENU_REQUEST: Type = 141;
-    pub const TVE_CEC_OPCODE_MENU_STATUS: Type = 142;
-    pub const TVE_CEC_OPCODE_GIVE_DEVICE_POWER_STATUS: Type = 143;
-    pub const TVE_CEC_OPCODE_REPORT_POWER_STATUS: Type = 144;
-    pub const TVE_CEC_OPCODE_GET_MENU_LANGUAGE: Type = 145;
-    pub const TVE_CEC_OPCODE_SELECT_ANALOGUE_SERVICE: Type = 146;
-    pub const TVE_CEC_OPCODE_SELECT_DIGITAL_SERVICE: Type = 147;
-    pub const TVE_CEC_OPCODE_SET_DIGITAL_TIMER: Type = 151;
-    pub const TVE_CEC_OPCODE_CLEAR_DIGITAL_TIMER: Type = 153;
-    pub const TVE_CEC_OPCODE_SET_AUDIO_RATE: Type = 154;
-    pub const TVE_CEC_OPCODE_INACTIVE_SOURCE: Type = 157;
-    pub const TVE_CEC_OPCODE_CEC_VERSION: Type = 158;
-    pub const TVE_CEC_OPCODE_GET_CEC_VERSION: Type = 159;
-    pub const TVE_CEC_OPCODE_VENDOR_COMMAND_WITH_ID: Type = 160;
-    pub const TVE_CEC_OPCODE_CLEAR_EXTERNAL_TIMER: Type = 161;
-    pub const TVE_CEC_OPCODE_SET_EXTERNAL_TIMER: Type = 162;
-    pub const TVE_CEC_OPCODE_ABORT: Type = 255;
-}
+pub const TVE_CEC_DEVICE_TV: TVECECLogicalAddress = 0;
+pub const TVE_CEC_DEVICE_RECORDING_DEVICE_1: TVECECLogicalAddress = 1;
+pub const TVE_CEC_DEVICE_RECORDING_DEVICE_2: TVECECLogicalAddress = 2;
+pub const TVE_CEC_DEVICE_TUNER_1: TVECECLogicalAddress = 3;
+pub const TVE_CEC_DEVICE_PLAYBACK_DEVICE_1: TVECECLogicalAddress = 4;
+pub const TVE_CEC_DEVICE_AUDIO_SYSTEM: TVECECLogicalAddress = 5;
+pub const TVE_CEC_DEVICE_TUNER_2: TVECECLogicalAddress = 6;
+pub const TVE_CEC_DEVICE_TUNER_3: TVECECLogicalAddress = 7;
+pub const TVE_CEC_DEVICE_PLAYBACK_DEVICE_2: TVECECLogicalAddress = 8;
+pub const TVE_CEC_DEVICE_RECORDING_DEVICE_3: TVECECLogicalAddress = 9;
+pub const TVE_CEC_DEVICE_TUNER_4: TVECECLogicalAddress = 10;
+pub const TVE_CEC_DEVICE_PLAYBACK_DEVICE_3: TVECECLogicalAddress = 11;
+pub const TVE_CEC_DEVICE_RESERVED_1: TVECECLogicalAddress = 12;
+pub const TVE_CEC_DEVICE_RESERVED_2: TVECECLogicalAddress = 13;
+pub const TVE_CEC_DEVICE_FREE_USE: TVECECLogicalAddress = 14;
+pub const TVE_CEC_DEVICE_UNREGISTERED: TVECECLogicalAddress = 15;
+pub const TVE_CEC_DEVICE_BROADCAST: TVECECLogicalAddress = 15;
+pub type TVECECLogicalAddress = ::core::ffi::c_uint;
+pub const TVE_CEC_OPCODE_FEATURE_ABORT: TVECECOpCode = 0;
+pub const TVE_CEC_OPCODE_IMAGE_VIEW_ON: TVECECOpCode = 4;
+pub const TVE_CEC_OPCODE_TUNER_STEP_INCREMENT: TVECECOpCode = 5;
+pub const TVE_CEC_OPCODE_TUNER_STEP_DECREMENT: TVECECOpCode = 6;
+pub const TVE_CEC_OPCODE_TUNER_DEVICE_STATUS: TVECECOpCode = 7;
+pub const TVE_CEC_OPCODE_GIVE_TUNER_DEVICE_STATUS: TVECECOpCode = 8;
+pub const TVE_CEC_OPCODE_RECORD_ON: TVECECOpCode = 9;
+pub const TVE_CEC_OPCODE_RECORD_STATUS: TVECECOpCode = 10;
+pub const TVE_CEC_OPCODE_RECORD_OFF: TVECECOpCode = 11;
+pub const TVE_CEC_OPCODE_TEXT_VIEW_ON: TVECECOpCode = 13;
+pub const TVE_CEC_OPCODE_RECORD_TV_SCREEN: TVECECOpCode = 15;
+pub const TVE_CEC_OPCODE_GIVE_DECK_STATUS: TVECECOpCode = 26;
+pub const TVE_CEC_OPCODE_DECK_STATUS: TVECECOpCode = 27;
+pub const TVE_CEC_OPCODE_SET_MENU_LANGUAGE: TVECECOpCode = 50;
+pub const TVE_CEC_OPCODE_CLEAR_ANALOGUE_TIMER: TVECECOpCode = 51;
+pub const TVE_CEC_OPCODE_SET_ANALOGUE_TIMER: TVECECOpCode = 52;
+pub const TVE_CEC_OPCODE_TIMER_STATUS: TVECECOpCode = 53;
+pub const TVE_CEC_OPCODE_STANDBY: TVECECOpCode = 54;
+pub const TVE_CEC_OPCODE_PLAY: TVECECOpCode = 65;
+pub const TVE_CEC_OPCODE_DECK_CONTROL: TVECECOpCode = 66;
+pub const TVE_CEC_OPCODE_TIMER_CLEARED_STATUS: TVECECOpCode = 67;
+pub const TVE_CEC_OPCODE_USER_CONTROL_PRESSED: TVECECOpCode = 68;
+pub const TVE_CEC_OPCODE_USER_CONTROL_RELEASE: TVECECOpCode = 69;
+pub const TVE_CEC_OPCODE_GIVE_OSD_NAME: TVECECOpCode = 70;
+pub const TVE_CEC_OPCODE_SET_OSD_NAME: TVECECOpCode = 71;
+pub const TVE_CEC_OPCODE_SET_OSD_STRING: TVECECOpCode = 100;
+pub const TVE_CEC_OPCODE_SET_TIMER_PROGRAM_TITLE: TVECECOpCode = 103;
+pub const TVE_CEC_OPCODE_SYSTEM_AUDIO_MODE_REQUEST: TVECECOpCode = 112;
+pub const TVE_CEC_OPCODE_GIVE_AUDIO_STATUS: TVECECOpCode = 113;
+pub const TVE_CEC_OPCODE_SET_SYSTEM_AUDIO_MODE: TVECECOpCode = 114;
+pub const TVE_CEC_OPCODE_REPORT_AUDIO_STATUS: TVECECOpCode = 122;
+pub const TVE_CEC_OPCODE_GIVE_SYSTEM_AUDIO_MODE_STATUS: TVECECOpCode = 125;
+pub const TVE_CEC_OPCODE_SYSTEM_AUDIO_MODE_STATUS: TVECECOpCode = 126;
+pub const TVE_CEC_OPCODE_ROUTING_CHANGE: TVECECOpCode = 128;
+pub const TVE_CEC_OPCODE_ROUTING_INFORMATION: TVECECOpCode = 129;
+pub const TVE_CEC_OPCODE_ACTIVE_SOURCE: TVECECOpCode = 130;
+pub const TVE_CEC_OPCODE_GIVE_PHYSICAL_ADDRESS: TVECECOpCode = 131;
+pub const TVE_CEC_OPCODE_REPORT_PHYSICAL_ADDRESS: TVECECOpCode = 132;
+pub const TVE_CEC_OPCODE_REQUEST_ACTIVE_SOURCE: TVECECOpCode = 133;
+pub const TVE_CEC_OPCODE_SET_STREAM_PATH: TVECECOpCode = 134;
+pub const TVE_CEC_OPCODE_DEVICE_VENDOR_ID: TVECECOpCode = 135;
+pub const TVE_CEC_OPCODE_VENDOR_COMMAND: TVECECOpCode = 137;
+pub const TVE_CEC_OPCODE_VENDOR_REMOTE_BUTTON_DOWN: TVECECOpCode = 138;
+pub const TVE_CEC_OPCODE_VENDOR_REMOTE_BUTTON_UP: TVECECOpCode = 139;
+pub const TVE_CEC_OPCODE_GIVE_DEVICE_VENDOR_ID: TVECECOpCode = 140;
+pub const TVE_CEC_OPCODE_MENU_REQUEST: TVECECOpCode = 141;
+pub const TVE_CEC_OPCODE_MENU_STATUS: TVECECOpCode = 142;
+pub const TVE_CEC_OPCODE_GIVE_DEVICE_POWER_STATUS: TVECECOpCode = 143;
+pub const TVE_CEC_OPCODE_REPORT_POWER_STATUS: TVECECOpCode = 144;
+pub const TVE_CEC_OPCODE_GET_MENU_LANGUAGE: TVECECOpCode = 145;
+pub const TVE_CEC_OPCODE_SELECT_ANALOGUE_SERVICE: TVECECOpCode = 146;
+pub const TVE_CEC_OPCODE_SELECT_DIGITAL_SERVICE: TVECECOpCode = 147;
+pub const TVE_CEC_OPCODE_SET_DIGITAL_TIMER: TVECECOpCode = 151;
+pub const TVE_CEC_OPCODE_CLEAR_DIGITAL_TIMER: TVECECOpCode = 153;
+pub const TVE_CEC_OPCODE_SET_AUDIO_RATE: TVECECOpCode = 154;
+pub const TVE_CEC_OPCODE_INACTIVE_SOURCE: TVECECOpCode = 157;
+pub const TVE_CEC_OPCODE_CEC_VERSION: TVECECOpCode = 158;
+pub const TVE_CEC_OPCODE_GET_CEC_VERSION: TVECECOpCode = 159;
+pub const TVE_CEC_OPCODE_VENDOR_COMMAND_WITH_ID: TVECECOpCode = 160;
+pub const TVE_CEC_OPCODE_CLEAR_EXTERNAL_TIMER: TVECECOpCode = 161;
+pub const TVE_CEC_OPCODE_SET_EXTERNAL_TIMER: TVECECOpCode = 162;
+pub const TVE_CEC_OPCODE_ABORT: TVECECOpCode = 255;
+pub type TVECECOpCode = ::core::ffi::c_uint;
 extern "C" {
     pub fn TVECECInit() -> BOOL;
 }
@@ -13207,54 +13953,42 @@ extern "C" {
 }
 extern "C" {
     pub fn TVECECSendCommand(
-        destination: TVECECLogicalAddress::Type,
-        opCode: TVECECOpCode::Type,
+        destination: TVECECLogicalAddress,
+        opCode: TVECECOpCode,
         parameters: *mut u8,
         numParameters: u8,
     ) -> BOOL;
 }
 extern "C" {
     pub fn TVECECReceiveCommand(
-        outInitiator: *mut TVECECLogicalAddress::Type,
-        outOpCode: *mut TVECECOpCode::Type,
+        outInitiator: *mut TVECECLogicalAddress,
+        outOpCode: *mut TVECECOpCode,
         outParameters: *mut u8,
         outNumParameters: *mut u8,
     ) -> BOOL;
 }
 pub type AXResult = i32;
-pub mod AX_RESULT {
-    pub type Type = ::core::ffi::c_int;
-    pub const AX_RESULT_SUCCESS: Type = 0;
-    pub const AX_RESULT_INVALID_DEVICE_TYPE: Type = -1;
-    pub const AX_RESULT_INVALID_DRC_VS_MODE: Type = -13;
-    pub const AX_RESULT_VOICE_IS_RUNNING: Type = -18;
-    pub const AX_RESULT_DELAY_TOO_BIG: Type = -19;
-}
+pub const AX_RESULT_SUCCESS: AX_RESULT = 0;
+pub const AX_RESULT_INVALID_DEVICE_TYPE: AX_RESULT = -1;
+pub const AX_RESULT_INVALID_DRC_VS_MODE: AX_RESULT = -13;
+pub const AX_RESULT_VOICE_IS_RUNNING: AX_RESULT = -18;
+pub const AX_RESULT_DELAY_TOO_BIG: AX_RESULT = -19;
+pub type AX_RESULT = ::core::ffi::c_int;
 pub type AXDRCVSMode = u32;
 pub type AXDRCVSOutput = u32;
 pub type AXDRCVSLC = u32;
 pub type AXDRCVSSpeakerPosition = u32;
 pub type AXDRCVSSurroundLevelGain = u32;
-pub mod AX_DRC_VS_MODE {
-    pub type Type = ::core::ffi::c_uint;
-    pub const AX_DRC_VS_MODE_UNKNOWN: Type = 0;
-}
-pub mod AX_DRC_VS_OUTPUT {
-    pub type Type = ::core::ffi::c_uint;
-    pub const AX_DRC_VS_OUTPUT_UNKNOWN: Type = 0;
-}
-pub mod AX_DRC_VS_LC {
-    pub type Type = ::core::ffi::c_uint;
-    pub const AX_DRC_VS_LC_UNKNOWN: Type = 0;
-}
-pub mod AX_DRC_VS_SPEAKER_POS {
-    pub type Type = ::core::ffi::c_uint;
-    pub const AX_DRC_VS_SPEAKER_POS_UNKNOWN: Type = 0;
-}
-pub mod AX_DRC_VS_SURROUND_GAIN {
-    pub type Type = ::core::ffi::c_uint;
-    pub const AX_DRC_VS_SURROUND_GAIN_UNKNOWN: Type = 0;
-}
+pub const AX_DRC_VS_MODE_UNKNOWN: AX_DRC_VS_MODE = 0;
+pub type AX_DRC_VS_MODE = ::core::ffi::c_uint;
+pub const AX_DRC_VS_OUTPUT_UNKNOWN: AX_DRC_VS_OUTPUT = 0;
+pub type AX_DRC_VS_OUTPUT = ::core::ffi::c_uint;
+pub const AX_DRC_VS_LC_UNKNOWN: AX_DRC_VS_LC = 0;
+pub type AX_DRC_VS_LC = ::core::ffi::c_uint;
+pub const AX_DRC_VS_SPEAKER_POS_UNKNOWN: AX_DRC_VS_SPEAKER_POS = 0;
+pub type AX_DRC_VS_SPEAKER_POS = ::core::ffi::c_uint;
+pub const AX_DRC_VS_SURROUND_GAIN_UNKNOWN: AX_DRC_VS_SURROUND_GAIN = 0;
+pub type AX_DRC_VS_SURROUND_GAIN = ::core::ffi::c_uint;
 extern "C" {
     pub fn AXGetDRCVSMode(mode: *mut AXDRCVSMode) -> AXResult;
 }
@@ -13295,16 +14029,12 @@ pub type AXAuxCallback = ::core::option::Option<
 >;
 pub type AXDeviceMode = u32;
 pub type AXDeviceType = u32;
-pub mod AX_DEVICE_MODE {
-    pub type Type = ::core::ffi::c_uint;
-    pub const AX_DEVICE_MODE_UNKNOWN: Type = 0;
-}
-pub mod AX_DEVICE_TYPE {
-    pub type Type = ::core::ffi::c_uint;
-    pub const AX_DEVICE_TYPE_TV: Type = 0;
-    pub const AX_DEVICE_TYPE_DRC: Type = 1;
-    pub const AX_DEVICE_TYPE_CONTROLLER: Type = 2;
-}
+pub const AX_DEVICE_MODE_UNKNOWN: AX_DEVICE_MODE = 0;
+pub type AX_DEVICE_MODE = ::core::ffi::c_uint;
+pub const AX_DEVICE_TYPE_TV: AX_DEVICE_TYPE = 0;
+pub const AX_DEVICE_TYPE_DRC: AX_DEVICE_TYPE = 1;
+pub const AX_DEVICE_TYPE_CONTROLLER: AX_DEVICE_TYPE = 2;
+pub type AX_DEVICE_TYPE = ::core::ffi::c_uint;
 extern "C" {
     pub fn AXGetDeviceMode(type_: AXDeviceType, mode: *mut AXDeviceMode) -> AXResult;
 }
@@ -13353,28 +14083,24 @@ extern "C" {
 pub type AXFrameCallback = ::core::option::Option<unsafe extern "C" fn()>;
 pub type AXInitRenderer = u32;
 pub type AXInitPipeline = u32;
-pub mod AX_INIT_RENDERER {
-    pub type Type = ::core::ffi::c_uint;
-    pub const AX_INIT_RENDERER_32KHZ: Type = 0;
-    pub const AX_INIT_RENDERER_48KHZ: Type = 1;
-}
-pub mod AX_INIT_PIPELINE {
-    pub type Type = ::core::ffi::c_uint;
-    pub const AX_INIT_PIPELINE_SINGLE: Type = 0;
-    pub const AX_INIT_PIPELINE_FOUR_STAGE: Type = 1;
-}
+pub const AX_INIT_RENDERER_32KHZ: AX_INIT_RENDERER = 0;
+pub const AX_INIT_RENDERER_48KHZ: AX_INIT_RENDERER = 1;
+pub type AX_INIT_RENDERER = ::core::ffi::c_uint;
+pub const AX_INIT_PIPELINE_SINGLE: AX_INIT_PIPELINE = 0;
+pub const AX_INIT_PIPELINE_FOUR_STAGE: AX_INIT_PIPELINE = 1;
+pub type AX_INIT_PIPELINE = ::core::ffi::c_uint;
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct AXProfile {}
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct AXInitParams {
     pub renderer: AXInitRenderer,
     pub __unk78: [::core::ffi::c_char; 4usize],
     pub pipeline: AXInitPipeline,
 }
 #[repr(C, packed)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct AXTransitionAudioBufferDevice {
     pub mode: AXDeviceMode,
     pub unk1: f32,
@@ -13392,6 +14118,15 @@ pub struct AXTransitionAudioBuffer {
     pub audioBufferLen: u32,
     pub tv: AXTransitionAudioBufferDevice,
     pub drc: AXTransitionAudioBufferDevice,
+}
+impl Default for AXTransitionAudioBuffer {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 extern "C" {
     pub fn AXInit();
@@ -13447,51 +14182,46 @@ pub type AXVoiceCallbackFn =
 pub type AXVoiceCallbackExFn = ::core::option::Option<
     unsafe extern "C" fn(arg1: *mut ::core::ffi::c_void, arg2: u32, arg3: u32),
 >;
-pub mod AX_VOICE_FORMAT {
-    pub type Type = ::core::ffi::c_uint;
-    pub const AX_VOICE_FORMAT_ADPCM: Type = 0;
-    pub const AX_VOICE_FORMAT_LPCM16: Type = 10;
-    pub const AX_VOICE_FORMAT_LPCM8: Type = 25;
-}
-pub mod AX_VOICE_LOOP {
-    pub type Type = ::core::ffi::c_uint;
-    pub const AX_VOICE_LOOP_DISABLED: Type = 0;
-    pub const AX_VOICE_LOOP_ENABLED: Type = 1;
-}
-pub mod AX_VOICE_RENDERER {
-    pub type Type = ::core::ffi::c_uint;
-    pub const AX_VOICE_RENDERER_DSP: Type = 0;
-    pub const AX_VOICE_RENDERER_CPU: Type = 1;
-    pub const AX_VOICE_RENDERER_AUTO: Type = 2;
-}
-pub mod AX_VOICE_RATIO_RESULT {
-    pub type Type = ::core::ffi::c_int;
-    pub const AX_VOICE_RATIO_RESULT_SUCCESS: Type = 0;
-    pub const AX_VOICE_RATIO_RESULT_LESS_THAN_ZERO: Type = -1;
-    pub const AX_VOICE_RATIO_RESULT_GREATER_THAN_SOMETHING: Type = -2;
-}
-pub mod AX_VOICE_SRC_TYPE {
-    pub type Type = ::core::ffi::c_uint;
-    pub const AX_VOICE_SRC_TYPE_NONE: Type = 0;
-    pub const AX_VOICE_SRC_TYPE_LINEAR: Type = 1;
-    pub const AX_VOICE_SRC_TYPE_UNK0: Type = 2;
-    pub const AX_VOICE_SRC_TYPE_UNK1: Type = 3;
-    pub const AX_VOICE_SRC_TYPE_UNK2: Type = 4;
-}
-pub mod AX_VOICE_STATE {
-    pub type Type = ::core::ffi::c_uint;
-    pub const AX_VOICE_STATE_STOPPED: Type = 0;
-    pub const AX_VOICE_STATE_PLAYING: Type = 1;
-}
-pub mod AX_VOICE_TYPE {
-    pub type Type = ::core::ffi::c_uint;
-    pub const AX_VOICE_TYPE_UNKNOWN: Type = 0;
-}
+pub const AX_VOICE_FORMAT_ADPCM: AX_VOICE_FORMAT = 0;
+pub const AX_VOICE_FORMAT_LPCM16: AX_VOICE_FORMAT = 10;
+pub const AX_VOICE_FORMAT_LPCM8: AX_VOICE_FORMAT = 25;
+pub type AX_VOICE_FORMAT = ::core::ffi::c_uint;
+pub const AX_VOICE_LOOP_DISABLED: AX_VOICE_LOOP = 0;
+pub const AX_VOICE_LOOP_ENABLED: AX_VOICE_LOOP = 1;
+pub type AX_VOICE_LOOP = ::core::ffi::c_uint;
+pub const AX_VOICE_RENDERER_DSP: AX_VOICE_RENDERER = 0;
+pub const AX_VOICE_RENDERER_CPU: AX_VOICE_RENDERER = 1;
+pub const AX_VOICE_RENDERER_AUTO: AX_VOICE_RENDERER = 2;
+pub type AX_VOICE_RENDERER = ::core::ffi::c_uint;
+pub const AX_VOICE_RATIO_RESULT_SUCCESS: AX_VOICE_RATIO_RESULT = 0;
+pub const AX_VOICE_RATIO_RESULT_LESS_THAN_ZERO: AX_VOICE_RATIO_RESULT = -1;
+pub const AX_VOICE_RATIO_RESULT_GREATER_THAN_SOMETHING: AX_VOICE_RATIO_RESULT = -2;
+pub type AX_VOICE_RATIO_RESULT = ::core::ffi::c_int;
+pub const AX_VOICE_SRC_TYPE_NONE: AX_VOICE_SRC_TYPE = 0;
+pub const AX_VOICE_SRC_TYPE_LINEAR: AX_VOICE_SRC_TYPE = 1;
+pub const AX_VOICE_SRC_TYPE_UNK0: AX_VOICE_SRC_TYPE = 2;
+pub const AX_VOICE_SRC_TYPE_UNK1: AX_VOICE_SRC_TYPE = 3;
+pub const AX_VOICE_SRC_TYPE_UNK2: AX_VOICE_SRC_TYPE = 4;
+pub type AX_VOICE_SRC_TYPE = ::core::ffi::c_uint;
+pub const AX_VOICE_STATE_STOPPED: AX_VOICE_STATE = 0;
+pub const AX_VOICE_STATE_PLAYING: AX_VOICE_STATE = 1;
+pub type AX_VOICE_STATE = ::core::ffi::c_uint;
+pub const AX_VOICE_TYPE_UNKNOWN: AX_VOICE_TYPE = 0;
+pub type AX_VOICE_TYPE = ::core::ffi::c_uint;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct AXVoiceLink {
     pub next: *mut AXVoice,
     pub prev: *mut AXVoice,
+}
+impl Default for AXVoiceLink {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -13502,6 +14232,15 @@ pub struct AXVoiceOffsets {
     pub endOffset: u32,
     pub currentOffset: u32,
     pub data: *const ::core::ffi::c_void,
+}
+impl Default for AXVoiceOffsets {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -13523,31 +14262,40 @@ pub struct AXVoice {
     pub unk0: f32,
     pub unk1: f32,
 }
+impl Default for AXVoice {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct AXVoiceDeviceBusMixData {
     pub volume: u16,
     pub delta: i16,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct AXVoiceDeviceMixData {
     pub bus: [AXVoiceDeviceBusMixData; 4usize],
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct AXVoiceVeData {
     pub volume: u16,
     pub delta: i16,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct AXVoiceAdpcmLoopData {
     pub predScale: u16,
     pub prevSample: [i16; 2usize],
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct AXVoiceAdpcm {
     pub coefficients: [i16; 16usize],
     pub gain: u16,
@@ -13555,7 +14303,7 @@ pub struct AXVoiceAdpcm {
     pub prevSample: [i16; 2usize],
 }
 #[repr(C, packed)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct AXVoiceSrc {
     pub ratio: u32,
     pub currentOffsetFrac: u16,
@@ -13683,9 +14431,9 @@ extern "C" {
 }
 extern "C" {
     pub fn GX2RDrawIndexed(
-        mode: GX2PrimitiveMode::Type,
+        mode: GX2PrimitiveMode,
         buffer: *mut GX2RBuffer,
-        indexType: GX2IndexType::Type,
+        indexType: GX2IndexType,
         count: u32,
         indexOffset: u32,
         vertexOffset: u32,
@@ -13693,45 +14441,41 @@ extern "C" {
     );
 }
 extern "C" {
-    pub fn GX2RCreateSurface(surface: *mut GX2Surface, flags: GX2RResourceFlags::Type) -> BOOL;
+    pub fn GX2RCreateSurface(surface: *mut GX2Surface, flags: GX2RResourceFlags) -> BOOL;
 }
 extern "C" {
     pub fn GX2RCreateSurfaceUserMemory(
         surface: *mut GX2Surface,
         image: *mut u8,
         mipmap: *mut u8,
-        flags: GX2RResourceFlags::Type,
+        flags: GX2RResourceFlags,
     ) -> BOOL;
 }
 extern "C" {
-    pub fn GX2RDestroySurfaceEx(surface: *mut GX2Surface, flags: GX2RResourceFlags::Type) -> BOOL;
+    pub fn GX2RDestroySurfaceEx(surface: *mut GX2Surface, flags: GX2RResourceFlags) -> BOOL;
 }
 extern "C" {
     pub fn GX2RInvalidateSurface(
         surface: *mut GX2Surface,
         level: i32,
-        flags: GX2RResourceFlags::Type,
+        flags: GX2RResourceFlags,
     ) -> BOOL;
 }
 extern "C" {
     pub fn GX2RLockSurfaceEx(
         surface: *mut GX2Surface,
         level: i32,
-        flags: GX2RResourceFlags::Type,
+        flags: GX2RResourceFlags,
     ) -> *mut ::core::ffi::c_void;
 }
 extern "C" {
-    pub fn GX2RUnlockSurfaceEx(
-        surface: *mut GX2Surface,
-        level: i32,
-        flags: GX2RResourceFlags::Type,
-    );
+    pub fn GX2RUnlockSurfaceEx(surface: *mut GX2Surface, level: i32, flags: GX2RResourceFlags);
 }
 extern "C" {
     pub fn GX2RBeginDisplayListEx(
         displayList: *mut GX2RBuffer,
         unknown: u32,
-        flags: GX2RResourceFlags::Type,
+        flags: GX2RResourceFlags,
     );
 }
 extern "C" {
@@ -13744,24 +14488,20 @@ extern "C" {
     pub fn GX2RDirectCallDisplayList(displayList: *mut GX2RBuffer, size: u32);
 }
 pub type GX2RAllocFunction = ::core::option::Option<
-    unsafe extern "C" fn(
-        arg1: GX2RResourceFlags::Type,
-        arg2: u32,
-        arg3: u32,
-    ) -> *mut ::core::ffi::c_void,
+    unsafe extern "C" fn(arg1: GX2RResourceFlags, arg2: u32, arg3: u32) -> *mut ::core::ffi::c_void,
 >;
 pub type GX2RFreeFunction = ::core::option::Option<
-    unsafe extern "C" fn(arg1: GX2RResourceFlags::Type, arg2: *mut ::core::ffi::c_void),
+    unsafe extern "C" fn(arg1: GX2RResourceFlags, arg2: *mut ::core::ffi::c_void),
 >;
 extern "C" {
     pub fn GX2RInvalidateMemory(
-        flags: GX2RResourceFlags::Type,
+        flags: GX2RResourceFlags,
         buffer: *mut ::core::ffi::c_void,
         size: u32,
     );
 }
 extern "C" {
-    pub fn GX2RIsUserMemory(flags: GX2RResourceFlags::Type) -> BOOL;
+    pub fn GX2RIsUserMemory(flags: GX2RResourceFlags) -> BOOL;
 }
 extern "C" {
     pub fn GX2RSetAllocator(allocFn: GX2RAllocFunction, freeFn: GX2RFreeFunction);
@@ -13773,6 +14513,15 @@ extern "C" {
 #[derive(Debug, Copy, Clone)]
 pub struct CCRHIDReport {
     pub __unk80: [::core::ffi::c_char; 128usize],
+}
+impl Default for CCRHIDReport {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 extern "C" {
     pub fn CCRHIDStart(
@@ -13829,7 +14578,7 @@ extern "C" {
 }
 pub type NTAGError = i32;
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct NTAGFormatSettings {
     pub version: u8,
     pub __unk81: [::core::ffi::c_char; 3usize],
@@ -13838,7 +14587,7 @@ pub struct NTAGFormatSettings {
     pub __unk82: [::core::ffi::c_char; 28usize],
 }
 #[repr(C, packed)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct NTAGNoftHeader {
     pub magic: u32,
     pub version: u8,
@@ -13846,7 +14595,7 @@ pub struct NTAGNoftHeader {
     pub unknown: u8,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct NTAGInfoHeader {
     pub rwHeaderOffset: u16,
     pub rwSize: u16,
@@ -13856,7 +14605,7 @@ pub struct NTAGInfoHeader {
     pub formatVersion: u8,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct NTAGAreaHeader {
     pub magic: u16,
     pub offset: u16,
@@ -13875,6 +14624,15 @@ pub struct NTAGAreaInfo {
     pub identifyCode: u32,
     pub __unk85: [::core::ffi::c_char; 32usize],
 }
+impl Default for NTAGAreaInfo {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct NTAGData {
@@ -13885,6 +14643,15 @@ pub struct NTAGData {
     pub rwInfo: NTAGAreaInfo,
     pub roInfo: NTAGAreaInfo,
     pub __unk87: [::core::ffi::c_char; 32usize],
+}
+impl Default for NTAGData {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C, packed)]
 #[derive(Debug, Copy, Clone)]
@@ -13911,11 +14678,29 @@ pub struct NTAGInfoT2T {
     pub titleID: u64,
     pub reserved: [u8; 508usize],
 }
+impl Default for NTAGInfoT2T {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct NTAGApplicationDataT2T {
     pub size: u16,
     pub data: [u8; 216usize],
+}
+impl Default for NTAGApplicationDataT2T {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -13937,7 +14722,7 @@ pub struct NTAGRawDataT2T {
     pub reserved1: [u8; 2usize],
 }
 #[repr(C, packed)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct NTAGRawDataT2T__bindgen_ty_1 {
     pub magic: u8,
     pub writes: u16,
@@ -13951,7 +14736,7 @@ pub struct NTAGRawDataT2T__bindgen_ty_1 {
     pub name: [u16; 10usize],
 }
 #[repr(C, packed)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct NTAGRawDataT2T__bindgen_ty_2 {
     pub tagHmac: [u8; 32usize],
     pub characterID: [u8; 3usize],
@@ -13972,11 +14757,38 @@ pub struct NTAGRawDataT2T__bindgen_ty_3 {
     pub accessID: u32,
     pub reserved: [u8; 34usize],
 }
+impl Default for NTAGRawDataT2T__bindgen_ty_3 {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
+impl Default for NTAGRawDataT2T {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct NTAGRawDataContainerT2T {
     pub size: u16,
     pub data: NTAGRawDataT2T,
+}
+impl Default for NTAGRawDataContainerT2T {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -13988,16 +14800,21 @@ pub struct NTAGDataT2T {
     pub raw: NTAGRawDataContainerT2T,
     pub __unk88: [::core::ffi::c_char; 32usize],
 }
+impl Default for NTAGDataT2T {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 pub type NTAGCallbackFn = ::core::option::Option<
-    unsafe extern "C" fn(
-        chan: VPADChan::Type,
-        error: NTAGError,
-        userContext: *mut ::core::ffi::c_void,
-    ),
+    unsafe extern "C" fn(chan: VPADChan, error: NTAGError, userContext: *mut ::core::ffi::c_void),
 >;
 pub type NTAGReadCallbackFn = ::core::option::Option<
     unsafe extern "C" fn(
-        chan: VPADChan::Type,
+        chan: VPADChan,
         error: NTAGError,
         data: *mut NTAGData,
         userContext: *mut ::core::ffi::c_void,
@@ -14005,7 +14822,7 @@ pub type NTAGReadCallbackFn = ::core::option::Option<
 >;
 pub type NTAGReadT2TCallbackFn = ::core::option::Option<
     unsafe extern "C" fn(
-        chan: VPADChan::Type,
+        chan: VPADChan,
         error: NTAGError,
         data: *mut NTAGDataT2T,
         userContext: *mut ::core::ffi::c_void,
@@ -14013,7 +14830,7 @@ pub type NTAGReadT2TCallbackFn = ::core::option::Option<
 >;
 pub type NTAGReadT2TRawDataCallbackFn = ::core::option::Option<
     unsafe extern "C" fn(
-        chan: VPADChan::Type,
+        chan: VPADChan,
         error: NTAGError,
         tagInfo: *mut NFCTagInfo,
         rawData: *mut NTAGRawDataContainerT2T,
@@ -14021,30 +14838,30 @@ pub type NTAGReadT2TRawDataCallbackFn = ::core::option::Option<
     ),
 >;
 extern "C" {
-    pub fn NTAGInit(chan: VPADChan::Type) -> NTAGError;
+    pub fn NTAGInit(chan: VPADChan) -> NTAGError;
 }
 extern "C" {
-    pub fn NTAGInitEx(chan: VPADChan::Type) -> NTAGError;
+    pub fn NTAGInitEx(chan: VPADChan) -> NTAGError;
 }
 extern "C" {
-    pub fn NTAGIsInit(chan: VPADChan::Type) -> BOOL;
+    pub fn NTAGIsInit(chan: VPADChan) -> BOOL;
 }
 extern "C" {
-    pub fn NTAGProc(chan: VPADChan::Type);
+    pub fn NTAGProc(chan: VPADChan);
 }
 extern "C" {
-    pub fn NTAGShutdown(chan: VPADChan::Type) -> NTAGError;
+    pub fn NTAGShutdown(chan: VPADChan) -> NTAGError;
 }
 extern "C" {
     pub fn NTAGAbort(
-        chan: VPADChan::Type,
+        chan: VPADChan,
         callback: NTAGCallbackFn,
         userContext: *mut ::core::ffi::c_void,
     ) -> NTAGError;
 }
 extern "C" {
     pub fn NTAGFormat(
-        chan: VPADChan::Type,
+        chan: VPADChan,
         timeout: u32,
         uid: *mut NFCUid,
         rwSize: u32,
@@ -14055,7 +14872,7 @@ extern "C" {
 }
 extern "C" {
     pub fn NTAGSetReadOnly(
-        chan: VPADChan::Type,
+        chan: VPADChan,
         timeout: u32,
         uid: *mut NFCUid,
         uidMask: *mut NFCUid,
@@ -14066,7 +14883,7 @@ extern "C" {
 }
 extern "C" {
     pub fn NTAGSetTagDetectCallback(
-        chan: VPADChan::Type,
+        chan: VPADChan,
         callback: NFCTagDetectCallbackFn,
         userContext: *mut ::core::ffi::c_void,
     );
@@ -14076,7 +14893,7 @@ extern "C" {
 }
 extern "C" {
     pub fn NTAGRead(
-        chan: VPADChan::Type,
+        chan: VPADChan,
         timeout: u32,
         uid: *mut NFCUid,
         uidMask: *mut NFCUid,
@@ -14086,7 +14903,7 @@ extern "C" {
 }
 extern "C" {
     pub fn NTAGReadT2T(
-        chan: VPADChan::Type,
+        chan: VPADChan,
         timeout: u32,
         uid: *mut NFCUid,
         uidMask: *mut NFCUid,
@@ -14096,7 +14913,7 @@ extern "C" {
 }
 extern "C" {
     pub fn NTAGReadT2TRawData(
-        chan: VPADChan::Type,
+        chan: VPADChan,
         timeout: u32,
         uid: *mut NFCUid,
         uidMask: *mut NFCUid,
@@ -14106,7 +14923,7 @@ extern "C" {
 }
 extern "C" {
     pub fn NTAGWrite(
-        chan: VPADChan::Type,
+        chan: VPADChan,
         timeout: u32,
         uid: *mut NFCUid,
         rwSize: u32,
@@ -14117,7 +14934,7 @@ extern "C" {
 }
 extern "C" {
     pub fn NTAGWriteT2T(
-        chan: VPADChan::Type,
+        chan: VPADChan,
         timeout: u32,
         uid: *mut NFCUid,
         dataContainer: *mut NTAGRawDataContainerT2T,
@@ -14127,7 +14944,7 @@ extern "C" {
 }
 extern "C" {
     pub fn NTAGWriteT2TConfigArea(
-        chan: VPADChan::Type,
+        chan: VPADChan,
         timeout: u32,
         uid: *mut NFCUid,
         cfg0: *mut u32,
@@ -14140,7 +14957,7 @@ extern "C" {
 }
 extern "C" {
     pub fn NTAGWriteT2TLockArea(
-        chan: VPADChan::Type,
+        chan: VPADChan,
         timeout: u32,
         uid: *mut NFCUid,
         lockBytes: *mut u32,
@@ -14152,7 +14969,7 @@ extern "C" {
 }
 extern "C" {
     pub fn NTAGWriteT2TRawData(
-        chan: VPADChan::Type,
+        chan: VPADChan,
         timeout: u32,
         uid: *mut NFCUid,
         data: *mut NTAGRawDataT2T,
@@ -14162,7 +14979,7 @@ extern "C" {
 }
 extern "C" {
     pub fn NTAGWriteT2TRawDataEx(
-        chan: VPADChan::Type,
+        chan: VPADChan,
         timeout: u32,
         uid: *mut NFCUid,
         data: *mut NTAGRawDataT2T,
@@ -14173,7 +14990,7 @@ extern "C" {
 }
 extern "C" {
     pub fn NTAGWriteT2TWithConvert(
-        chan: VPADChan::Type,
+        chan: VPADChan,
         timeout: u32,
         uid: *mut NFCUid,
         data: *mut NTAGDataT2T,
@@ -14203,82 +15020,58 @@ pub type NetConfInterfaceType = u16;
 pub type NetConfLinkState = u16;
 pub type NetConfOperState = u16;
 pub type NetConfAdminState = u16;
-pub mod NetConfInterfaceTypeEnum {
-    pub type Type = ::core::ffi::c_uint;
-    pub const NET_CONF_INTERFACE_TYPE_WIFI: Type = 0;
-    pub const NET_CONF_INTERFACE_TYPE_ETHERNET: Type = 1;
-}
-pub mod NetConfEthCfgSpeedEnum {
-    pub type Type = ::core::ffi::c_uint;
-    pub const NET_CONF_ETH_CFG_SPEED_10M: Type = 10;
-    pub const NET_CONF_ETH_CFG_SPEED_100M: Type = 100;
-}
-pub mod NetConfEthCfgDuplexEnum {
-    pub type Type = ::core::ffi::c_uint;
-    pub const NET_CONF_ETH_CFG_DUPLEX_HALF: Type = 1;
-    pub const NET_CONF_ETH_CFG_DUPLEX_FULL: Type = 2;
-}
-pub mod NetConfEthCfgNegotiationEnum {
-    pub type Type = ::core::ffi::c_uint;
-    pub const NET_CONF_ETH_CFG_NEGOTIATION_MANUAL: Type = 1;
-    pub const NET_CONF_ETH_CFG_NEGOTIATION_AUTO: Type = 2;
-}
-pub mod NetConfIPv4Mode {
-    pub type Type = ::core::ffi::c_uint;
-    pub const NET_CONF_IPV4_MODE_DHCP: Type = 0;
-    pub const NET_CONF_IPV4_MODE_MANUAL: Type = 2;
-}
-pub mod NetConfWifiPrivacyModeEnum {
-    pub type Type = ::core::ffi::c_uint;
-    pub const NET_CONF_WIFI_PRIVACY_MODE_NONE: Type = 0;
-    pub const NET_CONF_WIFI_PRIVACY_MODE_WEP: Type = 1;
-    pub const NET_CONF_WIFI_PRIVACY_MODE_WPA2_PSK_TKIP: Type = 3;
-    pub const NET_CONF_WIFI_PRIVACY_MODE_WPA_PSK_TKIP: Type = 4;
-    pub const NET_CONF_WIFI_PRIVACY_MODE_WPA2_PSK_AES: Type = 5;
-    pub const NET_CONF_WIFI_PRIVACY_MODE_WPA_PSK_AES: Type = 6;
-}
-pub mod NetConfProxyAuthTypeEnum {
-    pub type Type = ::core::ffi::c_uint;
-    pub const NET_CONF_PROXY_AUTH_TYPE_NONE: Type = 0;
-    pub const NET_CONF_PROXY_AUTH_TYPE_BASIC_AUTHENTICATION: Type = 1;
-}
-pub mod NetConfProxyStatusEnum {
-    pub type Type = ::core::ffi::c_uint;
-    pub const NET_CONF_PROXY_DISABLED: Type = 0;
-    pub const NET_CONF_PROXY_ENABLED: Type = 1;
-}
-pub mod NetConfLinkStateEnum {
-    pub type Type = ::core::ffi::c_uint;
-    pub const NET_CONF_LINK_STATE_UP: Type = 1;
-    pub const NET_CONF_LINK_STATE_DOWN: Type = 2;
-    pub const NET_CONF_LINK_STATE_NEGOTIATE: Type = 3;
-}
-pub mod NetConfOperStateEnum {
-    pub type Type = ::core::ffi::c_uint;
-    pub const NET_CONF_OPER_STATE_UP: Type = 1;
-    pub const NET_CONF_OPER_STATE_DOWN: Type = 2;
-}
-pub mod NetConfAdminStateEnum {
-    pub type Type = ::core::ffi::c_uint;
-    pub const NET_CONF_ADMIN_STATE_UP: Type = 1;
-    pub const NET_CONF_ADMIN_STATE_DOWN: Type = 2;
-}
-pub mod NetConfProfile {
-    pub type Type = ::core::ffi::c_uint;
-    pub const NET_CONF_PROFILE_0: Type = 0;
-    pub const NET_CONF_PROFILE_1: Type = 1;
-    pub const NET_CONF_PROFILE_2: Type = 2;
-    pub const NET_CONF_PROFILE_3: Type = 3;
-    pub const NET_CONF_PROFILE_4: Type = 4;
-    pub const NET_CONF_PROFILE_5: Type = 5;
-}
+pub const NET_CONF_INTERFACE_TYPE_WIFI: NetConfInterfaceTypeEnum = 0;
+pub const NET_CONF_INTERFACE_TYPE_ETHERNET: NetConfInterfaceTypeEnum = 1;
+pub type NetConfInterfaceTypeEnum = ::core::ffi::c_uint;
+pub const NET_CONF_ETH_CFG_SPEED_10M: NetConfEthCfgSpeedEnum = 10;
+pub const NET_CONF_ETH_CFG_SPEED_100M: NetConfEthCfgSpeedEnum = 100;
+pub type NetConfEthCfgSpeedEnum = ::core::ffi::c_uint;
+pub const NET_CONF_ETH_CFG_DUPLEX_HALF: NetConfEthCfgDuplexEnum = 1;
+pub const NET_CONF_ETH_CFG_DUPLEX_FULL: NetConfEthCfgDuplexEnum = 2;
+pub type NetConfEthCfgDuplexEnum = ::core::ffi::c_uint;
+pub const NET_CONF_ETH_CFG_NEGOTIATION_MANUAL: NetConfEthCfgNegotiationEnum = 1;
+pub const NET_CONF_ETH_CFG_NEGOTIATION_AUTO: NetConfEthCfgNegotiationEnum = 2;
+pub type NetConfEthCfgNegotiationEnum = ::core::ffi::c_uint;
+pub const NET_CONF_IPV4_MODE_DHCP: NetConfIPv4Mode = 0;
+pub const NET_CONF_IPV4_MODE_MANUAL: NetConfIPv4Mode = 2;
+pub type NetConfIPv4Mode = ::core::ffi::c_uint;
+pub const NET_CONF_WIFI_PRIVACY_MODE_NONE: NetConfWifiPrivacyModeEnum = 0;
+pub const NET_CONF_WIFI_PRIVACY_MODE_WEP: NetConfWifiPrivacyModeEnum = 1;
+pub const NET_CONF_WIFI_PRIVACY_MODE_WPA2_PSK_TKIP: NetConfWifiPrivacyModeEnum = 3;
+pub const NET_CONF_WIFI_PRIVACY_MODE_WPA_PSK_TKIP: NetConfWifiPrivacyModeEnum = 4;
+pub const NET_CONF_WIFI_PRIVACY_MODE_WPA2_PSK_AES: NetConfWifiPrivacyModeEnum = 5;
+pub const NET_CONF_WIFI_PRIVACY_MODE_WPA_PSK_AES: NetConfWifiPrivacyModeEnum = 6;
+pub type NetConfWifiPrivacyModeEnum = ::core::ffi::c_uint;
+pub const NET_CONF_PROXY_AUTH_TYPE_NONE: NetConfProxyAuthTypeEnum = 0;
+pub const NET_CONF_PROXY_AUTH_TYPE_BASIC_AUTHENTICATION: NetConfProxyAuthTypeEnum = 1;
+pub type NetConfProxyAuthTypeEnum = ::core::ffi::c_uint;
+pub const NET_CONF_PROXY_DISABLED: NetConfProxyStatusEnum = 0;
+pub const NET_CONF_PROXY_ENABLED: NetConfProxyStatusEnum = 1;
+pub type NetConfProxyStatusEnum = ::core::ffi::c_uint;
+pub const NET_CONF_LINK_STATE_UP: NetConfLinkStateEnum = 1;
+pub const NET_CONF_LINK_STATE_DOWN: NetConfLinkStateEnum = 2;
+pub const NET_CONF_LINK_STATE_NEGOTIATE: NetConfLinkStateEnum = 3;
+pub type NetConfLinkStateEnum = ::core::ffi::c_uint;
+pub const NET_CONF_OPER_STATE_UP: NetConfOperStateEnum = 1;
+pub const NET_CONF_OPER_STATE_DOWN: NetConfOperStateEnum = 2;
+pub type NetConfOperStateEnum = ::core::ffi::c_uint;
+pub const NET_CONF_ADMIN_STATE_UP: NetConfAdminStateEnum = 1;
+pub const NET_CONF_ADMIN_STATE_DOWN: NetConfAdminStateEnum = 2;
+pub type NetConfAdminStateEnum = ::core::ffi::c_uint;
+pub const NET_CONF_PROFILE_0: NetConfProfile = 0;
+pub const NET_CONF_PROFILE_1: NetConfProfile = 1;
+pub const NET_CONF_PROFILE_2: NetConfProfile = 2;
+pub const NET_CONF_PROFILE_3: NetConfProfile = 3;
+pub const NET_CONF_PROFILE_4: NetConfProfile = 4;
+pub const NET_CONF_PROFILE_5: NetConfProfile = 5;
+pub type NetConfProfile = ::core::ffi::c_uint;
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct NetConfAllProfileState {
     pub __unk89: [::core::ffi::c_char; 24usize],
 }
 #[repr(C, packed)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct NetConfEthCfg {
     pub speed: NetConfEthCfgSpeed,
     pub duplex: NetConfEthCfgDuplex,
@@ -14288,15 +15081,24 @@ pub struct NetConfEthCfg {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct NetConfIPv4Info {
-    pub mode: NetConfIPv4Mode::Type,
+    pub mode: NetConfIPv4Mode,
     pub addr: u32,
     pub netmask: u32,
     pub nexthop: u32,
     pub ns1: u32,
     pub ns2: u32,
 }
+impl Default for NetConfIPv4Info {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct NetConfMACAddr {
     pub MACAddr: [u8; 6usize],
 }
@@ -14312,8 +15114,17 @@ pub struct NetConfProxyConfig {
     pub password: [::core::ffi::c_char; 64usize],
     pub noproxy_hosts: [::core::ffi::c_char; 128usize],
 }
+impl Default for NetConfProxyConfig {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct NetConfValidFlags {
     pub __unk92: [::core::ffi::c_char; 24usize],
 }
@@ -14326,6 +15137,15 @@ pub struct NetConfWifiConfigDataPrivacy {
     pub aes_key: [u8; 64usize],
     pub __unk94: [::core::ffi::c_char; 2usize],
 }
+impl Default for NetConfWifiConfigDataPrivacy {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C, packed)]
 #[derive(Debug, Copy, Clone)]
 pub struct NetConfWifiConfigData {
@@ -14334,6 +15154,15 @@ pub struct NetConfWifiConfigData {
     pub __unk95: [::core::ffi::c_char; 2usize],
     pub privacy: NetConfWifiConfigDataPrivacy,
 }
+impl Default for NetConfWifiConfigData {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct NetConfWifiConfig {
@@ -14341,10 +15170,28 @@ pub struct NetConfWifiConfig {
     pub __unk96: [::core::ffi::c_char; 2usize],
     pub config: NetConfWifiConfigData,
 }
+impl Default for NetConfWifiConfig {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct NetConfOpt {
     pub __unk97: [::core::ffi::c_char; 705usize],
+}
+impl Default for NetConfOpt {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C, packed)]
 #[derive(Debug, Copy, Clone)]
@@ -14353,6 +15200,15 @@ pub struct NetConfInterface {
     pub if_sate: u16,
     pub if_mtu: u32,
     pub ipv4Info: NetConfIPv4Info,
+}
+impl Default for NetConfInterface {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -14363,13 +15219,31 @@ pub struct NetConfCfg {
     pub ethCfg: NetConfEthCfg,
     pub proxy: NetConfProxyConfig,
 }
+impl Default for NetConfCfg {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C, packed)]
 #[derive(Debug, Copy, Clone)]
 pub struct NetConfAOSSConfig {
     pub config: [NetConfWifiConfigData; 4usize],
 }
+impl Default for NetConfAOSSConfig {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct NetConfIfState {
     pub if_state: u16,
     pub linkstate: NetConfLinkState,
@@ -14383,7 +15257,7 @@ extern "C" {
     pub fn netconf_close() -> ::core::ffi::c_int;
 }
 extern "C" {
-    pub fn netconf_delete_profile(id: NetConfProfile::Type) -> ::core::ffi::c_int;
+    pub fn netconf_delete_profile(id: NetConfProfile) -> ::core::ffi::c_int;
 }
 extern "C" {
     pub fn netconf_get_all_profile_state(state: *mut NetConfAllProfileState) -> ::core::ffi::c_int;
@@ -14494,32 +15368,27 @@ extern "C" {
     ) -> ::core::ffi::c_int;
 }
 extern "C" {
-    pub fn netconf_nv_read(
-        profileId: NetConfProfile::Type,
-        data: *mut NetConfCfg,
-    ) -> ::core::ffi::c_int;
+    pub fn netconf_nv_read(profileId: NetConfProfile, data: *mut NetConfCfg) -> ::core::ffi::c_int;
 }
 extern "C" {
-    pub fn netconf_nv_write(
-        profileId: NetConfProfile::Type,
-        data: *mut NetConfCfg,
-    ) -> ::core::ffi::c_int;
+    pub fn netconf_nv_write(profileId: NetConfProfile, data: *mut NetConfCfg)
+        -> ::core::ffi::c_int;
 }
 extern "C" {
-    pub fn netconf_nv_load(profileId: NetConfProfile::Type) -> ::core::ffi::c_int;
+    pub fn netconf_nv_load(profileId: NetConfProfile) -> ::core::ffi::c_int;
 }
 extern "C" {
-    pub fn netconf_nv_store(profileId: NetConfProfile::Type) -> ::core::ffi::c_int;
+    pub fn netconf_nv_store(profileId: NetConfProfile) -> ::core::ffi::c_int;
 }
 extern "C" {
     pub fn netconf_read_aoss_config(
-        profileId: NetConfProfile::Type,
+        profileId: NetConfProfile,
         data: *mut NetConfAOSSConfig,
     ) -> ::core::ffi::c_int;
 }
 extern "C" {
     pub fn netconf_write_aoss_config(
-        profileId: NetConfProfile::Type,
+        profileId: NetConfProfile,
         data: *mut NetConfAOSSConfig,
     ) -> ::core::ffi::c_int;
 }
@@ -14539,7 +15408,7 @@ extern "C" {
 extern "C" {
     pub fn netconf_set_if_admin_state(
         interface: NetConfInterfaceType,
-        unk2: NetConfAdminStateEnum::Type,
+        unk2: NetConfAdminStateEnum,
     ) -> ::core::ffi::c_int;
 }
 extern "C" {
@@ -14584,12 +15453,12 @@ extern "C" {
 }
 pub type nsysnet_fd_mask = u32;
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct nsysnet_fd_set {
     pub __fds_bits: nsysnet_fd_mask,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct nsysnet_timeval {
     pub tv_sec: ::core::ffi::c_long,
     pub tv_usec: ::core::ffi::c_long,
@@ -14750,6 +15619,15 @@ pub struct hostent {
     pub h_length: ::core::ffi::c_int,
     pub h_addr_list: *mut *mut ::core::ffi::c_char,
 }
+impl Default for hostent {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct servent {
@@ -14757,6 +15635,15 @@ pub struct servent {
     pub s_aliases: *mut *mut ::core::ffi::c_char,
     pub s_port: ::core::ffi::c_int,
     pub s_proto: *mut ::core::ffi::c_char,
+}
+impl Default for servent {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -14769,6 +15656,15 @@ pub struct addrinfo {
     pub ai_canonname: *mut ::core::ffi::c_char,
     pub ai_addr: *mut sockaddr,
     pub ai_next: *mut addrinfo,
+}
+impl Default for addrinfo {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 extern "C" {
     pub fn gethostbyname(name: *const ::core::ffi::c_char) -> *mut hostent;
@@ -14873,110 +15769,106 @@ extern "C" {
 pub type NSSLError = i32;
 pub type NSSLContextHandle = i32;
 pub type NSSLConnectionHandle = i32;
-pub mod NSSLErrors {
-    pub type Type = ::core::ffi::c_int;
-    pub const NSSL_ERROR_OK: Type = 0;
-    pub const NSSL_ERROR_GENERIC: Type = -1;
-    pub const NSSL_ERROR_INVALID_NSSL_CONTEXT: Type = -2621441;
-    pub const NSSL_ERROR_INVALID_CERT_ID: Type = -2621442;
-    pub const NSSL_ERROR_CERT_LIMIT: Type = -2621443;
-    pub const NSSL_ERROR_INVALID_NSSL_CONNECTION: Type = -2621444;
-    pub const NSSL_ERROR_INVALID_CERT: Type = -2621445;
-    pub const NSSL_ERROR_ZERO_RETURN: Type = -2621446;
-    pub const NSSL_ERROR_WANT_READ: Type = -2621447;
-    pub const NSSL_ERROR_WANT_WRITE: Type = -2621448;
-    pub const NSSL_ERROR_IO_ERROR: Type = -2621449;
-    pub const NSSL_ERROR_NSSL_LIB_ERROR: Type = -2621450;
-    pub const NSSL_ERROR_UNKNOWN: Type = -2621451;
-    pub const NSSL_ERROR_OUT_OF_MEMORY: Type = -2621452;
-    pub const NSSL_ERROR_INVALID_STATE: Type = -2621453;
-    pub const NSSL_ERROR_HANDSHAKE_ERROR: Type = -2621454;
-    pub const NSSL_ERROR_NO_CERT: Type = -2621455;
-    pub const NSSL_ERROR_INVALID_FD: Type = -2621456;
-    pub const NSSL_ERROR_LIB_NOT_READY: Type = -2621457;
-    pub const NSSL_ERROR_IPC_ERROR: Type = -2621458;
-    pub const NSSL_ERROR_RESOURCE_LIMIT: Type = -2621459;
-    pub const NSSL_ERROR_INVALID_HANDLE: Type = -2621460;
-    pub const NSSL_ERROR_INVALID_CERT_TYPE: Type = -2621461;
-    pub const NSSL_ERROR_INVALID_KEY_TYPE: Type = -2621462;
-    pub const NSSL_ERROR_INVALID_SIZE: Type = -2621463;
-    pub const NSSL_ERROR_NO_PEER_CERT: Type = -2621464;
-    pub const NSSL_ERROR_INSUFFICIENT_SIZE: Type = -2621465;
-    pub const NSSL_ERROR_NO_CIPHER: Type = -2621466;
-    pub const NSSL_ERROR_INVALID_ARG: Type = -2621467;
-    pub const NSSL_ERROR_INVALID_NSSL_SESSION: Type = -2621468;
-    pub const NSSL_ERROR_NO_SESSION: Type = -2621469;
-    pub const NSSL_ERROR_SSL_SHUTDOWN_ERROR: Type = -2621470;
-    pub const NSSL_ERROR_CERT_SIZE_LIMIT: Type = -2621471;
-    pub const NSSL_ERROR_CERT_NO_ACCESS: Type = -2621472;
-    pub const NSSL_ERROR_INVALID_CERT_ID2: Type = -2621473;
-    pub const NSSL_ERROR_CERT_READ_ERROR: Type = -2621474;
-    pub const NSSL_ERROR_CERT_STORE_INIT_FAILURE: Type = -2621475;
-    pub const NSSL_ERROR_INVALID_CERT_ENCODING: Type = -2621476;
-    pub const NSSL_ERROR_CERT_STORE_ERROR: Type = -2621477;
-    pub const NSSL_ERROR_PRIVATE_KEY_READ_ERROR: Type = -2621478;
-    pub const NSSL_ERROR_INVALID_PRIVATE_KEY: Type = -2621479;
-    pub const NSSL_ERROR_NOT_READY: Type = -2621480;
-    pub const NSSL_ERROR_ENCRYPTION_ERROR: Type = -2621481;
-    pub const NSSL_ERROR_NO_CERT_STORE: Type = -2621482;
-    pub const NSSL_ERROR_PRIVATE_KEY_SIZE_LIMIT: Type = -2621483;
-    pub const NSSL_ERROR_PROCESS_MAX_EXT_CERTS: Type = -2621484;
-    pub const NSSL_ERROR_PROCESS_MAX_CONTEXTS: Type = -2621485;
-    pub const NSSL_ERROR_PROCESS_MAX_CONNECTIONS: Type = -2621486;
-    pub const NSSL_ERROR_CERT_NOT_EXPORTABLE: Type = -2621487;
-    pub const NSSL_ERROR_INVALID_CERT_SIZE: Type = -2621488;
-    pub const NSSL_ERROR_INVALID_KEY_SIZE: Type = -2621489;
-}
-pub mod NSSLServerCertId {
-    pub type Type = ::core::ffi::c_uint;
-    pub const NSSL_SERVER_CERT_GROUP_NINTENDO_FIRST: Type = 100;
-    pub const NSSL_SERVER_CERT_NINTENDO_CA: Type = 100;
-    pub const NSSL_SERVER_CERT_NINTENDO_CA_G2: Type = 101;
-    pub const NSSL_SERVER_CERT_NINTENDO_CA_G3: Type = 102;
-    pub const NSSL_SERVER_CERT_NINTENDO_CLASS2_CA: Type = 103;
-    pub const NSSL_SERVER_CERT_NINTENDO_CLASS2_CA_G2: Type = 104;
-    pub const NSSL_SERVER_CERT_NINTENDO_CLASS2_CA_G3: Type = 105;
-    pub const NSSL_SERVER_CERT_GROUP_NINTENDO_LAST: Type = 105;
-    pub const NSSL_SERVER_CERT_GROUP_COMMERCIAL_FIRST: Type = 1001;
-    pub const NSSL_SERVER_CERT_BALTIMORE_CYBERTRUST_ROOT_CA: Type = 1001;
-    pub const NSSL_SERVER_CERT_CYBERTRUST_GLOBAL_ROOT_CA: Type = 1002;
-    pub const NSSL_SERVER_CERT_VERIZON_GLOBAL_ROOT_CA: Type = 1003;
-    pub const NSSL_SERVER_CERT_GLOBALSIGN_ROOT_CA: Type = 1004;
-    pub const NSSL_SERVER_CERT_GLOBALSIGN_ROOT_CA_R2: Type = 1005;
-    pub const NSSL_SERVER_CERT_GLOBALSIGN_ROOT_CA_R3: Type = 1006;
-    pub const NSSL_SERVER_CERT_VERISIGN_CLASS3_PUBLIC_PRIMARY_CA_G3: Type = 1007;
-    pub const NSSL_SERVER_CERT_VERISIGN_UNIVERSAL_ROOT_CA: Type = 1008;
-    pub const NSSL_SERVER_CERT_VERISIGN_CLASS3_PUBLIC_PRIMARY_CA_G5: Type = 1009;
-    pub const NSSL_SERVER_CERT_THAWTE_PRIMARY_ROOT_CA_G3: Type = 1010;
-    pub const NSSL_SERVER_CERT_THAWTE_PRIMARY_ROOT_CA: Type = 1011;
-    pub const NSSL_SERVER_CERT_GEOTRUST_GLOBAL_CA: Type = 1012;
-    pub const NSSL_SERVER_CERT_GEOTRUST_GLOBAL_CA2: Type = 1013;
-    pub const NSSL_SERVER_CERT_GEOTRUST_PRIMARY_CA: Type = 1014;
-    pub const NSSL_SERVER_CERT_GEOTRUST_PRIMARY_CA_G3: Type = 1015;
-    pub const NSSL_SERVER_CERT_ADDTRUST_EXT_CA_ROOT: Type = 1016;
-    pub const NSSL_SERVER_CERT_COMODO_CA: Type = 1017;
-    pub const NSSL_SERVER_CERT_UTN_DATACORP_SGC_CA: Type = 1018;
-    pub const NSSL_SERVER_CERT_UTN_USERFIRST_HARDWARE_CA: Type = 1019;
-    pub const NSSL_SERVER_CERT_DIGICERT_HIGH_ASSURANCE_EV_ROOT_CA: Type = 1020;
-    pub const NSSL_SERVER_CERT_DIGICERT_ASSURED_ID_ROOT_CA: Type = 1021;
-    pub const NSSL_SERVER_CERT_DIGICERT_GLOBAL_ROOT_CA: Type = 1022;
-    pub const NSSL_SERVER_CERT_GTE_CYBERTRUST_GLOBAL_ROOT: Type = 1023;
-    pub const NSSL_SERVER_CERT_VERISIGN_CLASS3_PUBLIC_PRIMARY_CA: Type = 1024;
-    pub const NSSL_SERVER_CERT_THAWTE_PREMIUM_SERVER_CA: Type = 1025;
-    pub const NSSL_SERVER_CERT_EQUIFAX_SECURE_CA: Type = 1026;
-    pub const NSSL_SERVER_CERT_ENTRUST_SECURE_SERVER_CA: Type = 1027;
-    pub const NSSL_SERVER_CERT_VERISIGN_CLASS3_PUBLIC_PRIMARY_CA_G2: Type = 1028;
-    pub const NSSL_SERVER_CERT_ENTRUST_CA_2048: Type = 1029;
-    pub const NSSL_SERVER_CERT_ENTRUST_ROOT_CA: Type = 1030;
-    pub const NSSL_SERVER_CERT_ENTRUST_ROOT_CA_G2: Type = 1031;
-    pub const NSSL_SERVER_CERT_DIGICERT_ASSURED_ID_ROOT_CA_G2: Type = 1032;
-    pub const NSSL_SERVER_CERT_DIGICERT_GLOBAL_ROOT_CA_G2: Type = 1033;
-    pub const NSSL_SERVER_CERT_GROUP_COMMERCIAL_LAST: Type = 1033;
-    pub const NSSL_SERVER_CERT_GROUP_COMMERCIAL_4096_FIRST: Type = 1900;
-    pub const NSSL_SERVER_CERT_COMODO_RSA_CA: Type = 1900;
-    pub const NSSL_SERVER_CERT_USERTRUST_RSA_CA: Type = 1901;
-    pub const NSSL_SERVER_CERT_GROUP_COMMERCIAL_4096_LAST: Type = 1901;
-}
+pub const NSSL_ERROR_OK: NSSLErrors = 0;
+pub const NSSL_ERROR_GENERIC: NSSLErrors = -1;
+pub const NSSL_ERROR_INVALID_NSSL_CONTEXT: NSSLErrors = -2621441;
+pub const NSSL_ERROR_INVALID_CERT_ID: NSSLErrors = -2621442;
+pub const NSSL_ERROR_CERT_LIMIT: NSSLErrors = -2621443;
+pub const NSSL_ERROR_INVALID_NSSL_CONNECTION: NSSLErrors = -2621444;
+pub const NSSL_ERROR_INVALID_CERT: NSSLErrors = -2621445;
+pub const NSSL_ERROR_ZERO_RETURN: NSSLErrors = -2621446;
+pub const NSSL_ERROR_WANT_READ: NSSLErrors = -2621447;
+pub const NSSL_ERROR_WANT_WRITE: NSSLErrors = -2621448;
+pub const NSSL_ERROR_IO_ERROR: NSSLErrors = -2621449;
+pub const NSSL_ERROR_NSSL_LIB_ERROR: NSSLErrors = -2621450;
+pub const NSSL_ERROR_UNKNOWN: NSSLErrors = -2621451;
+pub const NSSL_ERROR_OUT_OF_MEMORY: NSSLErrors = -2621452;
+pub const NSSL_ERROR_INVALID_STATE: NSSLErrors = -2621453;
+pub const NSSL_ERROR_HANDSHAKE_ERROR: NSSLErrors = -2621454;
+pub const NSSL_ERROR_NO_CERT: NSSLErrors = -2621455;
+pub const NSSL_ERROR_INVALID_FD: NSSLErrors = -2621456;
+pub const NSSL_ERROR_LIB_NOT_READY: NSSLErrors = -2621457;
+pub const NSSL_ERROR_IPC_ERROR: NSSLErrors = -2621458;
+pub const NSSL_ERROR_RESOURCE_LIMIT: NSSLErrors = -2621459;
+pub const NSSL_ERROR_INVALID_HANDLE: NSSLErrors = -2621460;
+pub const NSSL_ERROR_INVALID_CERT_TYPE: NSSLErrors = -2621461;
+pub const NSSL_ERROR_INVALID_KEY_TYPE: NSSLErrors = -2621462;
+pub const NSSL_ERROR_INVALID_SIZE: NSSLErrors = -2621463;
+pub const NSSL_ERROR_NO_PEER_CERT: NSSLErrors = -2621464;
+pub const NSSL_ERROR_INSUFFICIENT_SIZE: NSSLErrors = -2621465;
+pub const NSSL_ERROR_NO_CIPHER: NSSLErrors = -2621466;
+pub const NSSL_ERROR_INVALID_ARG: NSSLErrors = -2621467;
+pub const NSSL_ERROR_INVALID_NSSL_SESSION: NSSLErrors = -2621468;
+pub const NSSL_ERROR_NO_SESSION: NSSLErrors = -2621469;
+pub const NSSL_ERROR_SSL_SHUTDOWN_ERROR: NSSLErrors = -2621470;
+pub const NSSL_ERROR_CERT_SIZE_LIMIT: NSSLErrors = -2621471;
+pub const NSSL_ERROR_CERT_NO_ACCESS: NSSLErrors = -2621472;
+pub const NSSL_ERROR_INVALID_CERT_ID2: NSSLErrors = -2621473;
+pub const NSSL_ERROR_CERT_READ_ERROR: NSSLErrors = -2621474;
+pub const NSSL_ERROR_CERT_STORE_INIT_FAILURE: NSSLErrors = -2621475;
+pub const NSSL_ERROR_INVALID_CERT_ENCODING: NSSLErrors = -2621476;
+pub const NSSL_ERROR_CERT_STORE_ERROR: NSSLErrors = -2621477;
+pub const NSSL_ERROR_PRIVATE_KEY_READ_ERROR: NSSLErrors = -2621478;
+pub const NSSL_ERROR_INVALID_PRIVATE_KEY: NSSLErrors = -2621479;
+pub const NSSL_ERROR_NOT_READY: NSSLErrors = -2621480;
+pub const NSSL_ERROR_ENCRYPTION_ERROR: NSSLErrors = -2621481;
+pub const NSSL_ERROR_NO_CERT_STORE: NSSLErrors = -2621482;
+pub const NSSL_ERROR_PRIVATE_KEY_SIZE_LIMIT: NSSLErrors = -2621483;
+pub const NSSL_ERROR_PROCESS_MAX_EXT_CERTS: NSSLErrors = -2621484;
+pub const NSSL_ERROR_PROCESS_MAX_CONTEXTS: NSSLErrors = -2621485;
+pub const NSSL_ERROR_PROCESS_MAX_CONNECTIONS: NSSLErrors = -2621486;
+pub const NSSL_ERROR_CERT_NOT_EXPORTABLE: NSSLErrors = -2621487;
+pub const NSSL_ERROR_INVALID_CERT_SIZE: NSSLErrors = -2621488;
+pub const NSSL_ERROR_INVALID_KEY_SIZE: NSSLErrors = -2621489;
+pub type NSSLErrors = ::core::ffi::c_int;
+pub const NSSL_SERVER_CERT_GROUP_NINTENDO_FIRST: NSSLServerCertId = 100;
+pub const NSSL_SERVER_CERT_NINTENDO_CA: NSSLServerCertId = 100;
+pub const NSSL_SERVER_CERT_NINTENDO_CA_G2: NSSLServerCertId = 101;
+pub const NSSL_SERVER_CERT_NINTENDO_CA_G3: NSSLServerCertId = 102;
+pub const NSSL_SERVER_CERT_NINTENDO_CLASS2_CA: NSSLServerCertId = 103;
+pub const NSSL_SERVER_CERT_NINTENDO_CLASS2_CA_G2: NSSLServerCertId = 104;
+pub const NSSL_SERVER_CERT_NINTENDO_CLASS2_CA_G3: NSSLServerCertId = 105;
+pub const NSSL_SERVER_CERT_GROUP_NINTENDO_LAST: NSSLServerCertId = 105;
+pub const NSSL_SERVER_CERT_GROUP_COMMERCIAL_FIRST: NSSLServerCertId = 1001;
+pub const NSSL_SERVER_CERT_BALTIMORE_CYBERTRUST_ROOT_CA: NSSLServerCertId = 1001;
+pub const NSSL_SERVER_CERT_CYBERTRUST_GLOBAL_ROOT_CA: NSSLServerCertId = 1002;
+pub const NSSL_SERVER_CERT_VERIZON_GLOBAL_ROOT_CA: NSSLServerCertId = 1003;
+pub const NSSL_SERVER_CERT_GLOBALSIGN_ROOT_CA: NSSLServerCertId = 1004;
+pub const NSSL_SERVER_CERT_GLOBALSIGN_ROOT_CA_R2: NSSLServerCertId = 1005;
+pub const NSSL_SERVER_CERT_GLOBALSIGN_ROOT_CA_R3: NSSLServerCertId = 1006;
+pub const NSSL_SERVER_CERT_VERISIGN_CLASS3_PUBLIC_PRIMARY_CA_G3: NSSLServerCertId = 1007;
+pub const NSSL_SERVER_CERT_VERISIGN_UNIVERSAL_ROOT_CA: NSSLServerCertId = 1008;
+pub const NSSL_SERVER_CERT_VERISIGN_CLASS3_PUBLIC_PRIMARY_CA_G5: NSSLServerCertId = 1009;
+pub const NSSL_SERVER_CERT_THAWTE_PRIMARY_ROOT_CA_G3: NSSLServerCertId = 1010;
+pub const NSSL_SERVER_CERT_THAWTE_PRIMARY_ROOT_CA: NSSLServerCertId = 1011;
+pub const NSSL_SERVER_CERT_GEOTRUST_GLOBAL_CA: NSSLServerCertId = 1012;
+pub const NSSL_SERVER_CERT_GEOTRUST_GLOBAL_CA2: NSSLServerCertId = 1013;
+pub const NSSL_SERVER_CERT_GEOTRUST_PRIMARY_CA: NSSLServerCertId = 1014;
+pub const NSSL_SERVER_CERT_GEOTRUST_PRIMARY_CA_G3: NSSLServerCertId = 1015;
+pub const NSSL_SERVER_CERT_ADDTRUST_EXT_CA_ROOT: NSSLServerCertId = 1016;
+pub const NSSL_SERVER_CERT_COMODO_CA: NSSLServerCertId = 1017;
+pub const NSSL_SERVER_CERT_UTN_DATACORP_SGC_CA: NSSLServerCertId = 1018;
+pub const NSSL_SERVER_CERT_UTN_USERFIRST_HARDWARE_CA: NSSLServerCertId = 1019;
+pub const NSSL_SERVER_CERT_DIGICERT_HIGH_ASSURANCE_EV_ROOT_CA: NSSLServerCertId = 1020;
+pub const NSSL_SERVER_CERT_DIGICERT_ASSURED_ID_ROOT_CA: NSSLServerCertId = 1021;
+pub const NSSL_SERVER_CERT_DIGICERT_GLOBAL_ROOT_CA: NSSLServerCertId = 1022;
+pub const NSSL_SERVER_CERT_GTE_CYBERTRUST_GLOBAL_ROOT: NSSLServerCertId = 1023;
+pub const NSSL_SERVER_CERT_VERISIGN_CLASS3_PUBLIC_PRIMARY_CA: NSSLServerCertId = 1024;
+pub const NSSL_SERVER_CERT_THAWTE_PREMIUM_SERVER_CA: NSSLServerCertId = 1025;
+pub const NSSL_SERVER_CERT_EQUIFAX_SECURE_CA: NSSLServerCertId = 1026;
+pub const NSSL_SERVER_CERT_ENTRUST_SECURE_SERVER_CA: NSSLServerCertId = 1027;
+pub const NSSL_SERVER_CERT_VERISIGN_CLASS3_PUBLIC_PRIMARY_CA_G2: NSSLServerCertId = 1028;
+pub const NSSL_SERVER_CERT_ENTRUST_CA_2048: NSSLServerCertId = 1029;
+pub const NSSL_SERVER_CERT_ENTRUST_ROOT_CA: NSSLServerCertId = 1030;
+pub const NSSL_SERVER_CERT_ENTRUST_ROOT_CA_G2: NSSLServerCertId = 1031;
+pub const NSSL_SERVER_CERT_DIGICERT_ASSURED_ID_ROOT_CA_G2: NSSLServerCertId = 1032;
+pub const NSSL_SERVER_CERT_DIGICERT_GLOBAL_ROOT_CA_G2: NSSLServerCertId = 1033;
+pub const NSSL_SERVER_CERT_GROUP_COMMERCIAL_LAST: NSSLServerCertId = 1033;
+pub const NSSL_SERVER_CERT_GROUP_COMMERCIAL_4096_FIRST: NSSLServerCertId = 1900;
+pub const NSSL_SERVER_CERT_COMODO_RSA_CA: NSSLServerCertId = 1900;
+pub const NSSL_SERVER_CERT_USERTRUST_RSA_CA: NSSLServerCertId = 1901;
+pub const NSSL_SERVER_CERT_GROUP_COMMERCIAL_4096_LAST: NSSLServerCertId = 1901;
+pub type NSSLServerCertId = ::core::ffi::c_uint;
 extern "C" {
     pub fn NSSLInit() -> NSSLError;
 }
@@ -14998,7 +15890,7 @@ extern "C" {
     ) -> NSSLError;
 }
 extern "C" {
-    pub fn NSSLAddServerPKI(context: NSSLContextHandle, pki: NSSLServerCertId::Type) -> NSSLError;
+    pub fn NSSLAddServerPKI(context: NSSLContextHandle, pki: NSSLServerCertId) -> NSSLError;
 }
 extern "C" {
     pub fn NSSLCreateConnection(
@@ -15043,46 +15935,39 @@ extern "C" {
 }
 extern "C" {
     pub fn AVMCECSendCommand(
-        destination: TVECECLogicalAddress::Type,
-        opCode: TVECECOpCode::Type,
+        destination: TVECECLogicalAddress,
+        opCode: TVECECOpCode,
         parameters: *mut u8,
         numParameters: u8,
     ) -> BOOL;
 }
 extern "C" {
     pub fn AVMCECReceiveCommand(
-        outInitiator: *mut TVECECLogicalAddress::Type,
-        outOpCode: *mut TVECECOpCode::Type,
+        outInitiator: *mut TVECECLogicalAddress,
+        outOpCode: *mut TVECECOpCode,
         outParameters: *mut u8,
         outNumParameters: *mut u8,
     ) -> BOOL;
 }
-pub mod AVMDrcScanMode {
-    pub type Type = ::core::ffi::c_uint;
-    pub const AVM_DRC_SCAN_MODE_UNKNOWN_0: Type = 0;
-    pub const AVM_DRC_SCAN_MODE_UNKNOWN_1: Type = 1;
-    pub const AVM_DRC_SCAN_MODE_UNKNOWN_3: Type = 3;
-    pub const AVM_DRC_SCAN_MODE_UNKNOWN_255: Type = 255;
-}
-pub mod AVMDrcMode {
-    pub type Type = ::core::ffi::c_uint;
-    pub const AVM_DRC_MODE_NONE: Type = 0;
-    pub const AVM_DRC_MODE_SINGLE: Type = 1;
-    pub const AVM_DRC_MODE_DOUBLE: Type = 2;
-}
-pub mod AVMDrcSystemAudioMode {
-    pub type Type = ::core::ffi::c_uint;
-    pub const AVM_DRC_SYSTEM_AUDIO_MODE_UNKNOWN_0: Type = 0;
-    pub const AVM_DRC_SYSTEM_AUDIO_MODE_UNKNOWN_1: Type = 1;
-    pub const AVM_DRC_SYSTEM_AUDIO_MODE_SURROUND: Type = 2;
+pub const AVM_DRC_SCAN_MODE_UNKNOWN_0: AVMDrcScanMode = 0;
+pub const AVM_DRC_SCAN_MODE_UNKNOWN_1: AVMDrcScanMode = 1;
+pub const AVM_DRC_SCAN_MODE_UNKNOWN_3: AVMDrcScanMode = 3;
+pub const AVM_DRC_SCAN_MODE_UNKNOWN_255: AVMDrcScanMode = 255;
+pub type AVMDrcScanMode = ::core::ffi::c_uint;
+pub const AVM_DRC_MODE_NONE: AVMDrcMode = 0;
+pub const AVM_DRC_MODE_SINGLE: AVMDrcMode = 1;
+pub const AVM_DRC_MODE_DOUBLE: AVMDrcMode = 2;
+pub type AVMDrcMode = ::core::ffi::c_uint;
+pub const AVM_DRC_SYSTEM_AUDIO_MODE_UNKNOWN_0: AVMDrcSystemAudioMode = 0;
+pub const AVM_DRC_SYSTEM_AUDIO_MODE_UNKNOWN_1: AVMDrcSystemAudioMode = 1;
+pub const AVM_DRC_SYSTEM_AUDIO_MODE_SURROUND: AVMDrcSystemAudioMode = 2;
+pub type AVMDrcSystemAudioMode = ::core::ffi::c_uint;
+extern "C" {
+    pub fn AVMGetSystemDRCAudioMode(outAudioMode: *mut AVMDrcSystemAudioMode)
+        -> ::core::ffi::c_int;
 }
 extern "C" {
-    pub fn AVMGetSystemDRCAudioMode(
-        outAudioMode: *mut AVMDrcSystemAudioMode::Type,
-    ) -> ::core::ffi::c_int;
-}
-extern "C" {
-    pub fn AVMGetDRCSystemAudioMode(outAudioMode: *mut AVMDrcSystemAudioMode::Type) -> BOOL;
+    pub fn AVMGetDRCSystemAudioMode(outAudioMode: *mut AVMDrcSystemAudioMode) -> BOOL;
 }
 extern "C" {
     pub fn AVMGetDRCVertCount() -> u32;
@@ -15091,10 +15976,10 @@ extern "C" {
     pub fn AVMIsDRCFirstFlippDone() -> BOOL;
 }
 extern "C" {
-    pub fn AVMGetDRCScanMode(outScanMode: *mut AVMDrcScanMode::Type) -> BOOL;
+    pub fn AVMGetDRCScanMode(outScanMode: *mut AVMDrcScanMode) -> BOOL;
 }
 extern "C" {
-    pub fn AVMGetDRCMode(outMode: *mut AVMDrcMode::Type) -> BOOL;
+    pub fn AVMGetDRCMode(outMode: *mut AVMDrcMode) -> BOOL;
 }
 extern "C" {
     pub fn AVMProbeDRCNum() -> u32;
@@ -15105,45 +15990,39 @@ extern "C" {
 extern "C" {
     pub fn AVMSetDRCGamma(gamma: *mut f32) -> BOOL;
 }
-pub mod AVMTvAspectRatio {
-    pub type Type = ::core::ffi::c_uint;
-    pub const AVM_TV_ASPECT_RATIO_4_3: Type = 0;
-    pub const AVM_TV_ASPECT_RATIO_16_9: Type = 1;
-}
-pub mod AVMTvResolution {
-    pub type Type = ::core::ffi::c_uint;
-    pub const AVM_TV_RESOLUTION_576I: Type = 1;
-    pub const AVM_TV_RESOLUTION_480I: Type = 2;
-    pub const AVM_TV_RESOLUTION_480P: Type = 3;
-    pub const AVM_TV_RESOLUTION_720P: Type = 4;
-    pub const AVM_TV_RESOLUTION_720P_3D: Type = 5;
-    pub const AVM_TV_RESOLUTION_1080I: Type = 6;
-    pub const AVM_TV_RESOLUTION_1080P: Type = 7;
-    pub const AVM_TV_RESOLUTION_480I_PAL60: Type = 10;
-    pub const AVM_TV_RESOLUTION_576P: Type = 11;
-    pub const AVM_TV_RESOLUTION_720P_50HZ: Type = 12;
-    pub const AVM_TV_RESOLUTION_1080I_50HZ: Type = 13;
-    pub const AVM_TV_RESOLUTION_1080P_50HZ: Type = 14;
-}
-pub mod AVMTvVideoRegion {
-    pub type Type = ::core::ffi::c_uint;
-    pub const AVM_TV_VIDEO_REGION_NTSC: Type = 1;
-    pub const AVM_TV_VIDEO_REGION_PAL: Type = 2;
-}
+pub const AVM_TV_ASPECT_RATIO_4_3: AVMTvAspectRatio = 0;
+pub const AVM_TV_ASPECT_RATIO_16_9: AVMTvAspectRatio = 1;
+pub type AVMTvAspectRatio = ::core::ffi::c_uint;
+pub const AVM_TV_RESOLUTION_576I: AVMTvResolution = 1;
+pub const AVM_TV_RESOLUTION_480I: AVMTvResolution = 2;
+pub const AVM_TV_RESOLUTION_480P: AVMTvResolution = 3;
+pub const AVM_TV_RESOLUTION_720P: AVMTvResolution = 4;
+pub const AVM_TV_RESOLUTION_720P_3D: AVMTvResolution = 5;
+pub const AVM_TV_RESOLUTION_1080I: AVMTvResolution = 6;
+pub const AVM_TV_RESOLUTION_1080P: AVMTvResolution = 7;
+pub const AVM_TV_RESOLUTION_480I_PAL60: AVMTvResolution = 10;
+pub const AVM_TV_RESOLUTION_576P: AVMTvResolution = 11;
+pub const AVM_TV_RESOLUTION_720P_50HZ: AVMTvResolution = 12;
+pub const AVM_TV_RESOLUTION_1080I_50HZ: AVMTvResolution = 13;
+pub const AVM_TV_RESOLUTION_1080P_50HZ: AVMTvResolution = 14;
+pub type AVMTvResolution = ::core::ffi::c_uint;
+pub const AVM_TV_VIDEO_REGION_NTSC: AVMTvVideoRegion = 1;
+pub const AVM_TV_VIDEO_REGION_PAL: AVMTvVideoRegion = 2;
+pub type AVMTvVideoRegion = ::core::ffi::c_uint;
 extern "C" {
     pub fn AVMDebugIsNTSC() -> BOOL;
 }
 extern "C" {
-    pub fn AVMGetCurrentPort(outPort: *mut TVEPort::Type) -> BOOL;
+    pub fn AVMGetCurrentPort(outPort: *mut TVEPort) -> BOOL;
 }
 extern "C" {
-    pub fn AVMGetHDMIState(outState: *mut TVEHdmiState::Type);
+    pub fn AVMGetHDMIState(outState: *mut TVEHdmiState);
 }
 extern "C" {
-    pub fn AVMGetTVAspectRatio(outAspectRatio: *mut AVMTvAspectRatio::Type) -> BOOL;
+    pub fn AVMGetTVAspectRatio(outAspectRatio: *mut AVMTvAspectRatio) -> BOOL;
 }
 extern "C" {
-    pub fn AVMGetTVScanMode(outResolution: *mut AVMTvResolution::Type) -> BOOL;
+    pub fn AVMGetTVScanMode(outResolution: *mut AVMTvResolution) -> BOOL;
 }
 extern "C" {
     pub fn AVMGetTVUnderScan(outUnderScan: *mut u32) -> i32;
@@ -15152,23 +16031,19 @@ extern "C" {
     pub fn AVMIsAVOutReady() -> BOOL;
 }
 extern "C" {
-    pub fn AVMSetTVAspectRatio(aspectRatio: AVMTvAspectRatio::Type) -> BOOL;
+    pub fn AVMSetTVAspectRatio(aspectRatio: AVMTvAspectRatio) -> BOOL;
 }
 extern "C" {
     pub fn AVMSetTVEnable(enable: BOOL) -> BOOL;
 }
 extern "C" {
-    pub fn AVMSetTVOutPort(port: TVEPort::Type, resolution: AVMTvResolution::Type) -> i32;
+    pub fn AVMSetTVOutPort(port: TVEPort, resolution: AVMTvResolution) -> i32;
 }
 extern "C" {
-    pub fn AVMSetTVScanMode(
-        resolution: AVMTvResolution::Type,
-        unknown: u32,
-        port: TVEPort::Type,
-    ) -> i32;
+    pub fn AVMSetTVScanMode(resolution: AVMTvResolution, unknown: u32, port: TVEPort) -> i32;
 }
 extern "C" {
-    pub fn AVMSetTVScanResolution(resolution: AVMTvResolution::Type) -> i32;
+    pub fn AVMSetTVScanResolution(resolution: AVMTvResolution) -> i32;
 }
 extern "C" {
     pub fn AVMSetTVUnderScan(underScan: u32) -> i32;
@@ -15178,40 +16053,37 @@ extern "C" {
 }
 extern "C" {
     pub fn AVMSetTVVideoRegion(
-        videoRegion: AVMTvVideoRegion::Type,
-        port: TVEPort::Type,
-        resolution: AVMTvResolution::Type,
+        videoRegion: AVMTvVideoRegion,
+        port: TVEPort,
+        resolution: AVMTvResolution,
     ) -> i32;
 }
 extern "C" {
-    pub fn AVMReadSystemAspectRatioConfig(outAspectRatio: *mut AVMTvAspectRatio::Type) -> i32;
+    pub fn AVMReadSystemAspectRatioConfig(outAspectRatio: *mut AVMTvAspectRatio) -> i32;
 }
 extern "C" {
-    pub fn AVMReadSystemPortConfig(outPort: *mut TVEPort::Type) -> i32;
+    pub fn AVMReadSystemPortConfig(outPort: *mut TVEPort) -> i32;
 }
 extern "C" {
     pub fn AVMReadSystemTVUnderScanConfig(outUnderScan: *mut u32) -> i32;
 }
 extern "C" {
-    pub fn AVMReadSystemVideoResConfig(outResolution: *mut AVMTvResolution::Type) -> i32;
+    pub fn AVMReadSystemVideoResConfig(outResolution: *mut AVMTvResolution) -> i32;
 }
 extern "C" {
-    pub fn AVMWriteSystemAspectRatioConfig(aspectRatio: AVMTvAspectRatio::Type) -> i32;
+    pub fn AVMWriteSystemAspectRatioConfig(aspectRatio: AVMTvAspectRatio) -> i32;
 }
 extern "C" {
     pub fn AVMWriteSystemTVUnderScanConfig(underScan: u32) -> i32;
 }
 extern "C" {
-    pub fn AVMWriteSystemVideoOutConfig(
-        port: TVEPort::Type,
-        resolution: AVMTvResolution::Type,
-    ) -> i32;
+    pub fn AVMWriteSystemVideoOutConfig(port: TVEPort, resolution: AVMTvResolution) -> i32;
 }
 extern "C" {
-    pub fn AVMWriteSystemVideoResConfig(resolution: AVMTvResolution::Type) -> i32;
+    pub fn AVMWriteSystemVideoResConfig(resolution: AVMTvResolution) -> i32;
 }
 #[repr(C, packed)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct UhsDeviceDescriptor {
     pub bLength: u8,
     pub bDescriptorType: u8,
@@ -15229,7 +16101,7 @@ pub struct UhsDeviceDescriptor {
     pub bNumConfigurations: u8,
 }
 #[repr(C, packed)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct UhsConfigDescriptor {
     pub bLength: u8,
     pub bDescriptorType: u8,
@@ -15241,7 +16113,7 @@ pub struct UhsConfigDescriptor {
     pub bMaxPower: u8,
 }
 #[repr(C, packed)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct UhsInterfaceDescriptor {
     pub bLength: u8,
     pub bDescriptorType: u8,
@@ -15254,7 +16126,7 @@ pub struct UhsInterfaceDescriptor {
     pub iInterface: u8,
 }
 #[repr(C, packed)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct UhsSetupPacket {
     pub bmRequestType: u8,
     pub bRequest: u8,
@@ -15262,21 +16134,17 @@ pub struct UhsSetupPacket {
     pub wIndex: u16,
     pub wLength: u16,
 }
-pub mod UHSStatus {
-    pub type Type = ::core::ffi::c_uint;
-    pub const UHS_STATUS_OK: Type = 0;
-    pub const UHS_STATUS_HANDLE_INVALID_ARGS: Type = 4292804605;
-    pub const UHS_STATUS_HANDLE_INVALID_STATE: Type = 4292804604;
-}
-pub mod UHSHandleState {
-    pub type Type = ::core::ffi::c_uint;
-    pub const UHS_HANDLE_STATE_INIT: Type = 0;
-    pub const UHS_HANDLE_STATE_OPENING: Type = 1;
-    pub const UHS_HANDLE_STATE_OPENED: Type = 2;
-    pub const UHS_HANDLE_STATE_CLOSING: Type = 3;
-    pub const UHS_HANDLE_STATE_CLOSED: Type = 4;
-    pub const UHS_HANDLE_STATE_ERROR: Type = 5;
-}
+pub const UHS_STATUS_OK: UHSStatus = 0;
+pub const UHS_STATUS_HANDLE_INVALID_ARGS: UHSStatus = 4292804605;
+pub const UHS_STATUS_HANDLE_INVALID_STATE: UHSStatus = 4292804604;
+pub type UHSStatus = ::core::ffi::c_uint;
+pub const UHS_HANDLE_STATE_INIT: UHSHandleState = 0;
+pub const UHS_HANDLE_STATE_OPENING: UHSHandleState = 1;
+pub const UHS_HANDLE_STATE_OPENED: UHSHandleState = 2;
+pub const UHS_HANDLE_STATE_CLOSING: UHSHandleState = 3;
+pub const UHS_HANDLE_STATE_CLOSED: UHSHandleState = 4;
+pub const UHS_HANDLE_STATE_ERROR: UHSHandleState = 5;
+pub type UHSHandleState = ::core::ffi::c_uint;
 #[repr(C, packed)]
 #[derive(Debug, Copy, Clone)]
 pub struct UhsConfig {
@@ -15284,18 +16152,36 @@ pub struct UhsConfig {
     pub buffer: *mut ::core::ffi::c_void,
     pub buffer_size: u32,
 }
+impl Default for UhsConfig {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C, packed)]
 #[derive(Debug, Copy, Clone)]
 pub struct UhsHandle {
-    pub state: UHSHandleState::Type,
+    pub state: UHSHandleState,
     pub ipc_buffer: *mut ::core::ffi::c_void,
     pub __unk99: [::core::ffi::c_char; 4usize],
     pub handle: u32,
     pub config: *mut UhsConfig,
     pub __unk100: [::core::ffi::c_char; 4usize],
 }
+impl Default for UhsHandle {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C, packed)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct UhsInterfaceFilter {
     pub match_params: u16,
     pub vid: u16,
@@ -15309,7 +16195,7 @@ pub struct UhsInterfaceFilter {
     pub if_protocol: u8,
 }
 #[repr(C, packed)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct UhsEndpointDescriptor {
     pub bLength: u8,
     pub bDescriptorType: u8,
@@ -15330,26 +16216,31 @@ pub struct UhsInterfaceProfile {
     pub in_endpoints: [UhsEndpointDescriptor; 16usize],
     pub out_endpoints: [UhsEndpointDescriptor; 16usize],
 }
-pub mod UHSAdminDevType {
-    pub type Type = ::core::ffi::c_uint;
-    pub const UHS_ADMIN_DEV_RESET: Type = 1;
-    pub const UHS_ADMIN_DEV_FREEZE: Type = 2;
-    pub const UHS_ADMIN_DEV_SUSPEND: Type = 3;
-    pub const UHS_ADMIN_DEV_RESUME: Type = 4;
-    pub const UHS_ADMIN_DEV_DESTROY: Type = 5;
+impl Default for UhsInterfaceProfile {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
-pub mod UHSAdminEpType {
-    pub type Type = ::core::ffi::c_uint;
-    pub const UHS_ADMIN_EP_ENABLE: Type = 1;
-    pub const UHS_ADMIN_EP_DISABLE: Type = 2;
-    pub const UHS_ADMIN_EP_CANCEL: Type = 3;
-    pub const UHS_ADMIN_EP_CANCEL_RESET: Type = 4;
+pub const UHS_ADMIN_DEV_RESET: UHSAdminDevType = 1;
+pub const UHS_ADMIN_DEV_FREEZE: UHSAdminDevType = 2;
+pub const UHS_ADMIN_DEV_SUSPEND: UHSAdminDevType = 3;
+pub const UHS_ADMIN_DEV_RESUME: UHSAdminDevType = 4;
+pub const UHS_ADMIN_DEV_DESTROY: UHSAdminDevType = 5;
+pub type UHSAdminDevType = ::core::ffi::c_uint;
+pub const UHS_ADMIN_EP_ENABLE: UHSAdminEpType = 1;
+pub const UHS_ADMIN_EP_DISABLE: UHSAdminEpType = 2;
+pub const UHS_ADMIN_EP_CANCEL: UHSAdminEpType = 3;
+pub const UHS_ADMIN_EP_CANCEL_RESET: UHSAdminEpType = 4;
+pub type UHSAdminEpType = ::core::ffi::c_uint;
+extern "C" {
+    pub fn UhsClientOpen(handle: *mut UhsHandle, config: *mut UhsConfig) -> UHSStatus;
 }
 extern "C" {
-    pub fn UhsClientOpen(handle: *mut UhsHandle, config: *mut UhsConfig) -> UHSStatus::Type;
-}
-extern "C" {
-    pub fn UhsClientClose(handle: *mut UhsHandle) -> UHSStatus::Type;
+    pub fn UhsClientClose(handle: *mut UhsHandle) -> UHSStatus;
 }
 pub type UHSDrvRegCallback = ::core::option::Option<
     unsafe extern "C" fn(context: *mut ::core::ffi::c_void, profile: *mut UhsInterfaceProfile),
@@ -15360,10 +16251,10 @@ extern "C" {
         filter: *mut UhsInterfaceFilter,
         context: *mut ::core::ffi::c_void,
         callback: UHSDrvRegCallback,
-    ) -> UHSStatus::Type;
+    ) -> UHSStatus;
 }
 extern "C" {
-    pub fn UhsClassDrvUnReg(handle: *mut UhsHandle, drv_handle: u32) -> UHSStatus::Type;
+    pub fn UhsClassDrvUnReg(handle: *mut UhsHandle, drv_handle: u32) -> UHSStatus;
 }
 extern "C" {
     pub fn UhsGetFullConfigDescriptor(
@@ -15371,7 +16262,7 @@ extern "C" {
         if_handle: u32,
         data: *mut ::core::ffi::c_void,
         size: u32,
-    ) -> UHSStatus::Type;
+    ) -> UHSStatus;
 }
 extern "C" {
     pub fn UhsGetDescriptorString(
@@ -15381,7 +16272,7 @@ extern "C" {
         as_unicode: BOOL,
         data: *mut ::core::ffi::c_void,
         size: u32,
-    ) -> UHSStatus::Type;
+    ) -> UHSStatus;
 }
 extern "C" {
     pub fn UhsQueryInterfaces(
@@ -15389,7 +16280,7 @@ extern "C" {
         filter: *mut UhsInterfaceFilter,
         profiles: *mut UhsInterfaceProfile,
         max_profiles: i32,
-    ) -> UHSStatus::Type;
+    ) -> UHSStatus;
 }
 pub type UhsAcquireInterfaceCallback = ::core::option::Option<
     unsafe extern "C" fn(context: *mut ::core::ffi::c_void, arg1: i32, arg2: i32),
@@ -15400,32 +16291,32 @@ extern "C" {
         if_handle: u32,
         context: *mut ::core::ffi::c_void,
         callback: UhsAcquireInterfaceCallback,
-    ) -> UHSStatus::Type;
+    ) -> UHSStatus;
 }
 extern "C" {
     pub fn UhsReleaseInterface(
         handle: *mut UhsHandle,
         if_handle: u32,
         no_reacquire: bool,
-    ) -> UHSStatus::Type;
+    ) -> UHSStatus;
 }
 extern "C" {
     pub fn UhsAdministerDevice(
         handle: *mut UhsHandle,
         if_handle: u32,
-        type_: UHSAdminDevType::Type,
+        type_: UHSAdminDevType,
         arg3: i32,
-    ) -> UHSStatus::Type;
+    ) -> UHSStatus;
 }
 extern "C" {
     pub fn UhsAdministerEndpoint(
         handle: *mut UhsHandle,
         if_handle: u32,
-        type_: UHSAdminEpType::Type,
+        type_: UHSAdminEpType,
         endpointMask: u32,
         max_pending_requests: u32,
         max_request_size: u32,
-    ) -> UHSStatus::Type;
+    ) -> UHSStatus;
 }
 extern "C" {
     pub fn UhsClearEndpointHalt(
@@ -15433,7 +16324,7 @@ extern "C" {
         if_handle: u32,
         endpoint: u32,
         direction: i32,
-    ) -> UHSStatus::Type;
+    ) -> UHSStatus;
 }
 extern "C" {
     pub fn UhsSubmitControlRequest(
@@ -15446,7 +16337,7 @@ extern "C" {
         wIndex: u16,
         wLength: u16,
         timeout: i32,
-    ) -> UHSStatus::Type;
+    ) -> UHSStatus;
 }
 extern "C" {
     pub fn UhsSubmitBulkRequest(
@@ -15457,7 +16348,7 @@ extern "C" {
         buffer: *mut ::core::ffi::c_void,
         length: i32,
         timeout: i32,
-    ) -> UHSStatus::Type;
+    ) -> UHSStatus;
 }
 extern "C" {
     pub fn UhsSubmitInterruptRequest(
@@ -15468,7 +16359,7 @@ extern "C" {
         buffer: *mut ::core::ffi::c_void,
         length: i32,
         timeout: i32,
-    ) -> UHSStatus::Type;
+    ) -> UHSStatus;
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -15478,6 +16369,15 @@ pub struct OSSemaphore {
     pub __unk104: [::core::ffi::c_char; 4usize],
     pub count: i32,
     pub queue: OSThreadQueue,
+}
+impl Default for OSSemaphore {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 extern "C" {
     pub fn OSInitSemaphore(semaphore: *mut OSSemaphore, count: i32);
@@ -15518,39 +16418,33 @@ extern "C" {
     ) -> i32;
 }
 pub type OSDynLoad_Module = *mut ::core::ffi::c_void;
-pub mod OSDynLoad_Error {
-    pub type Type = ::core::ffi::c_uint;
-    pub const OS_DYNLOAD_OK: Type = 0;
-    pub const OS_DYNLOAD_OUT_OF_MEMORY: Type = 3134259202;
-    pub const OS_DYNLOAD_INVALID_NOTIFY_PTR: Type = 3134259214;
-    pub const OS_DYNLOAD_INVALID_MODULE_NAME_PTR: Type = 3134259215;
-    pub const OS_DYNLOAD_INVALID_MODULE_NAME: Type = 3134259216;
-    pub const OS_DYNLOAD_INVALID_ACQUIRE_PTR: Type = 3134259217;
-    pub const OS_DYNLOAD_EMPTY_MODULE_NAME: Type = 3134259218;
-    pub const OS_DYNLOAD_INVALID_ALLOCATOR_PTR: Type = 3134259223;
-    pub const OS_DYNLOAD_OUT_OF_SYSTEM_MEMORY: Type = 3134259247;
-    pub const OS_DYNLOAD_TLS_ALLOCATOR_LOCKED: Type = 3134259249;
-    pub const OS_DYNLOAD_MODULE_NOT_FOUND: Type = 4294967290;
-}
+pub const OS_DYNLOAD_OK: OSDynLoad_Error = 0;
+pub const OS_DYNLOAD_OUT_OF_MEMORY: OSDynLoad_Error = 3134259202;
+pub const OS_DYNLOAD_INVALID_NOTIFY_PTR: OSDynLoad_Error = 3134259214;
+pub const OS_DYNLOAD_INVALID_MODULE_NAME_PTR: OSDynLoad_Error = 3134259215;
+pub const OS_DYNLOAD_INVALID_MODULE_NAME: OSDynLoad_Error = 3134259216;
+pub const OS_DYNLOAD_INVALID_ACQUIRE_PTR: OSDynLoad_Error = 3134259217;
+pub const OS_DYNLOAD_EMPTY_MODULE_NAME: OSDynLoad_Error = 3134259218;
+pub const OS_DYNLOAD_INVALID_ALLOCATOR_PTR: OSDynLoad_Error = 3134259223;
+pub const OS_DYNLOAD_OUT_OF_SYSTEM_MEMORY: OSDynLoad_Error = 3134259247;
+pub const OS_DYNLOAD_TLS_ALLOCATOR_LOCKED: OSDynLoad_Error = 3134259249;
+pub const OS_DYNLOAD_MODULE_NOT_FOUND: OSDynLoad_Error = 4294967290;
+pub type OSDynLoad_Error = ::core::ffi::c_uint;
 pub type OSDynLoadAllocFn = ::core::option::Option<
     unsafe extern "C" fn(
         size: i32,
         align: i32,
         outAddr: *mut *mut ::core::ffi::c_void,
-    ) -> OSDynLoad_Error::Type,
+    ) -> OSDynLoad_Error,
 >;
 pub type OSDynLoadFreeFn =
     ::core::option::Option<unsafe extern "C" fn(addr: *mut ::core::ffi::c_void)>;
-pub mod OSDynLoad_ExportType {
-    pub type Type = ::core::ffi::c_uint;
-    pub const OS_DYNLOAD_EXPORT_FUNC: Type = 0;
-    pub const OS_DYNLOAD_EXPORT_DATA: Type = 1;
-}
-pub mod OSDynLoad_EntryReason {
-    pub type Type = ::core::ffi::c_uint;
-    pub const OS_DYNLOAD_LOADED: Type = 1;
-    pub const OS_DYNLOAD_UNLOADED: Type = 2;
-}
+pub const OS_DYNLOAD_EXPORT_FUNC: OSDynLoad_ExportType = 0;
+pub const OS_DYNLOAD_EXPORT_DATA: OSDynLoad_ExportType = 1;
+pub type OSDynLoad_ExportType = ::core::ffi::c_uint;
+pub const OS_DYNLOAD_LOADED: OSDynLoad_EntryReason = 1;
+pub const OS_DYNLOAD_UNLOADED: OSDynLoad_EntryReason = 2;
+pub type OSDynLoad_EntryReason = ::core::ffi::c_uint;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct OSDynLoad_NotifyData {
@@ -15565,8 +16459,17 @@ pub struct OSDynLoad_NotifyData {
     pub readOffset: u32,
     pub readSize: u32,
 }
+impl Default for OSDynLoad_NotifyData {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct OSDynLoad_LoaderHeapStatistics {
     pub codeHeapUsed: u32,
     pub unk_0x04: u32,
@@ -15591,6 +16494,15 @@ pub struct OSDynLoad_LoaderUserFileInfo {
     pub titleLocation: u32,
     pub __unk105: [::core::ffi::c_char; 56usize],
 }
+impl Default for OSDynLoad_LoaderUserFileInfo {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct OSDynLoad_LoaderSectionInfo {
@@ -15604,6 +16516,24 @@ pub struct OSDynLoad_LoaderSectionInfo {
 pub union OSDynLoad_LoaderSectionInfo__bindgen_ty_1 {
     pub size: u32,
     pub name: u32,
+}
+impl Default for OSDynLoad_LoaderSectionInfo__bindgen_ty_1 {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
+impl Default for OSDynLoad_LoaderSectionInfo {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -15632,16 +16562,23 @@ pub struct OSDynLoad_InternalData {
     pub next: *mut OSDynLoad_InternalData,
     pub __unk106: [::core::ffi::c_char; 60usize],
 }
-pub mod OSDynLoad_NotifyReason {
-    pub type Type = ::core::ffi::c_uint;
-    pub const OS_DYNLOAD_NOTIFY_UNLOADED: Type = 0;
-    pub const OS_DYNLOAD_NOTIFY_LOADED: Type = 1;
+impl Default for OSDynLoad_InternalData {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
+pub const OS_DYNLOAD_NOTIFY_UNLOADED: OSDynLoad_NotifyReason = 0;
+pub const OS_DYNLOAD_NOTIFY_LOADED: OSDynLoad_NotifyReason = 1;
+pub type OSDynLoad_NotifyReason = ::core::ffi::c_uint;
 pub type OSDynLoadNotifyFunc = ::core::option::Option<
     unsafe extern "C" fn(
         module: OSDynLoad_Module,
         userContext: *mut ::core::ffi::c_void,
-        notifyReason: OSDynLoad_NotifyReason::Type,
+        notifyReason: OSDynLoad_NotifyReason,
         infos: *mut OSDynLoad_NotifyData,
     ),
 >;
@@ -15649,15 +16586,15 @@ extern "C" {
     pub fn OSDynLoad_Acquire(
         name: *const ::core::ffi::c_char,
         outModule: *mut OSDynLoad_Module,
-    ) -> OSDynLoad_Error::Type;
+    ) -> OSDynLoad_Error;
 }
 extern "C" {
     pub fn OSDynLoad_FindExport(
         module: OSDynLoad_Module,
-        exportType: OSDynLoad_ExportType::Type,
+        exportType: OSDynLoad_ExportType,
         name: *const ::core::ffi::c_char,
         outAddr: *mut *mut ::core::ffi::c_void,
-    ) -> OSDynLoad_Error::Type;
+    ) -> OSDynLoad_Error;
 }
 extern "C" {
     pub fn OSDynLoad_Release(module: OSDynLoad_Module);
@@ -15666,37 +16603,37 @@ extern "C" {
     pub fn OSDynLoad_SetAllocator(
         allocFn: OSDynLoadAllocFn,
         freeFn: OSDynLoadFreeFn,
-    ) -> OSDynLoad_Error::Type;
+    ) -> OSDynLoad_Error;
 }
 extern "C" {
     pub fn OSDynLoad_GetAllocator(
         outAllocFn: *mut OSDynLoadAllocFn,
         outFreeFn: *mut OSDynLoadFreeFn,
-    ) -> OSDynLoad_Error::Type;
+    ) -> OSDynLoad_Error;
 }
 extern "C" {
     pub fn OSDynLoad_SetTLSAllocator(
         allocFn: OSDynLoadAllocFn,
         freeFn: OSDynLoadFreeFn,
-    ) -> OSDynLoad_Error::Type;
+    ) -> OSDynLoad_Error;
 }
 extern "C" {
     pub fn OSDynLoad_GetTLSAllocator(
         outAllocFn: *mut OSDynLoadAllocFn,
         outFreeFn: *mut OSDynLoadFreeFn,
-    ) -> OSDynLoad_Error::Type;
+    ) -> OSDynLoad_Error;
 }
 extern "C" {
     pub fn OSDynLoad_GetLoaderHeapStatistics(
         outLoaderHeapStatistics: *mut OSDynLoad_LoaderHeapStatistics,
-    ) -> OSDynLoad_Error::Type;
+    ) -> OSDynLoad_Error;
 }
 extern "C" {
     pub fn OSDynLoad_GetModuleName(
         module: OSDynLoad_Module,
         nameBuf: *mut ::core::ffi::c_char,
         nameBufSize: *mut i32,
-    ) -> OSDynLoad_Error::Type;
+    ) -> OSDynLoad_Error;
 }
 extern "C" {
     pub fn OSDynLoad_GetNumberOfRPLs() -> i32;
@@ -15712,25 +16649,23 @@ extern "C" {
     pub fn OSDynLoad_IsModuleLoaded(
         name: *const ::core::ffi::c_char,
         outModule: *mut OSDynLoad_Module,
-    ) -> OSDynLoad_Error::Type;
+    ) -> OSDynLoad_Error;
 }
 extern "C" {
     pub fn OSDynLoad_AddNotifyCallback(
         notifyFn: OSDynLoadNotifyFunc,
         userContext: *mut ::core::ffi::c_void,
-    ) -> OSDynLoad_Error::Type;
+    ) -> OSDynLoad_Error;
 }
 extern "C" {
     pub fn OSDynLoad_DelNotifyCallback(
         notifyFn: OSDynLoadNotifyFunc,
         userContext: *mut ::core::ffi::c_void,
-    ) -> OSDynLoad_Error::Type;
+    ) -> OSDynLoad_Error;
 }
 extern "C" {
-    pub fn rpl_entry(
-        module: OSDynLoad_Module,
-        reason: OSDynLoad_EntryReason::Type,
-    ) -> ::core::ffi::c_int;
+    pub fn rpl_entry(module: OSDynLoad_Module, reason: OSDynLoad_EntryReason)
+        -> ::core::ffi::c_int;
 }
 #[repr(C)]
 #[repr(align(16))]
@@ -15745,6 +16680,15 @@ pub struct OSStopwatch {
     pub startTime: OSTime,
     pub running: BOOL,
     pub __unk107: [::core::ffi::c_char; 4usize],
+}
+impl Default for OSStopwatch {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 extern "C" {
     pub fn OSInitStopwatch(stopwatch: *mut OSStopwatch, name: *const ::core::ffi::c_char);
@@ -15770,6 +16714,15 @@ pub struct OSMutexLink {
     pub next: *mut OSMutex,
     pub prev: *mut OSMutex,
 }
+impl Default for OSMutexLink {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct OSMutex {
@@ -15780,6 +16733,15 @@ pub struct OSMutex {
     pub owner: *mut OSThread,
     pub count: i32,
     pub link: OSMutexLink,
+}
+impl Default for OSMutex {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 extern "C" {
     pub fn OSInitMutex(mutex: *mut OSMutex);
@@ -15805,8 +16767,17 @@ pub struct IPCBufPoolFIFO {
     pub maxCount: i32,
     pub messages: *mut *mut ::core::ffi::c_void,
 }
+impl Default for IPCBufPoolFIFO {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct IPCBufPoolAttributes {
     pub messageSize: u32,
     pub poolSize: u32,
@@ -15829,6 +16800,15 @@ pub struct IPCBufPool {
     pub mutex: OSMutex,
     pub __unk109: [::core::ffi::c_char; 4usize],
 }
+impl Default for IPCBufPool {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 extern "C" {
     pub fn IPCBufPoolCreate(
         buffer: *mut ::core::ffi::c_void,
@@ -15842,19 +16822,16 @@ extern "C" {
     pub fn IPCBufPoolAllocate(pool: *mut IPCBufPool, size: u32) -> *mut ::core::ffi::c_void;
 }
 extern "C" {
-    pub fn IPCBufPoolFree(
-        pool: *mut IPCBufPool,
-        message: *mut ::core::ffi::c_void,
-    ) -> IOSError::Type;
+    pub fn IPCBufPoolFree(pool: *mut IPCBufPool, message: *mut ::core::ffi::c_void) -> IOSError;
 }
 extern "C" {
     pub fn IPCBufPoolGetAttributes(
         pool: *mut IPCBufPool,
         attribs: *mut IPCBufPoolAttributes,
-    ) -> IOSError::Type;
+    ) -> IOSError;
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct OSRendezvous {
     pub core: [u32; 3usize],
     pub __unk110: [::core::ffi::c_char; 4usize],
@@ -15880,6 +16857,15 @@ pub struct OSFastCondition {
     pub __unk111: [::core::ffi::c_char; 4usize],
     pub queue: OSThreadQueue,
 }
+impl Default for OSFastCondition {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 extern "C" {
     pub fn OSFastCond_Init(condition: *mut OSFastCondition, name: *const ::core::ffi::c_char);
 }
@@ -15889,34 +16875,32 @@ extern "C" {
 extern "C" {
     pub fn OSFastCond_Signal(condition: *mut OSFastCondition);
 }
-pub mod OSICICommand {
-    pub type Type = ::core::ffi::c_uint;
-    pub const OS_ICI_COMMAND_INVALID_IC_RANGE: Type = 1;
-    pub const OS_ICI_COMMAND_RESCHEDULE_CORE: Type = 2;
-    pub const OS_ICI_COMMAND_HALT_CORE: Type = 3;
-    pub const OS_ICI_COMMAND_PROC_EXIT: Type = 4;
-    pub const OS_ICI_COMMAND_SET_DABR: Type = 5;
-    pub const OS_ICI_COMMAND_PROC_SCHED: Type = 6;
-    pub const OS_ICI_COMMAND_FAST_BG_EXIT: Type = 7;
-    pub const OS_ICI_COMMAND_IOP_SHELL_CORE_TRACE: Type = 8;
-    pub const OS_ICI_COMMAND_SYSTEM_FATAL: Type = 9;
-    pub const OS_ICI_COMMAND_SET_IABR: Type = 10;
-    pub const OS_ICI_COMMAND_PANIC_0X15: Type = 11;
-    pub const OS_ICI_COMMAND_PROC_KILL: Type = 12;
-    pub const OS_ICI_COMMAND_PROC_CRASH: Type = 13;
-    pub const OS_ICI_COMMAND_UNKNOWN: Type = 14;
-    pub const OS_ICI_COMMAND_OVERLAY_ARENA: Type = 15;
-}
+pub const OS_ICI_COMMAND_INVALID_IC_RANGE: OSICICommand = 1;
+pub const OS_ICI_COMMAND_RESCHEDULE_CORE: OSICICommand = 2;
+pub const OS_ICI_COMMAND_HALT_CORE: OSICICommand = 3;
+pub const OS_ICI_COMMAND_PROC_EXIT: OSICICommand = 4;
+pub const OS_ICI_COMMAND_SET_DABR: OSICICommand = 5;
+pub const OS_ICI_COMMAND_PROC_SCHED: OSICICommand = 6;
+pub const OS_ICI_COMMAND_FAST_BG_EXIT: OSICICommand = 7;
+pub const OS_ICI_COMMAND_IOP_SHELL_CORE_TRACE: OSICICommand = 8;
+pub const OS_ICI_COMMAND_SYSTEM_FATAL: OSICICommand = 9;
+pub const OS_ICI_COMMAND_SET_IABR: OSICICommand = 10;
+pub const OS_ICI_COMMAND_PANIC_0X15: OSICICommand = 11;
+pub const OS_ICI_COMMAND_PROC_KILL: OSICICommand = 12;
+pub const OS_ICI_COMMAND_PROC_CRASH: OSICICommand = 13;
+pub const OS_ICI_COMMAND_UNKNOWN: OSICICommand = 14;
+pub const OS_ICI_COMMAND_OVERLAY_ARENA: OSICICommand = 15;
+pub type OSICICommand = ::core::ffi::c_uint;
 pub type OSExceptionCallbackExFn = ::core::option::Option<
     unsafe extern "C" fn(
-        exceptionType: OSExceptionType::Type,
+        exceptionType: OSExceptionType,
         interruptedContext: *mut OSContext,
         cbContext: *mut OSContext,
     ),
 >;
 pub type KernelTimerCallbackFn = ::core::option::Option<
     unsafe extern "C" fn(
-        exception: OSExceptionType::Type,
+        exception: OSExceptionType,
         interruptedContext: *mut OSContext,
         currentContext: *mut OSContext,
     ),
@@ -15928,6 +16912,15 @@ pub struct OSExceptionChainInfo {
     pub callback: OSExceptionCallbackExFn,
     pub stack: *mut ::core::ffi::c_void,
     pub context: *mut OSContext,
+}
+impl Default for OSExceptionChainInfo {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -15979,6 +16972,24 @@ pub struct KernelInfo0_CoreinitInfo {
     pub loadOffset: u32,
     pub loadSize: u32,
 }
+impl Default for KernelInfo0_CoreinitInfo {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
+impl Default for KernelInfo0 {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct KernelInfo6 {
@@ -15986,9 +16997,18 @@ pub struct KernelInfo6 {
     pub unk0x08: u32,
     pub __unk112: [::core::ffi::c_char; 252usize],
 }
+impl Default for KernelInfo6 {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 extern "C" {
     pub fn __KernelSetUserModeExHandler(
-        exceptionType: OSExceptionType::Type,
+        exceptionType: OSExceptionType,
         chainInfo: *mut OSExceptionChainInfo,
         prevChainInfo: *mut OSExceptionChainInfo,
     );
@@ -16010,7 +17030,7 @@ extern "C" {
 }
 extern "C" {
     pub fn __KernelSendICI(
-        cmd: OSICICommand::Type,
+        cmd: OSICICommand,
         arg1: *mut ::core::ffi::c_void,
         unknown1: u32,
         unknown2: u32,
@@ -16025,23 +17045,19 @@ extern "C" {
     );
 }
 pub type IMEventMask = u32;
-pub mod IMPadType {
-    pub type Type = ::core::ffi::c_uint;
-    pub const IM_PAD_TYPE_NONE: Type = 0;
-    pub const IM_PAD_TYPE_WII_REMOTE: Type = 1;
-    pub const IM_PAD_TYPE_WIIU_PRO_CONTROLLER: Type = 2;
-    pub const IM_PAD_TYPE_WII_REMOTE_EXTENSION: Type = 3;
-    pub const IM_PAD_TYPE_WIIU_GAMEPAD: Type = 4;
-}
-pub mod IMDeviceState {
-    pub type Type = ::core::ffi::c_uint;
-    pub const IM_DEVICE_STATE_CLEAR: Type = 0;
-    pub const IM_DEVICE_STATE_INACTIVE: Type = 1;
-    pub const IM_DEVICE_STATE_ACTIVE: Type = 2;
-    pub const IM_DEVICE_STATE_HOME: Type = 3;
-    pub const IM_DEVICE_STATE_POWER: Type = 4;
-    pub const IM_DEVICE_STATE_SYNC: Type = 5;
-}
+pub const IM_PAD_TYPE_NONE: IMPadType = 0;
+pub const IM_PAD_TYPE_WII_REMOTE: IMPadType = 1;
+pub const IM_PAD_TYPE_WIIU_PRO_CONTROLLER: IMPadType = 2;
+pub const IM_PAD_TYPE_WII_REMOTE_EXTENSION: IMPadType = 3;
+pub const IM_PAD_TYPE_WIIU_GAMEPAD: IMPadType = 4;
+pub type IMPadType = ::core::ffi::c_uint;
+pub const IM_DEVICE_STATE_CLEAR: IMDeviceState = 0;
+pub const IM_DEVICE_STATE_INACTIVE: IMDeviceState = 1;
+pub const IM_DEVICE_STATE_ACTIVE: IMDeviceState = 2;
+pub const IM_DEVICE_STATE_HOME: IMDeviceState = 3;
+pub const IM_DEVICE_STATE_POWER: IMDeviceState = 4;
+pub const IM_DEVICE_STATE_SYNC: IMDeviceState = 5;
+pub type IMDeviceState = ::core::ffi::c_uint;
 #[repr(C, packed)]
 #[derive(Debug, Copy, Clone)]
 pub struct IMRequest {
@@ -16055,14 +17071,32 @@ pub struct IMRequest {
     pub copyDst: *mut ::core::ffi::c_void,
     pub copySize: u32,
 }
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct IMHomeButtonParams {
-    pub type_: IMPadType::Type,
-    pub index: i32,
+impl Default for IMRequest {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+pub struct IMHomeButtonParams {
+    pub type_: IMPadType,
+    pub index: i32,
+}
+impl Default for IMHomeButtonParams {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
+#[repr(C)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct IMParameters {
     pub resetEnabled: u32,
     pub dimEnabled: u32,
@@ -16073,47 +17107,50 @@ pub struct IMParameters {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct IMDeviceStateEx {
-    pub state: IMDeviceState::Type,
+    pub state: IMDeviceState,
     pub params: IMHomeButtonParams,
 }
-pub mod IMParameter {
-    pub type Type = ::core::ffi::c_uint;
-    pub const IM_PARAMETER_INACTIVE_SECONDS: Type = 0;
-    pub const IM_PARAMETER_DIM_ENABLED: Type = 1;
-    pub const IM_PARAMETER_DIM_PERIOD: Type = 2;
-    pub const IM_PARAMETER_APD_ENABLED: Type = 3;
-    pub const IM_PARAMETER_APD_PERIOD: Type = 4;
-    pub const IM_PARAMETER_RESET_ENABLE: Type = 5;
-    pub const IM_PARAMETER_RESET_SECONDS: Type = 6;
-    pub const IM_PARAMETER_POWER_OFF_ENABLE: Type = 7;
-    pub const IM_PARAMETER_APD_OCCURED: Type = 8;
-    pub const IM_PARAMETER_DIM_ENABLE_TV: Type = 9;
-    pub const IM_PARAMETER_DIM_ENABLE_DRC: Type = 10;
-    pub const IM_PARAMETER_MAX: Type = 11;
+impl Default for IMDeviceStateEx {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
-pub mod IMTimer {
-    pub type Type = ::core::ffi::c_uint;
-    pub const IM_TIMER_DIM: Type = 0;
-    pub const IM_TIMER_APD: Type = 1;
-}
-pub mod IMEvent {
-    pub type Type = ::core::ffi::c_int;
-    pub const IM_EVENT_ACTIVE: Type = 1;
-    pub const IM_EVENT_INACTIVE: Type = 2;
-    pub const IM_EVENT_DIM: Type = 4;
-    pub const IM_EVENT_UNDIM: Type = 8;
-    pub const IM_EVENT_APD: Type = 16;
-    pub const IM_EVENT_POWER: Type = 32;
-    pub const IM_EVENT_HOME: Type = 64;
-    pub const IM_EVENT_SYNC: Type = 128;
-    pub const IM_EVENT_RESET: Type = 256;
-    pub const IM_EVENT_CANCELLED: Type = -2147483648;
-}
+pub const IM_PARAMETER_INACTIVE_SECONDS: IMParameter = 0;
+pub const IM_PARAMETER_DIM_ENABLED: IMParameter = 1;
+pub const IM_PARAMETER_DIM_PERIOD: IMParameter = 2;
+pub const IM_PARAMETER_APD_ENABLED: IMParameter = 3;
+pub const IM_PARAMETER_APD_PERIOD: IMParameter = 4;
+pub const IM_PARAMETER_RESET_ENABLE: IMParameter = 5;
+pub const IM_PARAMETER_RESET_SECONDS: IMParameter = 6;
+pub const IM_PARAMETER_POWER_OFF_ENABLE: IMParameter = 7;
+pub const IM_PARAMETER_APD_OCCURED: IMParameter = 8;
+pub const IM_PARAMETER_DIM_ENABLE_TV: IMParameter = 9;
+pub const IM_PARAMETER_DIM_ENABLE_DRC: IMParameter = 10;
+pub const IM_PARAMETER_MAX: IMParameter = 11;
+pub type IMParameter = ::core::ffi::c_uint;
+pub const IM_TIMER_DIM: IMTimer = 0;
+pub const IM_TIMER_APD: IMTimer = 1;
+pub type IMTimer = ::core::ffi::c_uint;
+pub const IM_EVENT_ACTIVE: IMEvent = 1;
+pub const IM_EVENT_INACTIVE: IMEvent = 2;
+pub const IM_EVENT_DIM: IMEvent = 4;
+pub const IM_EVENT_UNDIM: IMEvent = 8;
+pub const IM_EVENT_APD: IMEvent = 16;
+pub const IM_EVENT_POWER: IMEvent = 32;
+pub const IM_EVENT_HOME: IMEvent = 64;
+pub const IM_EVENT_SYNC: IMEvent = 128;
+pub const IM_EVENT_RESET: IMEvent = 256;
+pub const IM_EVENT_CANCELLED: IMEvent = -2147483648;
+pub type IMEvent = ::core::ffi::c_int;
 extern "C" {
     pub fn IM_Open() -> IOSHandle;
 }
 extern "C" {
-    pub fn IM_Close(handle: IOSHandle) -> IOSError::Type;
+    pub fn IM_Close(handle: IOSHandle) -> IOSError;
 }
 extern "C" {
     pub fn IM_GetHomeButtonParams(
@@ -16122,71 +17159,65 @@ extern "C" {
         output: *mut IMHomeButtonParams,
         asyncCallback: IOSAsyncCallbackFn,
         asyncCallbackContext: *mut ::core::ffi::c_void,
-    ) -> IOSError::Type;
+    ) -> IOSError;
 }
 extern "C" {
     pub fn IM_GetParameter(
         handle: IOSHandle,
         request: *mut IMRequest,
-        parameter: IMParameter::Type,
+        parameter: IMParameter,
         output: *mut u32,
         asyncCallback: IOSAsyncCallbackFn,
         asyncCallbackContext: *mut ::core::ffi::c_void,
-    ) -> IOSError::Type;
+    ) -> IOSError;
 }
 extern "C" {
-    pub fn IM_GetParameters(parameters: *mut IMParameters) -> IOSError::Type;
+    pub fn IM_GetParameters(parameters: *mut IMParameters) -> IOSError;
 }
 extern "C" {
     pub fn IM_GetNvParameter(
         handle: IOSHandle,
         request: *mut IMRequest,
-        parameter: IMParameter::Type,
+        parameter: IMParameter,
         output: *mut u32,
         asyncCallback: IOSAsyncCallbackFn,
         asyncCallbackContext: *mut ::core::ffi::c_void,
-    ) -> IOSError::Type;
+    ) -> IOSError;
 }
 extern "C" {
     pub fn IM_GetNvParameterWithoutHandleAndItb(
-        parameter: IMParameter::Type,
+        parameter: IMParameter,
         outValue: *mut u32,
-    ) -> IOSError::Type;
+    ) -> IOSError;
 }
 extern "C" {
-    pub fn IM_GetRuntimeParameter(
-        parameter: IMParameter::Type,
-        outValue: *mut u32,
-    ) -> IOSError::Type;
+    pub fn IM_GetRuntimeParameter(parameter: IMParameter, outValue: *mut u32) -> IOSError;
 }
 extern "C" {
     pub fn IM_GetTimerRemaining(
         handle: IOSHandle,
         request: *mut IMRequest,
-        timer: IMTimer::Type,
+        timer: IMTimer,
         output: *mut u32,
         asyncCallback: IOSAsyncCallbackFn,
         asyncCallbackContext: *mut ::core::ffi::c_void,
-    ) -> IOSError::Type;
+    ) -> IOSError;
 }
 extern "C" {
-    pub fn IM_GetTimerRemainingSeconds(
-        timer: IMTimer::Type,
-        outSeconds: *mut u32,
-    ) -> IOSError::Type;
+    pub fn IM_GetTimerRemainingSeconds(timer: IMTimer, outSeconds: *mut u32) -> IOSError;
 }
 extern "C" {
     pub fn IM_SetParameter(
         handle: IOSHandle,
         request: *mut IMRequest,
-        parameter: IMParameter::Type,
+        parameter: IMParameter,
         value: u32,
         asyncCallback: IOSAsyncCallbackFn,
         asyncCallbackContext: *mut ::core::ffi::c_void,
-    ) -> IOSError::Type;
+    ) -> IOSError;
 }
 extern "C" {
-    pub fn IM_SetRuntimeParameter(parameter: IMParameter::Type, value: u32) -> IOSError::Type;
+    pub fn IM_SetRuntimeParameter(parameter: IMParameter, value: u32) -> IOSError;
 }
 extern "C" {
     pub fn IM_GetEventNotify(
@@ -16195,7 +17226,7 @@ extern "C" {
         event: *mut IMEventMask,
         asyncCallback: IOSAsyncCallbackFn,
         asyncCallbackContext: *mut ::core::ffi::c_void,
-    ) -> IOSError::Type;
+    ) -> IOSError;
 }
 extern "C" {
     pub fn IM_CancelGetEventNotify(
@@ -16203,16 +17234,16 @@ extern "C" {
         request: *mut IMRequest,
         asyncCallback: IOSAsyncCallbackFn,
         asyncCallbackContext: *mut ::core::ffi::c_void,
-    ) -> IOSError::Type;
+    ) -> IOSError;
 }
 extern "C" {
     pub fn IM_SetDeviceState(
         handle: IOSHandle,
         request: *mut IMRequest,
-        state: IMDeviceState::Type,
+        state: IMDeviceState,
         asyncCallback: IOSAsyncCallbackFn,
         asyncCallbackContext: *mut ::core::ffi::c_void,
-    ) -> IOSError::Type;
+    ) -> IOSError;
 }
 extern "C" {
     pub fn IM_SetDeviceStateEx(
@@ -16221,7 +17252,7 @@ extern "C" {
         state: *mut IMDeviceStateEx,
         asyncCallback: IOSAsyncCallbackFn,
         asyncCallbackContext: *mut ::core::ffi::c_void,
-    ) -> IOSError::Type;
+    ) -> IOSError;
 }
 extern "C" {
     pub fn __rplwrap_exit(code: ::core::ffi::c_int);
@@ -16326,64 +17357,53 @@ extern "C" {
 extern "C" {
     pub fn OSMemoryBarrier();
 }
-pub mod OSSavedFrameType {
-    pub type Type = ::core::ffi::c_uint;
-    pub const OS_SAVED_FRAME_A: Type = 0;
-    pub const OS_SAVED_FRAME_B: Type = 1;
-}
-pub mod OSSavedFrameScreen {
-    pub type Type = ::core::ffi::c_uint;
-    pub const OS_SAVED_FRAME_SCREEN_TV: Type = 2;
-    pub const OS_SAVED_FRAME_SCREEN_DRC: Type = 4;
-}
+pub const OS_SAVED_FRAME_A: OSSavedFrameType = 0;
+pub const OS_SAVED_FRAME_B: OSSavedFrameType = 1;
+pub type OSSavedFrameType = ::core::ffi::c_uint;
+pub const OS_SAVED_FRAME_SCREEN_TV: OSSavedFrameScreen = 2;
+pub const OS_SAVED_FRAME_SCREEN_DRC: OSSavedFrameScreen = 4;
+pub type OSSavedFrameScreen = ::core::ffi::c_uint;
 extern "C" {
-    pub fn __OSClearSavedFrame(
-        type_: OSSavedFrameType::Type,
-        screen: OSSavedFrameScreen::Type,
-    ) -> u32;
+    pub fn __OSClearSavedFrame(type_: OSSavedFrameType, screen: OSSavedFrameScreen) -> u32;
 }
 extern "C" {
     pub fn __OSGetSavedFrame(
-        screen: OSSavedFrameScreen::Type,
+        screen: OSSavedFrameScreen,
         outPtr: *mut ::core::ffi::c_void,
         ptr_size: u32,
     );
 }
 extern "C" {
     pub fn __OSGetSavedFrameA(
-        screen: OSSavedFrameScreen::Type,
+        screen: OSSavedFrameScreen,
         outPtr: *mut ::core::ffi::c_void,
         ptr_size: u32,
     );
 }
 extern "C" {
     pub fn __OSGetSavedFrameB(
-        screen: OSSavedFrameScreen::Type,
+        screen: OSSavedFrameScreen,
         outPtr: *mut ::core::ffi::c_void,
         ptr_size: u32,
     );
 }
 extern "C" {
-    pub fn __OSGetSavedFrameGammaA(screen: OSSavedFrameScreen::Type, outGamma: *mut f32) -> BOOL;
+    pub fn __OSGetSavedFrameGammaA(screen: OSSavedFrameScreen, outGamma: *mut f32) -> BOOL;
 }
 extern "C" {
-    pub fn __OSGetSavedFrameGammaB(screen: OSSavedFrameScreen::Type, outGamma: *mut f32) -> BOOL;
+    pub fn __OSGetSavedFrameGammaB(screen: OSSavedFrameScreen, outGamma: *mut f32) -> BOOL;
 }
 extern "C" {
     pub fn __OSGetSavedFramePtr(
-        type_: OSSavedFrameType::Type,
-        screen: OSSavedFrameScreen::Type,
+        type_: OSSavedFrameType,
+        screen: OSSavedFrameScreen,
     ) -> *mut ::core::ffi::c_void;
 }
 extern "C" {
-    pub fn __OSGetSavedFramePtrForRead(
-        screen: OSSavedFrameScreen::Type,
-    ) -> *mut ::core::ffi::c_void;
+    pub fn __OSGetSavedFramePtrForRead(screen: OSSavedFrameScreen) -> *mut ::core::ffi::c_void;
 }
 extern "C" {
-    pub fn __OSGetSavedFramePtrForWrite(
-        screen: OSSavedFrameScreen::Type,
-    ) -> *mut ::core::ffi::c_void;
+    pub fn __OSGetSavedFramePtrForWrite(screen: OSSavedFrameScreen) -> *mut ::core::ffi::c_void;
 }
 extern "C" {
     pub fn __OSGetSavedFrames() -> u32;
@@ -16395,36 +17415,34 @@ extern "C" {
     pub fn __OSGetSavedFramesB() -> u32;
 }
 extern "C" {
-    pub fn __OSResetSavedFrame(screen: OSSavedFrameScreen::Type);
+    pub fn __OSResetSavedFrame(screen: OSSavedFrameScreen);
 }
 extern "C" {
     pub fn __OSSetSavedFrame(
-        screen: OSSavedFrameScreen::Type,
+        screen: OSSavedFrameScreen,
         data: *mut ::core::ffi::c_void,
         size: u32,
     ) -> ::core::ffi::c_int;
 }
 extern "C" {
-    pub fn __OSSetSavedFrameGamma(gamma: f32, screen: OSSavedFrameScreen::Type);
+    pub fn __OSSetSavedFrameGamma(gamma: f32, screen: OSSavedFrameScreen);
 }
-pub mod OSInterruptType {
-    pub type Type = ::core::ffi::c_uint;
-    pub const OS_INTERRUPT_TYPE_ERROR: Type = 0;
-    pub const OS_INTERRUPT_TYPE_DSP: Type = 1;
-    pub const OS_INTERRUPT_TYPE_GPU7: Type = 2;
-    pub const OS_INTERRUPT_TYPE_GPIPPC: Type = 3;
-    pub const OS_INTERRUPT_TYPE_PRIMARYI2C: Type = 4;
-    pub const OS_INTERRUPT_TYPE_DSPAI: Type = 5;
-    pub const OS_INTERRUPT_TYPE_DSPAI2: Type = 6;
-    pub const OS_INTERRUPT_TYPE_DSPACC: Type = 7;
-    pub const OS_INTERRUPT_TYPE_DSPDSP: Type = 8;
-    pub const OS_INTERRUPT_TYPE_IPCPPC0: Type = 9;
-    pub const OS_INTERRUPT_TYPE_IPCPPC1: Type = 10;
-    pub const OS_INTERRUPT_TYPE_IPCPPC2: Type = 11;
-    pub const OS_INTERRUPT_TYPE_AHB: Type = 12;
-}
+pub const OS_INTERRUPT_TYPE_ERROR: OSInterruptType = 0;
+pub const OS_INTERRUPT_TYPE_DSP: OSInterruptType = 1;
+pub const OS_INTERRUPT_TYPE_GPU7: OSInterruptType = 2;
+pub const OS_INTERRUPT_TYPE_GPIPPC: OSInterruptType = 3;
+pub const OS_INTERRUPT_TYPE_PRIMARYI2C: OSInterruptType = 4;
+pub const OS_INTERRUPT_TYPE_DSPAI: OSInterruptType = 5;
+pub const OS_INTERRUPT_TYPE_DSPAI2: OSInterruptType = 6;
+pub const OS_INTERRUPT_TYPE_DSPACC: OSInterruptType = 7;
+pub const OS_INTERRUPT_TYPE_DSPDSP: OSInterruptType = 8;
+pub const OS_INTERRUPT_TYPE_IPCPPC0: OSInterruptType = 9;
+pub const OS_INTERRUPT_TYPE_IPCPPC1: OSInterruptType = 10;
+pub const OS_INTERRUPT_TYPE_IPCPPC2: OSInterruptType = 11;
+pub const OS_INTERRUPT_TYPE_AHB: OSInterruptType = 12;
+pub type OSInterruptType = ::core::ffi::c_uint;
 pub type OSUserInterruptHandler = ::core::option::Option<
-    unsafe extern "C" fn(type_: OSInterruptType::Type, interruptedContext: *mut OSContext),
+    unsafe extern "C" fn(type_: OSInterruptType, interruptedContext: *mut OSContext),
 >;
 extern "C" {
     pub fn OSEnableInterrupts() -> BOOL;
@@ -16440,15 +17458,15 @@ extern "C" {
 }
 extern "C" {
     pub fn __OSSetInterruptHandler(
-        type_: OSInterruptType::Type,
+        type_: OSInterruptType,
         handler: OSUserInterruptHandler,
     ) -> OSUserInterruptHandler;
 }
 extern "C" {
-    pub fn __OSClearAndEnableInterrupt(type_: OSInterruptType::Type);
+    pub fn __OSClearAndEnableInterrupt(type_: OSInterruptType);
 }
 extern "C" {
-    pub fn __OSDisableInterrupt(type_: OSInterruptType::Type);
+    pub fn __OSDisableInterrupt(type_: OSInterruptType);
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -16457,6 +17475,15 @@ pub struct OSCondition {
     pub name: *const ::core::ffi::c_char,
     pub __unk113: [::core::ffi::c_char; 4usize],
     pub queue: OSThreadQueue,
+}
+impl Default for OSCondition {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 extern "C" {
     pub fn OSInitCond(condition: *mut OSCondition);
@@ -16470,125 +17497,122 @@ extern "C" {
 extern "C" {
     pub fn OSSignalCond(condition: *mut OSCondition);
 }
-pub mod COSReportLevel {
-    pub type Type = ::core::ffi::c_uint;
-    pub const COS_REPORT_LEVEL_ERROR: Type = 0;
-    pub const COS_REPORT_LEVEL_WARN: Type = 1;
-    pub const COS_REPORT_LEVEL_INFO: Type = 2;
-    pub const COS_REPORT_LEVEL_VERBOSE: Type = 3;
-}
-pub mod COSReportModule {
-    pub type Type = ::core::ffi::c_uint;
-    pub const COS_REPORT_MODULE_UNKNOWN_0: Type = 0;
-    pub const COS_REPORT_MODULE_UNKNOWN_1: Type = 1;
-    pub const COS_REPORT_MODULE_UNKNOWN_2: Type = 2;
-    pub const COS_REPORT_MODULE_UNKNOWN_5: Type = 5;
-}
+pub const COS_REPORT_LEVEL_ERROR: COSReportLevel = 0;
+pub const COS_REPORT_LEVEL_WARN: COSReportLevel = 1;
+pub const COS_REPORT_LEVEL_INFO: COSReportLevel = 2;
+pub const COS_REPORT_LEVEL_VERBOSE: COSReportLevel = 3;
+pub type COSReportLevel = ::core::ffi::c_uint;
+pub const COS_REPORT_MODULE_UNKNOWN_0: COSReportModule = 0;
+pub const COS_REPORT_MODULE_UNKNOWN_1: COSReportModule = 1;
+pub const COS_REPORT_MODULE_UNKNOWN_2: COSReportModule = 2;
+pub const COS_REPORT_MODULE_UNKNOWN_5: COSReportModule = 5;
+pub type COSReportModule = ::core::ffi::c_uint;
 extern "C" {
     pub fn COSVReport(
-        module: COSReportModule::Type,
-        level: COSReportLevel::Type,
+        module: COSReportModule,
+        level: COSReportLevel,
         fmt: *const ::core::ffi::c_char,
         ...
     );
 }
 extern "C" {
-    pub fn COSError(module: COSReportModule::Type, fmt: *const ::core::ffi::c_char, ...);
+    pub fn COSError(module: COSReportModule, fmt: *const ::core::ffi::c_char, ...);
 }
 extern "C" {
-    pub fn COSInfo(module: COSReportModule::Type, fmt: *const ::core::ffi::c_char, ...);
+    pub fn COSInfo(module: COSReportModule, fmt: *const ::core::ffi::c_char, ...);
 }
 extern "C" {
-    pub fn COSVerbose(module: COSReportModule::Type, fmt: *const ::core::ffi::c_char, ...);
+    pub fn COSVerbose(module: COSReportModule, fmt: *const ::core::ffi::c_char, ...);
 }
 extern "C" {
-    pub fn COSWarn(module: COSReportModule::Type, fmt: *const ::core::ffi::c_char, ...);
+    pub fn COSWarn(module: COSReportModule, fmt: *const ::core::ffi::c_char, ...);
 }
 pub type UCError = i32;
 pub type UCHandle = i32;
-pub mod UCCommand {
-    pub type Type = ::core::ffi::c_uint;
-    pub const UC_CMD_READ_SYS_CONFIG: Type = 48;
-    pub const UC_CMD_WRITE_SYS_CONFIG: Type = 49;
-    pub const UC_CMD_DELETE_SYS_CONFIG: Type = 50;
-    pub const UC_CMD_QUERY_SYS_CONFIG: Type = 51;
-    pub const UC_CMD_LIST_SYS_CONFIG: Type = 52;
-}
-pub mod UCDataType {
-    pub type Type = ::core::ffi::c_uint;
-    pub const UC_DATATYPE_UNDEFINED: Type = 0;
-    pub const UC_DATATYPE_UNSIGNED_BYTE: Type = 1;
-    pub const UC_DATATYPE_UNSIGNED_SHORT: Type = 2;
-    pub const UC_DATATYPE_UNSIGNED_INT: Type = 3;
-    pub const UC_DATATYPE_SIGNED_INT: Type = 4;
-    pub const UC_DATATYPE_FLOAT: Type = 5;
-    pub const UC_DATATYPE_STRING: Type = 6;
-    pub const UC_DATATYPE_HEXBINARY: Type = 7;
-    pub const UC_DATATYPE_COMPLEX: Type = 8;
-    pub const UC_DATATYPE_INVALID: Type = 255;
-}
-pub mod UCErrors {
-    pub type Type = ::core::ffi::c_int;
-    pub const UC_ERROR_OK: Type = 0;
-    pub const UC_ERROR_ERROR: Type = -1;
-    pub const UC_ERROR_OTHER: Type = -2097153;
-    pub const UC_ERROR_SYSTEM: Type = -2097154;
-    pub const UC_ERROR_ALLOC: Type = -2097155;
-    pub const UC_ERROR_OPCODE: Type = -2097156;
-    pub const UC_ERROR_INVALID_PARAM: Type = -2097157;
-    pub const UC_ERROR_INVALID_TYPE: Type = -2097158;
-    pub const UC_ERROR_UNSUPPORTED: Type = -2097159;
-    pub const UC_ERROR_NON_LEAF_NODE: Type = -2097160;
-    pub const UC_ERROR_KEY_NOT_FOUND: Type = -2097161;
-    pub const UC_ERROR_MODIFY: Type = -2097162;
-    pub const UC_ERROR_STRING_TOO_LONG: Type = -2097163;
-    pub const UC_ERROR_ROOT_KEYS_DIFFER: Type = -2097164;
-    pub const UC_ERROR_INVALID_LOCATION: Type = -2097165;
-    pub const UC_ERROR_BAD_COMMENT: Type = -2097166;
-    pub const UC_ERROR_READ_ACCESS: Type = -2097167;
-    pub const UC_ERROR_WRITE_ACCESS: Type = -2097168;
-    pub const UC_ERROR_CREATE_ACCESS: Type = -2097169;
-    pub const UC_ERROR_FILE_SYS_NAME: Type = -2097170;
-    pub const UC_ERROR_FILE_SYS_INIT: Type = -2097171;
-    pub const UC_ERROR_FILE_SYS_MOUNT: Type = -2097172;
-    pub const UC_ERROR_FILE_OPEN: Type = -2097173;
-    pub const UC_ERROR_FILE_STAT: Type = -2097174;
-    pub const UC_ERROR_FILE_READ: Type = -2097175;
-    pub const UC_ERROR_FILE_WRITE: Type = -2097176;
-    pub const UC_ERROR_FILE_TOO_BIG: Type = -2097177;
-    pub const UC_ERROR_FILE_REMOVE: Type = -2097178;
-    pub const UC_ERROR_FILE_RENAME: Type = -2097179;
-    pub const UC_ERROR_FILE_CLOSE: Type = -2097180;
-    pub const UC_ERROR_FILE_SEEK: Type = -2097181;
-    pub const UC_ERROR_FILE_CONFIRM: Type = -2097182;
-    pub const UC_ERROR_FILE_BACKUP: Type = -2097183;
-    pub const UC_ERROR_MALFORMED_XML: Type = -2097184;
-    pub const UC_ERROR_VERSION: Type = -2097185;
-    pub const UC_ERROR_NO_IPC_BUFFERS: Type = -2097186;
-    pub const UC_ERROR_FILE_LOCK_NEEDED: Type = -2097188;
-    pub const UC_ERROR_SYS_PROT: Type = -2097192;
-}
-pub mod UCFileSys {
-    pub type Type = ::core::ffi::c_uint;
-    pub const UC_FILE_SYS_INVALID: Type = 0;
-    pub const UC_FILE_SYS_SYS: Type = 1;
-    pub const UC_FILE_SYS_SLC: Type = 2;
-    pub const UC_FILE_SYS_RAM: Type = 3;
-}
+pub const UC_CMD_READ_SYS_CONFIG: UCCommand = 48;
+pub const UC_CMD_WRITE_SYS_CONFIG: UCCommand = 49;
+pub const UC_CMD_DELETE_SYS_CONFIG: UCCommand = 50;
+pub const UC_CMD_QUERY_SYS_CONFIG: UCCommand = 51;
+pub const UC_CMD_LIST_SYS_CONFIG: UCCommand = 52;
+pub type UCCommand = ::core::ffi::c_uint;
+pub const UC_DATATYPE_UNDEFINED: UCDataType = 0;
+pub const UC_DATATYPE_UNSIGNED_BYTE: UCDataType = 1;
+pub const UC_DATATYPE_UNSIGNED_SHORT: UCDataType = 2;
+pub const UC_DATATYPE_UNSIGNED_INT: UCDataType = 3;
+pub const UC_DATATYPE_SIGNED_INT: UCDataType = 4;
+pub const UC_DATATYPE_FLOAT: UCDataType = 5;
+pub const UC_DATATYPE_STRING: UCDataType = 6;
+pub const UC_DATATYPE_HEXBINARY: UCDataType = 7;
+pub const UC_DATATYPE_COMPLEX: UCDataType = 8;
+pub const UC_DATATYPE_INVALID: UCDataType = 255;
+pub type UCDataType = ::core::ffi::c_uint;
+pub const UC_ERROR_OK: UCErrors = 0;
+pub const UC_ERROR_ERROR: UCErrors = -1;
+pub const UC_ERROR_OTHER: UCErrors = -2097153;
+pub const UC_ERROR_SYSTEM: UCErrors = -2097154;
+pub const UC_ERROR_ALLOC: UCErrors = -2097155;
+pub const UC_ERROR_OPCODE: UCErrors = -2097156;
+pub const UC_ERROR_INVALID_PARAM: UCErrors = -2097157;
+pub const UC_ERROR_INVALID_TYPE: UCErrors = -2097158;
+pub const UC_ERROR_UNSUPPORTED: UCErrors = -2097159;
+pub const UC_ERROR_NON_LEAF_NODE: UCErrors = -2097160;
+pub const UC_ERROR_KEY_NOT_FOUND: UCErrors = -2097161;
+pub const UC_ERROR_MODIFY: UCErrors = -2097162;
+pub const UC_ERROR_STRING_TOO_LONG: UCErrors = -2097163;
+pub const UC_ERROR_ROOT_KEYS_DIFFER: UCErrors = -2097164;
+pub const UC_ERROR_INVALID_LOCATION: UCErrors = -2097165;
+pub const UC_ERROR_BAD_COMMENT: UCErrors = -2097166;
+pub const UC_ERROR_READ_ACCESS: UCErrors = -2097167;
+pub const UC_ERROR_WRITE_ACCESS: UCErrors = -2097168;
+pub const UC_ERROR_CREATE_ACCESS: UCErrors = -2097169;
+pub const UC_ERROR_FILE_SYS_NAME: UCErrors = -2097170;
+pub const UC_ERROR_FILE_SYS_INIT: UCErrors = -2097171;
+pub const UC_ERROR_FILE_SYS_MOUNT: UCErrors = -2097172;
+pub const UC_ERROR_FILE_OPEN: UCErrors = -2097173;
+pub const UC_ERROR_FILE_STAT: UCErrors = -2097174;
+pub const UC_ERROR_FILE_READ: UCErrors = -2097175;
+pub const UC_ERROR_FILE_WRITE: UCErrors = -2097176;
+pub const UC_ERROR_FILE_TOO_BIG: UCErrors = -2097177;
+pub const UC_ERROR_FILE_REMOVE: UCErrors = -2097178;
+pub const UC_ERROR_FILE_RENAME: UCErrors = -2097179;
+pub const UC_ERROR_FILE_CLOSE: UCErrors = -2097180;
+pub const UC_ERROR_FILE_SEEK: UCErrors = -2097181;
+pub const UC_ERROR_FILE_CONFIRM: UCErrors = -2097182;
+pub const UC_ERROR_FILE_BACKUP: UCErrors = -2097183;
+pub const UC_ERROR_MALFORMED_XML: UCErrors = -2097184;
+pub const UC_ERROR_VERSION: UCErrors = -2097185;
+pub const UC_ERROR_NO_IPC_BUFFERS: UCErrors = -2097186;
+pub const UC_ERROR_FILE_LOCK_NEEDED: UCErrors = -2097188;
+pub const UC_ERROR_SYS_PROT: UCErrors = -2097192;
+pub type UCErrors = ::core::ffi::c_int;
+pub const UC_FILE_SYS_INVALID: UCFileSys = 0;
+pub const UC_FILE_SYS_SYS: UCFileSys = 1;
+pub const UC_FILE_SYS_SLC: UCFileSys = 2;
+pub const UC_FILE_SYS_RAM: UCFileSys = 3;
+pub type UCFileSys = ::core::ffi::c_uint;
 #[repr(C, packed)]
 #[derive(Debug, Copy, Clone)]
 pub struct UCSysConfig {
     pub name: [::core::ffi::c_char; 64usize],
     pub access: u32,
-    pub dataType: UCDataType::Type,
+    pub dataType: UCDataType,
     pub error: UCError,
     pub dataSize: u32,
     pub data: *mut ::core::ffi::c_void,
 }
+impl Default for UCSysConfig {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 pub type UCAsyncCallbackFn = ::core::option::Option<
     unsafe extern "C" fn(
         result: UCError,
-        command: UCCommand::Type,
+        command: UCCommand,
         count: u32,
         settings: *mut UCSysConfig,
         context: *mut ::core::ffi::c_void,
@@ -16599,11 +17623,20 @@ pub type UCAsyncCallbackFn = ::core::option::Option<
 pub struct UCAsyncParams {
     pub callback: UCAsyncCallbackFn,
     pub context: *mut ::core::ffi::c_void,
-    pub command: UCCommand::Type,
+    pub command: UCCommand,
     pub unk0x0C: u32,
     pub count: u32,
     pub settings: *mut UCSysConfig,
     pub vecs: *mut IOSVec,
+}
+impl Default for UCAsyncParams {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 extern "C" {
     pub fn UCOpen() -> UCHandle;
@@ -16699,35 +17732,36 @@ extern "C" {
 extern "C" {
     pub fn OSIsMainCore() -> BOOL;
 }
-pub mod SmdLockType {
-    pub type Type = ::core::ffi::c_uint;
-    pub const SMD_LOCK_TYPE_MUTEX: Type = 0;
-    pub const SMD_LOCK_TYPE_DISABLE_INTERRUPTS: Type = 1;
-    pub const SMD_LOCK_TYPE_NONE: Type = 2;
-}
-pub mod SmdPpcState {
-    pub type Type = ::core::ffi::c_uint;
-    pub const SMD_PPC_STATE_INVALID: Type = 0;
-    pub const SMD_PPC_STATE_INITIALIZED: Type = 1;
-    pub const SMD_PPC_STATE_CLOSED: Type = 2;
-    pub const SMD_PPC_STATE_OPENED: Type = 3;
-}
-pub mod SmdInterfaceState {
-    pub type Type = ::core::ffi::c_uint;
-    pub const SMD_INTERFACE_STATE_OPENED: Type = 8738;
-    pub const SMD_INTERFACE_STATE_CLOSED: Type = 13107;
-}
-pub mod SmdElementType {
-    pub type Type = ::core::ffi::c_uint;
-    pub const SMD_ELEMENT_TYPE_MESSAGE: Type = 0;
-    pub const SMD_ELEMENT_TYPE_VECTOR_SPEC: Type = 1;
-    pub const SMD_ELEMENT_TYPE_VECTOR: Type = 2;
-}
+pub const SMD_LOCK_TYPE_MUTEX: SmdLockType = 0;
+pub const SMD_LOCK_TYPE_DISABLE_INTERRUPTS: SmdLockType = 1;
+pub const SMD_LOCK_TYPE_NONE: SmdLockType = 2;
+pub type SmdLockType = ::core::ffi::c_uint;
+pub const SMD_PPC_STATE_INVALID: SmdPpcState = 0;
+pub const SMD_PPC_STATE_INITIALIZED: SmdPpcState = 1;
+pub const SMD_PPC_STATE_CLOSED: SmdPpcState = 2;
+pub const SMD_PPC_STATE_OPENED: SmdPpcState = 3;
+pub type SmdPpcState = ::core::ffi::c_uint;
+pub const SMD_INTERFACE_STATE_OPENED: SmdInterfaceState = 8738;
+pub const SMD_INTERFACE_STATE_CLOSED: SmdInterfaceState = 13107;
+pub type SmdInterfaceState = ::core::ffi::c_uint;
+pub const SMD_ELEMENT_TYPE_MESSAGE: SmdElementType = 0;
+pub const SMD_ELEMENT_TYPE_VECTOR_SPEC: SmdElementType = 1;
+pub const SMD_ELEMENT_TYPE_VECTOR: SmdElementType = 2;
+pub type SmdElementType = ::core::ffi::c_uint;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct SmdVectorSpec {
     pub ptr: *mut ::core::ffi::c_void,
     pub size: u32,
+}
+impl Default for SmdVectorSpec {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -16736,10 +17770,19 @@ pub struct SmdVector {
     pub count: i32,
     pub vecs: [SmdVectorSpec; 4usize],
 }
+impl Default for SmdVector {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct SmdElement {
-    pub type_: SmdElementType::Type,
+    pub type_: SmdElementType,
     pub size: u32,
     pub __bindgen_anon_1: SmdElement__bindgen_ty_1,
 }
@@ -16750,10 +17793,28 @@ pub union SmdElement__bindgen_ty_1 {
     pub spec: SmdVector,
     pub vectorPaddr: u32,
 }
+impl Default for SmdElement__bindgen_ty_1 {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
+impl Default for SmdElement {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct SmdReceiveData {
-    pub type_: SmdElementType::Type,
+    pub type_: SmdElementType,
     pub size: u32,
     pub __bindgen_anon_1: SmdReceiveData__bindgen_ty_1,
 }
@@ -16764,10 +17825,28 @@ pub union SmdReceiveData__bindgen_ty_1 {
     pub spec: SmdVector,
     pub vector: *mut SmdVector,
 }
+impl Default for SmdReceiveData__bindgen_ty_1 {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
+impl Default for SmdReceiveData {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct SmdInterface {
-    pub state: SmdInterfaceState::Type,
+    pub state: SmdInterfaceState,
     pub __unk114: [::core::ffi::c_char; 124usize],
     pub elementCount: u32,
     pub __unk115: [::core::ffi::c_char; 124usize],
@@ -16777,6 +17856,15 @@ pub struct SmdInterface {
     pub __unk117: [::core::ffi::c_char; 124usize],
     pub bufPaddr: u32,
     pub __unk118: [::core::ffi::c_char; 124usize],
+}
+impl Default for SmdInterface {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -16789,6 +17877,15 @@ pub struct SmdCtrlTable {
     pub ppcInterface: SmdInterface,
     pub __unk121: [::core::ffi::c_char; 64usize],
 }
+impl Default for SmdCtrlTable {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct SmdPpcCtrlTableVectors {
@@ -16799,18 +17896,36 @@ pub struct SmdPpcCtrlTableVectors {
     pub readBuf: *mut SmdElement,
     pub readBufSize: u32,
 }
+impl Default for SmdPpcCtrlTableVectors {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct SmdPpc {
     pub self_: *mut SmdPpc,
     pub ctrlTable: *mut SmdCtrlTable,
-    pub lockType: SmdLockType::Type,
+    pub lockType: SmdLockType,
     pub mutex: OSMutex,
     pub messageCount: u32,
     pub writeBuf: *mut SmdElement,
     pub readBuf: *mut SmdElement,
-    pub state: SmdPpcState::Type,
+    pub state: SmdPpcState,
     pub __unk122: [::core::ffi::c_char; 56usize],
+}
+impl Default for SmdPpc {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -16819,7 +17934,7 @@ pub struct SmdSimpleBufPool {
     pub mutex: OSMutex,
     pub poolData: *mut ::core::ffi::c_void,
     pub poolDataSize: u32,
-    pub lockType: SmdLockType::Type,
+    pub lockType: SmdLockType,
     pub allocSize: u32,
     pub realAllocSize: u32,
     pub maxAllocCount: u32,
@@ -16829,13 +17944,22 @@ pub struct SmdSimpleBufPool {
     pub freeErrorCount: u32,
     pub __unk123: [::core::ffi::c_char; 40usize],
 }
+impl Default for SmdSimpleBufPool {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 extern "C" {
     pub fn smdPpcInit(
         buf: *mut ::core::ffi::c_void,
         bufSize: u32,
         messageCount: u32,
         name: *const ::core::ffi::c_char,
-        lockType: SmdLockType::Type,
+        lockType: SmdLockType,
     ) -> *mut SmdPpc;
 }
 extern "C" {
@@ -16853,8 +17977,8 @@ extern "C" {
 extern "C" {
     pub fn smdPpcGetInterfaceState(
         smd: *mut SmdPpc,
-        outPpcState: *mut SmdInterfaceState::Type,
-        outIopState: *mut SmdInterfaceState::Type,
+        outPpcState: *mut SmdInterfaceState,
+        outIopState: *mut SmdInterfaceState,
     ) -> i32;
 }
 extern "C" {
@@ -16884,7 +18008,7 @@ extern "C" {
         poolDataSize: u32,
         allocSize: u32,
         allocCount: u32,
-        lockType: SmdLockType::Type,
+        lockType: SmdLockType,
     ) -> *mut SmdSimpleBufPool;
 }
 extern "C" {
@@ -16924,10 +18048,8 @@ pub type DisassemblyFindSymbolFn = ::core::option::Option<
         symbolNameBufSize: u32,
     ) -> u32,
 >;
-pub mod DisassemblePPCFlags {
-    pub type Type = ::core::ffi::c_uint;
-    pub const DISASSEMBLE_PPC_FLAGS_NONE: Type = 0;
-}
+pub const DISASSEMBLE_PPC_FLAGS_NONE: DisassemblePPCFlags = 0;
+pub type DisassemblePPCFlags = ::core::ffi::c_uint;
 extern "C" {
     pub fn OSConsoleWrite(msg: *const ::core::ffi::c_char, size: u32);
 }
@@ -16991,7 +18113,7 @@ extern "C" {
         buffer: *mut ::core::ffi::c_char,
         bufferSize: u32,
         findSymbolFn: DisassemblyFindSymbolFn,
-        flags: DisassemblePPCFlags::Type,
+        flags: DisassemblePPCFlags,
     ) -> BOOL;
 }
 extern "C" {
@@ -17000,49 +18122,45 @@ extern "C" {
         end: *mut ::core::ffi::c_void,
         printFn: DisassemblyPrintFn,
         findSymbolFn: DisassemblyFindSymbolFn,
-        flags: DisassemblePPCFlags::Type,
+        flags: DisassemblePPCFlags,
     );
 }
 pub type BSPError = i32;
 pub type BSPHardwareVersion = u32;
 pub type BSPConsoleTypeRaw = u32;
-pub mod BSPErrors {
-    pub type Type = ::core::ffi::c_uint;
-    pub const BSP_ERROR_OK: Type = 0;
-    pub const BSP_ERROR_IOS_ERROR: Type = 64;
-    pub const BSP_ERROR_RESPONSE_TOO_LARGE: Type = 128;
-}
-pub mod BSPHardwareVersions {
-    pub type Type = ::core::ffi::c_uint;
-    pub const BSP_HARDWARE_VERSION_UNKNOWN: Type = 0;
-    pub const BSP_HARDWARE_VERSION_HOLLYWOOD_ENG_SAMPLE_1: Type = 1;
-    pub const BSP_HARDWARE_VERSION_HOLLYWOOD_ENG_SAMPLE_2: Type = 268435457;
-    pub const BSP_HARDWARE_VERSION_HOLLYWOOD_PROD_FOR_WII: Type = 269484033;
-    pub const BSP_HARDWARE_VERSION_HOLLYWOOD_CORTADO: Type = 269484040;
-    pub const BSP_HARDWARE_VERSION_HOLLYWOOD_CORTADO_ESPRESSO: Type = 269484044;
-    pub const BSP_HARDWARE_VERSION_BOLLYWOOD: Type = 536870913;
-    pub const BSP_HARDWARE_VERSION_BOLLYWOOD_PROD_FOR_WII: Type = 537919489;
-    pub const BSP_HARDWARE_VERSION_LATTE_A11_EV: Type = 554696720;
-    pub const BSP_HARDWARE_VERSION_LATTE_A11_CAT: Type = 554696736;
-    pub const BSP_HARDWARE_VERSION_LATTE_A12_EV: Type = 555745296;
-    pub const BSP_HARDWARE_VERSION_LATTE_A12_CAT: Type = 555745312;
-    pub const BSP_HARDWARE_VERSION_LATTE_A2X_EV: Type = 571473936;
-    pub const BSP_HARDWARE_VERSION_LATTE_A2X_CAT: Type = 571473952;
-    pub const BSP_HARDWARE_VERSION_LATTE_A3X_EV: Type = 588251152;
-    pub const BSP_HARDWARE_VERSION_LATTE_A3X_CAT: Type = 588251168;
-    pub const BSP_HARDWARE_VERSION_LATTE_A3X_CAFE: Type = 588251176;
-    pub const BSP_HARDWARE_VERSION_LATTE_A4X_EV: Type = 605028368;
-    pub const BSP_HARDWARE_VERSION_LATTE_A4X_CAT: Type = 605028384;
-    pub const BSP_HARDWARE_VERSION_LATTE_A4X_CAFE: Type = 605028392;
-    pub const BSP_HARDWARE_VERSION_LATTE_A5X_EV: Type = 621805584;
-    pub const BSP_HARDWARE_VERSION_LATTE_A5X_EV_Y: Type = 621805585;
-    pub const BSP_HARDWARE_VERSION_LATTE_A5X_CAT: Type = 621805600;
-    pub const BSP_HARDWARE_VERSION_LATTE_A5X_CAFE: Type = 621805608;
-    pub const BSP_HARDWARE_VERSION_LATTE_B1X_EV: Type = 638582800;
-    pub const BSP_HARDWARE_VERSION_LATTE_B1X_EV_Y: Type = 638582801;
-    pub const BSP_HARDWARE_VERSION_LATTE_B1X_CAT: Type = 638582816;
-    pub const BSP_HARDWARE_VERSION_LATTE_B1X_CAFE: Type = 638582824;
-}
+pub const BSP_ERROR_OK: BSPErrors = 0;
+pub const BSP_ERROR_IOS_ERROR: BSPErrors = 64;
+pub const BSP_ERROR_RESPONSE_TOO_LARGE: BSPErrors = 128;
+pub type BSPErrors = ::core::ffi::c_uint;
+pub const BSP_HARDWARE_VERSION_UNKNOWN: BSPHardwareVersions = 0;
+pub const BSP_HARDWARE_VERSION_HOLLYWOOD_ENG_SAMPLE_1: BSPHardwareVersions = 1;
+pub const BSP_HARDWARE_VERSION_HOLLYWOOD_ENG_SAMPLE_2: BSPHardwareVersions = 268435457;
+pub const BSP_HARDWARE_VERSION_HOLLYWOOD_PROD_FOR_WII: BSPHardwareVersions = 269484033;
+pub const BSP_HARDWARE_VERSION_HOLLYWOOD_CORTADO: BSPHardwareVersions = 269484040;
+pub const BSP_HARDWARE_VERSION_HOLLYWOOD_CORTADO_ESPRESSO: BSPHardwareVersions = 269484044;
+pub const BSP_HARDWARE_VERSION_BOLLYWOOD: BSPHardwareVersions = 536870913;
+pub const BSP_HARDWARE_VERSION_BOLLYWOOD_PROD_FOR_WII: BSPHardwareVersions = 537919489;
+pub const BSP_HARDWARE_VERSION_LATTE_A11_EV: BSPHardwareVersions = 554696720;
+pub const BSP_HARDWARE_VERSION_LATTE_A11_CAT: BSPHardwareVersions = 554696736;
+pub const BSP_HARDWARE_VERSION_LATTE_A12_EV: BSPHardwareVersions = 555745296;
+pub const BSP_HARDWARE_VERSION_LATTE_A12_CAT: BSPHardwareVersions = 555745312;
+pub const BSP_HARDWARE_VERSION_LATTE_A2X_EV: BSPHardwareVersions = 571473936;
+pub const BSP_HARDWARE_VERSION_LATTE_A2X_CAT: BSPHardwareVersions = 571473952;
+pub const BSP_HARDWARE_VERSION_LATTE_A3X_EV: BSPHardwareVersions = 588251152;
+pub const BSP_HARDWARE_VERSION_LATTE_A3X_CAT: BSPHardwareVersions = 588251168;
+pub const BSP_HARDWARE_VERSION_LATTE_A3X_CAFE: BSPHardwareVersions = 588251176;
+pub const BSP_HARDWARE_VERSION_LATTE_A4X_EV: BSPHardwareVersions = 605028368;
+pub const BSP_HARDWARE_VERSION_LATTE_A4X_CAT: BSPHardwareVersions = 605028384;
+pub const BSP_HARDWARE_VERSION_LATTE_A4X_CAFE: BSPHardwareVersions = 605028392;
+pub const BSP_HARDWARE_VERSION_LATTE_A5X_EV: BSPHardwareVersions = 621805584;
+pub const BSP_HARDWARE_VERSION_LATTE_A5X_EV_Y: BSPHardwareVersions = 621805585;
+pub const BSP_HARDWARE_VERSION_LATTE_A5X_CAT: BSPHardwareVersions = 621805600;
+pub const BSP_HARDWARE_VERSION_LATTE_A5X_CAFE: BSPHardwareVersions = 621805608;
+pub const BSP_HARDWARE_VERSION_LATTE_B1X_EV: BSPHardwareVersions = 638582800;
+pub const BSP_HARDWARE_VERSION_LATTE_B1X_EV_Y: BSPHardwareVersions = 638582801;
+pub const BSP_HARDWARE_VERSION_LATTE_B1X_CAT: BSPHardwareVersions = 638582816;
+pub const BSP_HARDWARE_VERSION_LATTE_B1X_CAFE: BSPHardwareVersions = 638582824;
+pub type BSPHardwareVersions = ::core::ffi::c_uint;
 extern "C" {
     pub fn bspInitializeShimInterface() -> BSPError;
 }
@@ -17160,35 +18278,40 @@ extern "C" {
     ) -> ::core::ffi::c_int;
 }
 pub type MPTaskFunc = ::core::option::Option<unsafe extern "C" fn(arg1: u32, arg2: u32) -> u32>;
-pub mod MPTaskState {
-    pub type Type = ::core::ffi::c_uint;
-    pub const MP_TASK_STATE_INITIALISED: Type = 1;
-    pub const MP_TASK_STATE_READY: Type = 2;
-    pub const MP_TASK_STATE_RUNNING: Type = 4;
-    pub const MP_TASK_STATE_FINISHED: Type = 8;
-}
-pub mod MPTaskQueueState {
-    pub type Type = ::core::ffi::c_uint;
-    pub const MP_TASK_QUEUE_STATE_INITIALISED: Type = 1;
-    pub const MP_TASK_QUEUE_STATE_READY: Type = 2;
-    pub const MP_TASK_QUEUE_STATE_STOPPING: Type = 4;
-    pub const MP_TASK_QUEUE_STATE_STOPPED: Type = 8;
-    pub const MP_TASK_QUEUE_STATE_FINISHED: Type = 16;
-}
+pub const MP_TASK_STATE_INITIALISED: MPTaskState = 1;
+pub const MP_TASK_STATE_READY: MPTaskState = 2;
+pub const MP_TASK_STATE_RUNNING: MPTaskState = 4;
+pub const MP_TASK_STATE_FINISHED: MPTaskState = 8;
+pub type MPTaskState = ::core::ffi::c_uint;
+pub const MP_TASK_QUEUE_STATE_INITIALISED: MPTaskQueueState = 1;
+pub const MP_TASK_QUEUE_STATE_READY: MPTaskQueueState = 2;
+pub const MP_TASK_QUEUE_STATE_STOPPING: MPTaskQueueState = 4;
+pub const MP_TASK_QUEUE_STATE_STOPPED: MPTaskQueueState = 8;
+pub const MP_TASK_QUEUE_STATE_FINISHED: MPTaskQueueState = 16;
+pub type MPTaskQueueState = ::core::ffi::c_uint;
 #[repr(C, packed)]
 #[derive(Debug, Copy, Clone)]
 pub struct MPTaskInfo {
-    pub state: MPTaskState::Type,
+    pub state: MPTaskState,
     pub result: u32,
     pub coreID: u32,
     pub duration: OSTime,
+}
+impl Default for MPTaskInfo {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C, packed)]
 #[derive(Debug, Copy, Clone)]
 pub struct MPTask {
     pub self_: *mut MPTask,
     pub queue: *mut MPTaskQueue,
-    pub state: MPTaskState::Type,
+    pub state: MPTaskState,
     pub func: MPTaskFunc,
     pub userArg1: u32,
     pub userArg2: u32,
@@ -17197,21 +18320,39 @@ pub struct MPTask {
     pub duration: OSTime,
     pub userData: *mut ::core::ffi::c_void,
 }
+impl Default for MPTask {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct MPTaskQueueInfo {
-    pub state: MPTaskQueueState::Type,
+    pub state: MPTaskQueueState,
     pub tasks: u32,
     pub tasksReady: u32,
     pub tasksRunning: u32,
     pub tasksFinished: u32,
+}
+impl Default for MPTaskQueueInfo {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C)]
 #[repr(align(16))]
 #[derive(Debug, Copy, Clone)]
 pub struct MPTaskQueue {
     pub self_: *mut MPTaskQueue,
-    pub state: MPTaskQueueState::Type,
+    pub state: MPTaskQueueState,
     pub tasks: u32,
     pub tasksReady: u32,
     pub tasksRunning: u32,
@@ -17225,6 +18366,15 @@ pub struct MPTaskQueue {
     pub queue: *mut *mut MPTask,
     pub queueMaxSize: u32,
     pub lock: OSSpinLock,
+}
+impl Default for MPTaskQueue {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 extern "C" {
     pub fn MPInitTaskQ(queue: *mut MPTaskQueue, queueBuffer: *mut *mut MPTask, queueBufferLen: u32);
@@ -17258,12 +18408,12 @@ extern "C" {
     ) -> u32;
 }
 extern "C" {
-    pub fn MPWaitTaskQ(queue: *mut MPTaskQueue, mask: MPTaskQueueState::Type) -> BOOL;
+    pub fn MPWaitTaskQ(queue: *mut MPTaskQueue, mask: MPTaskQueueState) -> BOOL;
 }
 extern "C" {
     pub fn MPWaitTaskQWithTimeout(
         queue: *mut MPTaskQueue,
-        wmask: MPTaskQueueState::Type,
+        wmask: MPTaskQueueState,
         timeout: OSTime,
     ) -> BOOL;
 }
@@ -17326,14 +18476,12 @@ extern "C" {
         argv: *mut *mut ::core::ffi::c_char,
     );
 }
-pub mod OSMemoryMapMode {
-    pub type Type = ::core::ffi::c_uint;
-    pub const OS_MAP_MEMORY_INVALID: Type = 0;
-    pub const OS_MAP_MEMORY_READ_ONLY: Type = 1;
-    pub const OS_MAP_MEMORY_READ_WRITE: Type = 2;
-    pub const OS_MAP_MEMORY_FREE: Type = 3;
-    pub const OS_MAP_MEMORY_ALLOCATED: Type = 4;
-}
+pub const OS_MAP_MEMORY_INVALID: OSMemoryMapMode = 0;
+pub const OS_MAP_MEMORY_READ_ONLY: OSMemoryMapMode = 1;
+pub const OS_MAP_MEMORY_READ_WRITE: OSMemoryMapMode = 2;
+pub const OS_MAP_MEMORY_FREE: OSMemoryMapMode = 3;
+pub const OS_MAP_MEMORY_ALLOCATED: OSMemoryMapMode = 4;
+pub type OSMemoryMapMode = ::core::ffi::c_uint;
 extern "C" {
     pub fn OSEffectiveToPhysical(virtualAddress: u32) -> u32;
 }
@@ -17360,14 +18508,14 @@ extern "C" {
     pub fn OSFreeVirtAddr(virtualAddress: u32, size: u32) -> BOOL;
 }
 extern "C" {
-    pub fn OSQueryVirtAddr(virtualAddress: u32) -> OSMemoryMapMode::Type;
+    pub fn OSQueryVirtAddr(virtualAddress: u32) -> OSMemoryMapMode;
 }
 extern "C" {
     pub fn OSMapMemory(
         virtualAddress: u32,
         physicalAddress: u32,
         size: u32,
-        mode: OSMemoryMapMode::Type,
+        mode: OSMemoryMapMode,
     ) -> BOOL;
 }
 extern "C" {
@@ -17394,7 +18542,7 @@ pub type FSAFilePosition = u32;
 pub type FSAVolumeInfo = FSVolumeInfo;
 pub type FSAAsyncCallbackFn = ::core::option::Option<
     unsafe extern "C" fn(
-        result: FSError::Type,
+        result: FSError,
         command: FSACommand,
         request: *mut FSARequest,
         response: *mut FSAResponse,
@@ -17402,12 +18550,12 @@ pub type FSAAsyncCallbackFn = ::core::option::Option<
     ),
 >;
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct FSABlockInfo {
     pub __unk128: [::core::ffi::c_char; 20usize],
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct FSADeviceInfo {
     pub __unk129: [::core::ffi::c_char; 8usize],
     pub deviceSizeInSectors: u64,
@@ -17415,41 +18563,33 @@ pub struct FSADeviceInfo {
     pub __unk130: [::core::ffi::c_char; 20usize],
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct FSAFileSystemInfo {
     pub __unk131: [::core::ffi::c_char; 30usize],
 }
-pub mod FSAMountPriority {
-    pub type Type = ::core::ffi::c_uint;
-    pub const FSA_MOUNT_PRIORITY_BASE: Type = 1;
-    pub const FSA_MOUNT_PRIORITY_RAM_DISK_CACHE: Type = 4;
-    pub const FSA_MOUNT_PRIORITY_TITLE_UPDATE: Type = 9;
-    pub const FSA_MOUNT_PRIORITY_UNMOUNT_ALL: Type = 2147483648;
-}
-pub mod FSAQueryInfoType {
-    pub type Type = ::core::ffi::c_uint;
-    pub const FSA_QUERY_INFO_FREE_SPACE_SIZE: Type = 0;
-    pub const FSA_QUERY_INFO_DIR_SIZE: Type = 1;
-    pub const FSA_QUERY_INFO_ENTRY_NUM: Type = 2;
-    pub const FSA_QUERY_INFO_FILE_SYSTEM_INFO: Type = 3;
-    pub const FSA_QUERY_INFO_DEVICE_INFO: Type = 4;
-    pub const FSA_QUERY_INFO_STAT: Type = 5;
-    pub const FSA_QUERY_INFO_BAD_BLOCK_INFO: Type = 6;
-    pub const FSA_QUERY_INFO_JOURNAL_FREE_SPACE_SIZE: Type = 7;
-    pub const FSA_QUERY_INFO_FRAGMENT_BLOCK_INFO: Type = 8;
-}
-pub mod FSAReadFlag {
-    pub type Type = ::core::ffi::c_uint;
-    pub const FSA_READ_FLAG_NONE: Type = 0;
-    pub const FSA_READ_FLAG_READ_WITH_POS: Type = 1;
-}
-pub mod FSAWriteFlag {
-    pub type Type = ::core::ffi::c_uint;
-    pub const FSA_WRITE_FLAG_NONE: Type = 0;
-    pub const FSA_WRITE_FLAG_READ_WITH_POS: Type = 1;
-}
+pub const FSA_MOUNT_PRIORITY_BASE: FSAMountPriority = 1;
+pub const FSA_MOUNT_PRIORITY_RAM_DISK_CACHE: FSAMountPriority = 4;
+pub const FSA_MOUNT_PRIORITY_TITLE_UPDATE: FSAMountPriority = 9;
+pub const FSA_MOUNT_PRIORITY_UNMOUNT_ALL: FSAMountPriority = 2147483648;
+pub type FSAMountPriority = ::core::ffi::c_uint;
+pub const FSA_QUERY_INFO_FREE_SPACE_SIZE: FSAQueryInfoType = 0;
+pub const FSA_QUERY_INFO_DIR_SIZE: FSAQueryInfoType = 1;
+pub const FSA_QUERY_INFO_ENTRY_NUM: FSAQueryInfoType = 2;
+pub const FSA_QUERY_INFO_FILE_SYSTEM_INFO: FSAQueryInfoType = 3;
+pub const FSA_QUERY_INFO_DEVICE_INFO: FSAQueryInfoType = 4;
+pub const FSA_QUERY_INFO_STAT: FSAQueryInfoType = 5;
+pub const FSA_QUERY_INFO_BAD_BLOCK_INFO: FSAQueryInfoType = 6;
+pub const FSA_QUERY_INFO_JOURNAL_FREE_SPACE_SIZE: FSAQueryInfoType = 7;
+pub const FSA_QUERY_INFO_FRAGMENT_BLOCK_INFO: FSAQueryInfoType = 8;
+pub type FSAQueryInfoType = ::core::ffi::c_uint;
+pub const FSA_READ_FLAG_NONE: FSAReadFlag = 0;
+pub const FSA_READ_FLAG_READ_WITH_POS: FSAReadFlag = 1;
+pub type FSAReadFlag = ::core::ffi::c_uint;
+pub const FSA_WRITE_FLAG_NONE: FSAWriteFlag = 0;
+pub const FSA_WRITE_FLAG_READ_WITH_POS: FSAWriteFlag = 1;
+pub type FSAWriteFlag = ::core::ffi::c_uint;
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct FSAProcessInfo {
     pub titleId: u64,
     pub processId: u32,
@@ -17460,13 +18600,22 @@ pub struct FSAProcessInfo {
 pub struct FSARequestRawOpen {
     pub path: [::core::ffi::c_char; 640usize],
 }
+impl Default for FSARequestRawOpen {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct FSARequestRawClose {
     pub handle: i32,
 }
 #[repr(C, packed)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct FSARequestRawRead {
     pub __unk132: [::core::ffi::c_char; 4usize],
     pub blocks_offset: u64,
@@ -17475,7 +18624,7 @@ pub struct FSARequestRawRead {
     pub device_handle: u32,
 }
 #[repr(C, packed)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct FSARequestRawWrite {
     pub __unk133: [::core::ffi::c_char; 4usize],
     pub blocks_offset: u64,
@@ -17484,7 +18633,7 @@ pub struct FSARequestRawWrite {
     pub device_handle: u32,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct FSARequestAppendFile {
     pub size: u32,
     pub count: u32,
@@ -17496,6 +18645,15 @@ pub struct FSARequestAppendFile {
 pub struct FSARequestChangeDir {
     pub path: [::core::ffi::c_char; 640usize],
 }
+impl Default for FSARequestChangeDir {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct FSARequestChangeMode {
@@ -17503,18 +18661,27 @@ pub struct FSARequestChangeMode {
     pub mode1: u32,
     pub mode2: u32,
 }
+impl Default for FSARequestChangeMode {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct FSARequestCloseDir {
     pub handle: FSADirectoryHandle,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct FSARequestCloseFile {
     pub handle: FSAFileHandle,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct FSARequestFlushFile {
     pub handle: FSAFileHandle,
 }
@@ -17523,19 +18690,37 @@ pub struct FSARequestFlushFile {
 pub struct FSARequestFlushQuota {
     pub path: [::core::ffi::c_char; 640usize],
 }
+impl Default for FSARequestFlushQuota {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct FSARequestGetInfoByQuery {
     pub path: [::core::ffi::c_char; 640usize],
-    pub type_: FSAQueryInfoType::Type,
+    pub type_: FSAQueryInfoType,
+}
+impl Default for FSARequestGetInfoByQuery {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct FSARequestGetPosFile {
     pub handle: FSAFileHandle,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct FSARequestIsEof {
     pub handle: FSAFileHandle,
 }
@@ -17545,12 +18730,30 @@ pub struct FSARequestMakeDir {
     pub path: [::core::ffi::c_char; 640usize],
     pub permission: u32,
 }
+impl Default for FSARequestMakeDir {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C, packed)]
 #[derive(Debug, Copy, Clone)]
 pub struct FSARequestMakeQuota {
     pub path: [::core::ffi::c_char; 640usize],
     pub mode: u32,
     pub size: u64,
+}
+impl Default for FSARequestMakeQuota {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -17561,20 +18764,47 @@ pub struct FSARequestMount {
     pub unkBuf: *mut ::core::ffi::c_void,
     pub unkBufLen: u32,
 }
+impl Default for FSARequestMount {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C, packed)]
 #[derive(Debug, Copy, Clone)]
 pub struct FSARequestMountWithProcess {
     pub path: [::core::ffi::c_char; 640usize],
     pub target: [::core::ffi::c_char; 640usize],
-    pub priority: FSAMountPriority::Type,
+    pub priority: FSAMountPriority,
     pub process: FSAProcessInfo,
     pub unkBuf: *mut ::core::ffi::c_void,
     pub unkBufLen: u32,
+}
+impl Default for FSARequestMountWithProcess {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct FSARequestOpenDir {
     pub path: [::core::ffi::c_char; 640usize],
+}
+impl Default for FSARequestOpenDir {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -17585,8 +18815,17 @@ pub struct FSARequestOpenFile {
     pub unk0x294: u32,
     pub unk0x298: u32,
 }
+impl Default for FSARequestOpenFile {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct FSARequestReadDir {
     pub handle: FSADirectoryHandle,
 }
@@ -17598,12 +18837,30 @@ pub struct FSARequestReadFile {
     pub count: u32,
     pub pos: FSAFilePosition,
     pub handle: FSAFileHandle,
-    pub readFlags: FSAReadFlag::Type,
+    pub readFlags: FSAReadFlag,
+}
+impl Default for FSARequestReadFile {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct FSARequestRemove {
     pub path: [::core::ffi::c_char; 640usize],
+}
+impl Default for FSARequestRemove {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -17611,24 +18868,33 @@ pub struct FSARequestRename {
     pub oldPath: [::core::ffi::c_char; 640usize],
     pub newPath: [::core::ffi::c_char; 640usize],
 }
+impl Default for FSARequestRename {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct FSARequestRewindDir {
     pub handle: FSADirectoryHandle,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct FSARequestSetPosFile {
     pub handle: FSAFileHandle,
     pub pos: FSAFilePosition,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct FSARequestStatFile {
     pub handle: FSAFileHandle,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct FSARequestTruncateFile {
     pub handle: FSAFileHandle,
 }
@@ -17638,12 +18904,30 @@ pub struct FSARequestUnmount {
     pub path: [::core::ffi::c_char; 640usize],
     pub unk0x280: u32,
 }
+impl Default for FSARequestUnmount {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C, packed)]
 #[derive(Debug, Copy, Clone)]
 pub struct FSARequestUnmountWithProcess {
     pub path: [::core::ffi::c_char; 640usize],
-    pub priority: FSAMountPriority::Type,
+    pub priority: FSAMountPriority,
     pub process: FSAProcessInfo,
+}
+impl Default for FSARequestUnmountWithProcess {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -17653,7 +18937,16 @@ pub struct FSARequestWriteFile {
     pub count: u32,
     pub pos: FSAFilePosition,
     pub handle: FSAFileHandle,
-    pub writeFlags: FSAWriteFlag::Type,
+    pub writeFlags: FSAWriteFlag,
+}
+impl Default for FSARequestWriteFile {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -17664,10 +18957,19 @@ pub struct FSARequestChangeOwner {
     pub __unk135: [::core::ffi::c_char; 4usize],
     pub group: u32,
 }
+impl Default for FSARequestChangeOwner {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct FSARequest {
-    pub emulatedError: FSError::Type,
+    pub emulatedError: FSError,
     pub __bindgen_anon_1: FSARequest__bindgen_ty_1,
 }
 #[repr(C)]
@@ -17707,8 +19009,26 @@ pub union FSARequest__bindgen_ty_1 {
     pub changeOwner: FSARequestChangeOwner,
     pub __unk136: [::core::ffi::c_char; 1308usize],
 }
+impl Default for FSARequest__bindgen_ty_1 {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
+impl Default for FSARequest {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct FSAResponseRawOpen {
     pub handle: ::core::ffi::c_int,
 }
@@ -17717,13 +19037,22 @@ pub struct FSAResponseRawOpen {
 pub struct FSAResponseGetCwd {
     pub path: [::core::ffi::c_char; 640usize],
 }
+impl Default for FSAResponseGetCwd {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct FSAResponseGetFileBlockAddress {
     pub address: u32,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct FSAResponseGetPosFile {
     pub pos: FSAFilePosition,
 }
@@ -17731,6 +19060,15 @@ pub struct FSAResponseGetPosFile {
 #[derive(Debug, Copy, Clone)]
 pub struct FSAResponseGetVolumeInfo {
     pub volumeInfo: FSAVolumeInfo,
+}
+impl Default for FSAResponseGetVolumeInfo {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C, packed)]
 #[derive(Copy, Clone)]
@@ -17750,13 +19088,31 @@ pub union FSAResponseGetInfoByQuery__bindgen_ty_1 {
     pub journalFreeSpaceSize: u64,
     pub stat: FSAStat,
 }
+impl Default for FSAResponseGetInfoByQuery__bindgen_ty_1 {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
+impl Default for FSAResponseGetInfoByQuery {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct FSAResponseOpenFile {
     pub handle: FSAFileHandle,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct FSAResponseOpenDir {
     pub handle: FSADirectoryHandle,
 }
@@ -17765,10 +19121,28 @@ pub struct FSAResponseOpenDir {
 pub struct FSAResponseReadDir {
     pub entry: FSADirectoryEntry,
 }
+impl Default for FSAResponseReadDir {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct FSAResponseStatFile {
     pub stat: FSAStat,
+}
+impl Default for FSAResponseStatFile {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C, packed)]
 #[derive(Copy, Clone)]
@@ -17791,90 +19165,113 @@ pub union FSAResponse__bindgen_ty_1 {
     pub statFile: FSAResponseStatFile,
     pub __unk137: [::core::ffi::c_char; 655usize],
 }
-pub mod FSACommandEnum {
-    pub type Type = ::core::ffi::c_uint;
-    pub const FSA_COMMAND_INVALID: Type = 0;
-    pub const FSA_COMMAND_MOUNT: Type = 1;
-    pub const FSA_COMMAND_UNMOUNT: Type = 2;
-    pub const FSA_COMMAND_GET_VOLUME_INFO: Type = 3;
-    pub const FSA_COMMAND_GET_ATTACH: Type = 4;
-    pub const FSA_COMMAND_CHANGE_DIR: Type = 5;
-    pub const FSA_COMMAND_GET_CWD: Type = 6;
-    pub const FSA_COMMAND_MAKE_DIR: Type = 7;
-    pub const FSA_COMMAND_REMOVE: Type = 8;
-    pub const FSA_COMMAND_RENAME: Type = 9;
-    pub const FSA_COMMAND_OPEN_DIR: Type = 10;
-    pub const FSA_COMMAND_READ_DIR: Type = 11;
-    pub const FSA_COMMAND_REWIND_DIR: Type = 12;
-    pub const FSA_COMMAND_CLOSE_DIR: Type = 13;
-    pub const FSA_COMMAND_OPEN_FILE: Type = 14;
-    pub const FSA_COMMAND_READ_FILE: Type = 15;
-    pub const FSA_COMMAND_WRITE_FILE: Type = 16;
-    pub const FSA_COMMAND_GET_POS_FILE: Type = 17;
-    pub const FSA_COMMAND_SET_POS_FILE: Type = 18;
-    pub const FSA_COMMAND_IS_EOF: Type = 19;
-    pub const FSA_COMMAND_STAT_FILE: Type = 20;
-    pub const FSA_COMMAND_CLOSE_FILE: Type = 21;
-    pub const FSA_COMMAND_GET_ERROR: Type = 22;
-    pub const FSA_COMMAND_FLUSH_FILE: Type = 23;
-    pub const FSA_COMMAND_GET_INFO_BY_QUERY: Type = 24;
-    pub const FSA_COMMAND_APPEND_FILE: Type = 25;
-    pub const FSA_COMMAND_TRUNCATE_FILE: Type = 26;
-    pub const FSA_COMMAND_FLUSH_VOLUME: Type = 27;
-    pub const FSA_COMMAND_ROLLBACK_VOLUME: Type = 28;
-    pub const FSA_COMMAND_MAKE_QUOTA: Type = 29;
-    pub const FSA_COMMAND_FLUSH_QUOTA: Type = 30;
-    pub const FSA_COMMAND_ROLLBACK_QUOTA: Type = 31;
-    pub const FSA_COMMAND_CHANGE_MODE: Type = 32;
-    pub const FSA_COMMAND_OPEN_FILE_BY_STAT: Type = 33;
-    pub const FSA_COMMAND_REGISTER_FLUSH_QUOTA: Type = 34;
-    pub const FSA_COMMAND_FLUSH_MULTI_QUOTA: Type = 35;
-    pub const FSA_COMMAND_GET_FILE_BLOCK_ADDRESS: Type = 37;
-    pub const FSA_COMMAND_ADD_USER_PROCESS: Type = 101;
-    pub const FSA_COMMAND_DEL_USER_PROCESS: Type = 102;
-    pub const FSA_COMMAND_MOUNT_WITH_PROCESS: Type = 103;
-    pub const FSA_COMMAND_UNMOUNT_WITH_PROCESS: Type = 104;
-    pub const FSA_COMMAND_FORMAT: Type = 105;
-    pub const FSA_COMMAND_RAW_OPEN: Type = 106;
-    pub const FSA_COMMAND_RAW_READ: Type = 107;
-    pub const FSA_COMMAND_RAW_WRITE: Type = 108;
-    pub const FSA_COMMAND_RAW_CLOSE: Type = 109;
-    pub const FSA_COMMAND_GET_LAST_FAILED_VOLUME: Type = 110;
-    pub const FSA_COMMAND_GET_VOLUME_EXISTENCE: Type = 111;
-    pub const FSA_COMMAND_CHANGE_OWNER: Type = 112;
-    pub const FSA_COMMAND_CANCEL_GET_ATTACH: Type = 113;
-    pub const FSA_COMMAND_REMOVE_QUOTA: Type = 114;
-    pub const FSA_COMMAND_SET_CLIENT_PRIORITY: Type = 115;
-    pub const FSA_COMMAND_APPLY_MEMORY_CACHE: Type = 116;
-    pub const FSA_COMMAND_MAKE_LINK: Type = 117;
-    pub const FSA_COMMAND_XFER_PARAMS: Type = 118;
-    pub const FSA_COMMAND_EXEC_DEBUG_PROC: Type = 120;
-    pub const FSA_COMMAND_DEBUG_SET_TITLE_ID: Type = 121;
-    pub const FSA_COMMAND_DEBUG_SET_CAPABILITY: Type = 122;
-    pub const FSA_COMMAND_SET_PROCESS_CONFIG: Type = 130;
-    pub const FSA_COMMAND_CONFIG_SET_MEMORY_CACHE: Type = 131;
-    pub const FSA_COMMAND_CONFIG_UNSET_MEMORY_CACHE: Type = 132;
-    pub const FSA_COMMAND_CONFIG_SET_PRF2_CHAR_CODE: Type = 133;
-    pub const FSA_COMMAND_GET_PROC_RESOURCE_USAGE: Type = 140;
-    pub const FSA_COMMAND_GET_ALL_RESOURCE_USAGE: Type = 141;
-    pub const FSA_COMMAND_SEND_PROFILE_CMD: Type = 142;
+impl Default for FSAResponse__bindgen_ty_1 {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
-pub mod FSAIpcRequestTypeEnum {
-    pub type Type = ::core::ffi::c_uint;
-    pub const FSA_IPC_REQUEST_IOCTL: Type = 0;
-    pub const FSA_IPC_REQUEST_IOCTLV: Type = 1;
+impl Default for FSAResponse {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
+pub const FSA_COMMAND_INVALID: FSACommandEnum = 0;
+pub const FSA_COMMAND_MOUNT: FSACommandEnum = 1;
+pub const FSA_COMMAND_UNMOUNT: FSACommandEnum = 2;
+pub const FSA_COMMAND_GET_VOLUME_INFO: FSACommandEnum = 3;
+pub const FSA_COMMAND_GET_ATTACH: FSACommandEnum = 4;
+pub const FSA_COMMAND_CHANGE_DIR: FSACommandEnum = 5;
+pub const FSA_COMMAND_GET_CWD: FSACommandEnum = 6;
+pub const FSA_COMMAND_MAKE_DIR: FSACommandEnum = 7;
+pub const FSA_COMMAND_REMOVE: FSACommandEnum = 8;
+pub const FSA_COMMAND_RENAME: FSACommandEnum = 9;
+pub const FSA_COMMAND_OPEN_DIR: FSACommandEnum = 10;
+pub const FSA_COMMAND_READ_DIR: FSACommandEnum = 11;
+pub const FSA_COMMAND_REWIND_DIR: FSACommandEnum = 12;
+pub const FSA_COMMAND_CLOSE_DIR: FSACommandEnum = 13;
+pub const FSA_COMMAND_OPEN_FILE: FSACommandEnum = 14;
+pub const FSA_COMMAND_READ_FILE: FSACommandEnum = 15;
+pub const FSA_COMMAND_WRITE_FILE: FSACommandEnum = 16;
+pub const FSA_COMMAND_GET_POS_FILE: FSACommandEnum = 17;
+pub const FSA_COMMAND_SET_POS_FILE: FSACommandEnum = 18;
+pub const FSA_COMMAND_IS_EOF: FSACommandEnum = 19;
+pub const FSA_COMMAND_STAT_FILE: FSACommandEnum = 20;
+pub const FSA_COMMAND_CLOSE_FILE: FSACommandEnum = 21;
+pub const FSA_COMMAND_GET_ERROR: FSACommandEnum = 22;
+pub const FSA_COMMAND_FLUSH_FILE: FSACommandEnum = 23;
+pub const FSA_COMMAND_GET_INFO_BY_QUERY: FSACommandEnum = 24;
+pub const FSA_COMMAND_APPEND_FILE: FSACommandEnum = 25;
+pub const FSA_COMMAND_TRUNCATE_FILE: FSACommandEnum = 26;
+pub const FSA_COMMAND_FLUSH_VOLUME: FSACommandEnum = 27;
+pub const FSA_COMMAND_ROLLBACK_VOLUME: FSACommandEnum = 28;
+pub const FSA_COMMAND_MAKE_QUOTA: FSACommandEnum = 29;
+pub const FSA_COMMAND_FLUSH_QUOTA: FSACommandEnum = 30;
+pub const FSA_COMMAND_ROLLBACK_QUOTA: FSACommandEnum = 31;
+pub const FSA_COMMAND_CHANGE_MODE: FSACommandEnum = 32;
+pub const FSA_COMMAND_OPEN_FILE_BY_STAT: FSACommandEnum = 33;
+pub const FSA_COMMAND_REGISTER_FLUSH_QUOTA: FSACommandEnum = 34;
+pub const FSA_COMMAND_FLUSH_MULTI_QUOTA: FSACommandEnum = 35;
+pub const FSA_COMMAND_GET_FILE_BLOCK_ADDRESS: FSACommandEnum = 37;
+pub const FSA_COMMAND_ADD_USER_PROCESS: FSACommandEnum = 101;
+pub const FSA_COMMAND_DEL_USER_PROCESS: FSACommandEnum = 102;
+pub const FSA_COMMAND_MOUNT_WITH_PROCESS: FSACommandEnum = 103;
+pub const FSA_COMMAND_UNMOUNT_WITH_PROCESS: FSACommandEnum = 104;
+pub const FSA_COMMAND_FORMAT: FSACommandEnum = 105;
+pub const FSA_COMMAND_RAW_OPEN: FSACommandEnum = 106;
+pub const FSA_COMMAND_RAW_READ: FSACommandEnum = 107;
+pub const FSA_COMMAND_RAW_WRITE: FSACommandEnum = 108;
+pub const FSA_COMMAND_RAW_CLOSE: FSACommandEnum = 109;
+pub const FSA_COMMAND_GET_LAST_FAILED_VOLUME: FSACommandEnum = 110;
+pub const FSA_COMMAND_GET_VOLUME_EXISTENCE: FSACommandEnum = 111;
+pub const FSA_COMMAND_CHANGE_OWNER: FSACommandEnum = 112;
+pub const FSA_COMMAND_CANCEL_GET_ATTACH: FSACommandEnum = 113;
+pub const FSA_COMMAND_REMOVE_QUOTA: FSACommandEnum = 114;
+pub const FSA_COMMAND_SET_CLIENT_PRIORITY: FSACommandEnum = 115;
+pub const FSA_COMMAND_APPLY_MEMORY_CACHE: FSACommandEnum = 116;
+pub const FSA_COMMAND_MAKE_LINK: FSACommandEnum = 117;
+pub const FSA_COMMAND_XFER_PARAMS: FSACommandEnum = 118;
+pub const FSA_COMMAND_EXEC_DEBUG_PROC: FSACommandEnum = 120;
+pub const FSA_COMMAND_DEBUG_SET_TITLE_ID: FSACommandEnum = 121;
+pub const FSA_COMMAND_DEBUG_SET_CAPABILITY: FSACommandEnum = 122;
+pub const FSA_COMMAND_SET_PROCESS_CONFIG: FSACommandEnum = 130;
+pub const FSA_COMMAND_CONFIG_SET_MEMORY_CACHE: FSACommandEnum = 131;
+pub const FSA_COMMAND_CONFIG_UNSET_MEMORY_CACHE: FSACommandEnum = 132;
+pub const FSA_COMMAND_CONFIG_SET_PRF2_CHAR_CODE: FSACommandEnum = 133;
+pub const FSA_COMMAND_GET_PROC_RESOURCE_USAGE: FSACommandEnum = 140;
+pub const FSA_COMMAND_GET_ALL_RESOURCE_USAGE: FSACommandEnum = 141;
+pub const FSA_COMMAND_SEND_PROFILE_CMD: FSACommandEnum = 142;
+pub type FSACommandEnum = ::core::ffi::c_uint;
+pub const FSA_IPC_REQUEST_IOCTL: FSAIpcRequestTypeEnum = 0;
+pub const FSA_IPC_REQUEST_IOCTLV: FSAIpcRequestTypeEnum = 1;
+pub type FSAIpcRequestTypeEnum = ::core::ffi::c_uint;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct FSAAsyncResult {
     pub ioMsgQueue: *mut OSMessageQueue,
     pub msg: FSMessage,
     pub userCallback: FSAAsyncCallbackFn,
-    pub error: FSError::Type,
+    pub error: FSError,
     pub command: FSACommand,
     pub request: *mut FSARequest,
     pub response: *mut FSAResponse,
     pub userContext: *mut ::core::ffi::c_void,
+}
+impl Default for FSAAsyncResult {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
 #[repr(C, packed)]
 #[derive(Copy, Clone)]
@@ -17892,9 +19289,18 @@ pub struct FSAShimBuffer {
     pub ioctlvVecOut: u8,
     pub fsaAsyncResult: FSAAsyncResult,
 }
+impl Default for FSAShimBuffer {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 pub type FSAClientAttachAsyncCallbackFn = ::core::option::Option<
     unsafe extern "C" fn(
-        result: FSError::Type,
+        result: FSError,
         command: FSACommand,
         request: *mut FSARequest,
         response: *mut FSAResponse,
@@ -17908,20 +19314,25 @@ pub struct FSAClientAttachAsyncData {
     pub userContext: *mut ::core::ffi::c_void,
     pub ioMsgQueue: *mut OSMessageQueue,
 }
-pub mod FSAMountFlags {
-    pub type Type = ::core::ffi::c_uint;
-    pub const FSA_MOUNT_FLAG_LOCAL_MOUNT: Type = 0;
-    pub const FSA_MOUNT_FLAG_BIND_MOUNT: Type = 1;
-    pub const FSA_MOUNT_FLAG_GLOBAL_MOUNT: Type = 2;
+impl Default for FSAClientAttachAsyncData {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
 }
-pub mod FSAUnmountFlags {
-    pub type Type = ::core::ffi::c_uint;
-    pub const FSA_UNMOUNT_FLAG_NONE: Type = 0;
-    pub const FSA_UNMOUNT_FLAG_FORCE: Type = 2;
-    pub const FSA_UNMOUNT_FLAG_BIND_MOUNT: Type = 2147483648;
-}
+pub const FSA_MOUNT_FLAG_LOCAL_MOUNT: FSAMountFlags = 0;
+pub const FSA_MOUNT_FLAG_BIND_MOUNT: FSAMountFlags = 1;
+pub const FSA_MOUNT_FLAG_GLOBAL_MOUNT: FSAMountFlags = 2;
+pub type FSAMountFlags = ::core::ffi::c_uint;
+pub const FSA_UNMOUNT_FLAG_NONE: FSAUnmountFlags = 0;
+pub const FSA_UNMOUNT_FLAG_FORCE: FSAUnmountFlags = 2;
+pub const FSA_UNMOUNT_FLAG_BIND_MOUNT: FSAUnmountFlags = 2147483648;
+pub type FSAUnmountFlags = ::core::ffi::c_uint;
 extern "C" {
-    pub fn FSAInit() -> FSError::Type;
+    pub fn FSAInit() -> FSError;
 }
 extern "C" {
     pub fn FSAShutdown();
@@ -17933,34 +19344,23 @@ extern "C" {
     pub fn FSAAddClient(attachAsyncData: *mut FSAClientAttachAsyncData) -> FSAClientHandle;
 }
 extern "C" {
-    pub fn FSADelClient(client: FSAClientHandle) -> FSError::Type;
+    pub fn FSADelClient(client: FSAClientHandle) -> FSError;
 }
 extern "C" {
-    pub fn FSAGetStatusStr(error: FSError::Type) -> *const ::core::ffi::c_char;
+    pub fn FSAGetStatusStr(error: FSError) -> *const ::core::ffi::c_char;
 }
 extern "C" {
-    pub fn __FSAShimDecodeIosErrorToFsaStatus(
-        handle: IOSHandle,
-        err: IOSError::Type,
-    ) -> FSError::Type;
+    pub fn __FSAShimDecodeIosErrorToFsaStatus(handle: IOSHandle, err: IOSError) -> FSError;
 }
 extern "C" {
-    pub fn FSAFlushMultiQuota(
-        client: FSAClientHandle,
-        path: *const ::core::ffi::c_char,
-    ) -> FSError::Type;
+    pub fn FSAFlushMultiQuota(client: FSAClientHandle, path: *const ::core::ffi::c_char)
+        -> FSError;
 }
 extern "C" {
-    pub fn FSAFlushQuota(
-        client: FSAClientHandle,
-        path: *const ::core::ffi::c_char,
-    ) -> FSError::Type;
+    pub fn FSAFlushQuota(client: FSAClientHandle, path: *const ::core::ffi::c_char) -> FSError;
 }
 extern "C" {
-    pub fn FSAFlushVolume(
-        client: FSAClientHandle,
-        path: *const ::core::ffi::c_char,
-    ) -> FSError::Type;
+    pub fn FSAFlushVolume(client: FSAClientHandle, path: *const ::core::ffi::c_char) -> FSError;
 }
 extern "C" {
     pub fn FSAFreeAsyncResult(asyncResult: *mut FSAAsyncResult);
@@ -17973,39 +19373,38 @@ extern "C" {
         client: FSAClientHandle,
         source: *const ::core::ffi::c_char,
         target: *const ::core::ffi::c_char,
-        flags: FSAMountFlags::Type,
+        flags: FSAMountFlags,
         arg_buf: *mut ::core::ffi::c_void,
         arg_len: u32,
-    ) -> FSError::Type;
+    ) -> FSError;
 }
 extern "C" {
     pub fn FSAUnmount(
         client: FSAClientHandle,
         mountedTarget: *const ::core::ffi::c_char,
-        flags: FSAUnmountFlags::Type,
-    ) -> FSError::Type;
+        flags: FSAUnmountFlags,
+    ) -> FSError;
 }
 extern "C" {
-    pub fn FSAChangeDir(client: FSAClientHandle, path: *const ::core::ffi::c_char)
-        -> FSError::Type;
+    pub fn FSAChangeDir(client: FSAClientHandle, path: *const ::core::ffi::c_char) -> FSError;
 }
 extern "C" {
     pub fn FSAChangeMode(
         client: FSAClientHandle,
         path: *const ::core::ffi::c_char,
-        permission: FSMode::Type,
-    ) -> FSError::Type;
+        permission: FSMode,
+    ) -> FSError;
 }
 extern "C" {
     pub fn FSAOpenFileEx(
         client: FSAClientHandle,
         path: *const ::core::ffi::c_char,
         mode: *const ::core::ffi::c_char,
-        createMode: FSMode::Type,
-        openFlag: FSOpenFileFlags::Type,
+        createMode: FSMode,
+        openFlag: FSOpenFileFlags,
         preallocSize: u32,
         outFileHandle: *mut FSAFileHandle,
-    ) -> FSError::Type;
+    ) -> FSError;
 }
 extern "C" {
     pub fn FSAOpenFileByStat(
@@ -18014,24 +19413,24 @@ extern "C" {
         mode: *const ::core::ffi::c_char,
         path: *const ::core::ffi::c_char,
         outFileHandle: *mut FSAFileHandle,
-    ) -> FSError::Type;
+    ) -> FSError;
 }
 extern "C" {
     pub fn FSAGetStatFile(
         client: FSAClientHandle,
         fileHandle: FSAFileHandle,
         stat: *mut FSAStat,
-    ) -> FSError::Type;
+    ) -> FSError;
 }
 extern "C" {
     pub fn FSAGetStat(
         client: FSAClientHandle,
         path: *const ::core::ffi::c_char,
         stat: *mut FSAStat,
-    ) -> FSError::Type;
+    ) -> FSError;
 }
 extern "C" {
-    pub fn FSACloseFile(client: FSAClientHandle, fileHandle: FSAFileHandle) -> FSError::Type;
+    pub fn FSACloseFile(client: FSAClientHandle, fileHandle: FSAFileHandle) -> FSError;
 }
 extern "C" {
     pub fn FSAAppendFile(
@@ -18039,7 +19438,7 @@ extern "C" {
         fileHandle: FSAFileHandle,
         size: u32,
         count: u32,
-    ) -> FSError::Type;
+    ) -> FSError;
 }
 extern "C" {
     pub fn FSAAppendFileEx(
@@ -18048,27 +19447,23 @@ extern "C" {
         size: u32,
         count: u32,
         flags: u32,
-    ) -> FSError::Type;
+    ) -> FSError;
 }
 extern "C" {
     pub fn FSAGetPosFile(
         client: FSAClientHandle,
         fileHandle: FSAFileHandle,
         outPos: *mut u32,
-    ) -> FSError::Type;
+    ) -> FSError;
 }
 extern "C" {
-    pub fn FSAFlushFile(client: FSAClientHandle, fileHandle: FSAFileHandle) -> FSError::Type;
+    pub fn FSAFlushFile(client: FSAClientHandle, fileHandle: FSAFileHandle) -> FSError;
 }
 extern "C" {
-    pub fn FSASetPosFile(
-        client: FSAClientHandle,
-        fileHandle: FSAFileHandle,
-        pos: u32,
-    ) -> FSError::Type;
+    pub fn FSASetPosFile(client: FSAClientHandle, fileHandle: FSAFileHandle, pos: u32) -> FSError;
 }
 extern "C" {
-    pub fn FSATruncateFile(client: FSAClientHandle, handle: FSAFileHandle) -> FSError::Type;
+    pub fn FSATruncateFile(client: FSAClientHandle, handle: FSAFileHandle) -> FSError;
 }
 extern "C" {
     pub fn FSAWriteFile(
@@ -18078,7 +19473,7 @@ extern "C" {
         count: u32,
         handle: FSAFileHandle,
         flags: u32,
-    ) -> FSError::Type;
+    ) -> FSError;
 }
 extern "C" {
     pub fn FSAWriteFileWithPos(
@@ -18089,10 +19484,10 @@ extern "C" {
         pos: u32,
         handle: FSAFileHandle,
         flags: u32,
-    ) -> FSError::Type;
+    ) -> FSError;
 }
 extern "C" {
-    pub fn FSAIsEof(client: FSAClientHandle, fileHandle: FSAFileHandle) -> FSError::Type;
+    pub fn FSAIsEof(client: FSAClientHandle, fileHandle: FSAFileHandle) -> FSError;
 }
 extern "C" {
     pub fn FSAReadFile(
@@ -18102,7 +19497,7 @@ extern "C" {
         count: u32,
         handle: FSAFileHandle,
         flags: u32,
-    ) -> FSError::Type;
+    ) -> FSError;
 }
 extern "C" {
     pub fn FSAReadFileWithPos(
@@ -18113,65 +19508,65 @@ extern "C" {
         pos: u32,
         handle: FSAFileHandle,
         flags: u32,
-    ) -> FSError::Type;
+    ) -> FSError;
 }
 extern "C" {
-    pub fn FSARemove(client: FSAClientHandle, path: *const ::core::ffi::c_char) -> FSError::Type;
+    pub fn FSARemove(client: FSAClientHandle, path: *const ::core::ffi::c_char) -> FSError;
 }
 extern "C" {
     pub fn FSARename(
         client: FSAClientHandle,
         oldPath: *const ::core::ffi::c_char,
         newPath: *const ::core::ffi::c_char,
-    ) -> FSError::Type;
+    ) -> FSError;
 }
 extern "C" {
     pub fn FSAOpenDir(
         client: FSAClientHandle,
         path: *const ::core::ffi::c_char,
         dirHandle: *mut FSADirectoryHandle,
-    ) -> FSError::Type;
+    ) -> FSError;
 }
 extern "C" {
     pub fn FSAReadDir(
         client: FSAClientHandle,
         dirHandle: FSADirectoryHandle,
         directoryEntry: *mut FSADirectoryEntry,
-    ) -> FSError::Type;
+    ) -> FSError;
 }
 extern "C" {
-    pub fn FSARewindDir(client: FSAClientHandle, dirHandle: FSADirectoryHandle) -> FSError::Type;
+    pub fn FSARewindDir(client: FSAClientHandle, dirHandle: FSADirectoryHandle) -> FSError;
 }
 extern "C" {
-    pub fn FSACloseDir(client: FSAClientHandle, dirHandle: FSADirectoryHandle) -> FSError::Type;
+    pub fn FSACloseDir(client: FSAClientHandle, dirHandle: FSADirectoryHandle) -> FSError;
 }
 extern "C" {
     pub fn FSAMakeDir(
         client: FSAClientHandle,
         path: *const ::core::ffi::c_char,
-        mode: FSMode::Type,
-    ) -> FSError::Type;
+        mode: FSMode,
+    ) -> FSError;
 }
 extern "C" {
     pub fn FSAGetCwd(
         client: FSAClientHandle,
         outPath: *mut ::core::ffi::c_char,
         outPathLen: u32,
-    ) -> FSError::Type;
+    ) -> FSError;
 }
 extern "C" {
     pub fn FSAGetTransactionBlockPoolAttributes(
         messageSize: *mut u32,
         poolSize: *mut u32,
         numMessages: *mut u32,
-    ) -> FSError::Type;
+    ) -> FSError;
 }
 extern "C" {
     pub fn FSAGetVolumeInfo(
         client: FSAClientHandle,
         path: *const ::core::ffi::c_char,
         outVolumeInfo: *mut FSAVolumeInfo,
-    ) -> FSError::Type;
+    ) -> FSError;
 }
 extern "C" {
     pub fn FSAMakeQuota(
@@ -18179,90 +19574,84 @@ extern "C" {
         name: *const ::core::ffi::c_char,
         mode: u32,
         quota: u64,
-    ) -> FSError::Type;
+    ) -> FSError;
 }
 extern "C" {
     pub fn FSARegisterFlushQuota(
         client: FSAClientHandle,
         path: *const ::core::ffi::c_char,
-    ) -> FSError::Type;
+    ) -> FSError;
 }
 extern "C" {
-    pub fn FSARollbackQuota(
-        client: FSAClientHandle,
-        path: *const ::core::ffi::c_char,
-    ) -> FSError::Type;
+    pub fn FSARollbackQuota(client: FSAClientHandle, path: *const ::core::ffi::c_char) -> FSError;
 }
 extern "C" {
     pub fn FSARollbackQuotaForce(
         client: FSAClientHandle,
         path: *const ::core::ffi::c_char,
-    ) -> FSError::Type;
+    ) -> FSError;
 }
 extern "C" {
-    pub fn FSARollbackVolume(
-        client: FSAClientHandle,
-        path: *const ::core::ffi::c_char,
-    ) -> FSError::Type;
+    pub fn FSARollbackVolume(client: FSAClientHandle, path: *const ::core::ffi::c_char) -> FSError;
 }
 extern "C" {
     pub fn FSAGetFreeSpaceSize(
         client: FSAClientHandle,
         path: *const ::core::ffi::c_char,
         freeSpaceSize: *mut u64,
-    ) -> FSError::Type;
+    ) -> FSError;
 }
 extern "C" {
     pub fn FSAGetJournalFreeSpaceSize(
         client: FSAClientHandle,
         path: *const ::core::ffi::c_char,
         journalFreeSpaceSize: *mut u64,
-    ) -> FSError::Type;
+    ) -> FSError;
 }
 extern "C" {
     pub fn FSAGetDirSize(
         client: FSAClientHandle,
         path: *const ::core::ffi::c_char,
         freeDirSize: *mut u64,
-    ) -> FSError::Type;
+    ) -> FSError;
 }
 extern "C" {
     pub fn FSAGetEntryNum(
         client: FSAClientHandle,
         path: *const ::core::ffi::c_char,
         entryNum: *mut FSAEntryNum,
-    ) -> FSError::Type;
+    ) -> FSError;
 }
 extern "C" {
     pub fn FSAGetFileSystemInfo(
         client: FSAClientHandle,
         path: *const ::core::ffi::c_char,
         fileSystemInfo: *mut FSAFileSystemInfo,
-    ) -> FSError::Type;
+    ) -> FSError;
 }
 extern "C" {
     pub fn FSAGetDeviceInfo(
         client: FSAClientHandle,
         path: *const ::core::ffi::c_char,
         fileSystemInfo: *mut FSADeviceInfo,
-    ) -> FSError::Type;
+    ) -> FSError;
 }
 extern "C" {
     pub fn FSAGetBadBlockInfo(
         client: FSAClientHandle,
         path: *const ::core::ffi::c_char,
         blockInfo: *mut FSABlockInfo,
-    ) -> FSError::Type;
+    ) -> FSError;
 }
 extern "C" {
     pub fn FSAGetFragmentBlockInfo(
         client: FSAClientHandle,
         path: *const ::core::ffi::c_char,
         blockInfo: *mut FSABlockInfo,
-    ) -> FSError::Type;
+    ) -> FSError;
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct OSStopWatchAtomic {
     pub startTime: OSTime,
     pub totalTime: OSTime,
@@ -18279,102 +19668,96 @@ extern "C" {
 extern "C" {
     pub fn OSStopWatchReset(stopWatch: *mut OSStopWatchAtomic) -> OSTime;
 }
-pub mod OSPerfMonArg {
-    pub type Type = ::core::ffi::c_uint;
-    pub const OS_PM_ARG_MMCR0: Type = 1;
-    pub const OS_PM_ARG_MMCR1: Type = 2;
-    pub const OS_PM_ARG_PMC1: Type = 4;
-    pub const OS_PM_ARG_PMC2: Type = 8;
-    pub const OS_PM_ARG_PMC3: Type = 16;
-    pub const OS_PM_ARG_PMC4: Type = 32;
-}
-pub mod OSPerfMonMMCR0Flags {
-    pub type Type = ::core::ffi::c_uint;
-    pub const OS_PM_MMCR0_PMC1_CURRENT: Type = 0;
-    pub const OS_PM_MMCR0_PMC1_CPU_CYCLES: Type = 64;
-    pub const OS_PM_MMCR0_PMC1_INSTRUCTIONS_COMPLETED: Type = 128;
-    pub const OS_PM_MMCR0_PMC1_TBL_RISING_TRANSITIONS: Type = 192;
-    pub const OS_PM_MMCR0_PMC1_INSTRUCTIONS_DISPATCHED: Type = 256;
-    pub const OS_PM_MMCR0_PMC1_EIEIO_INSTRUCTIONS_COMPLETED: Type = 320;
-    pub const OS_PM_MMCR0_PMC1_ITLB_SEARCH_CYCLES: Type = 384;
-    pub const OS_PM_MMCR0_PMC1_L2_HITS: Type = 448;
-    pub const OS_PM_MMCR0_PMC1_INSTRUCTIONS_EA_DELIVERED: Type = 512;
-    pub const OS_PM_MMCR0_PMC1_INSTRUCTIONS_COMPLETED_MATCHES_IABR: Type = 576;
-    pub const OS_PM_MMCR0_PMC1_SLOW_L1_MISSES: Type = 640;
-    pub const OS_PM_MMCR0_PMC1_UNRESOLVED_BRANCHES: Type = 704;
-    pub const OS_PM_MMCR0_PMC1_UNRESOLVED_STALL_CYCLES: Type = 768;
-    pub const OS_PM_MMCR0_PMC1_L1_SHARED_STORES: Type = 896;
-    pub const OS_PM_MMCR0_PMC1_L2_SHARED_INTERVENTIONS: Type = 960;
-    pub const OS_PM_MMCR0_PMC1_CACHE_PARADOXES: Type = 1024;
-    pub const OS_PM_MMCR0_PMC1_CIU_LOAD_REQUESTS: Type = 1280;
-    pub const OS_PM_MMCR0_PMC1_BIU_ADDRESS_ONLY_REQUESTS: Type = 1344;
-    pub const OS_PM_MMCR0_PMC1_CIU_PARADOXES: Type = 1408;
-    pub const OS_PM_MMCR0_PMC1_60XE_BUS_DATA_BEATS: Type = 1472;
-    pub const OS_PM_MMCR0_PMC2_CURRENT: Type = 0;
-    pub const OS_PM_MMCR0_PMC2_CPU_CYCLES: Type = 1;
-    pub const OS_PM_MMCR0_PMC2_INSTRUCTIONS_COMPLETED: Type = 2;
-    pub const OS_PM_MMCR0_PMC2_TBL_RISING_TRANSITIONS: Type = 3;
-    pub const OS_PM_MMCR0_PMC2_INSTRUCTIONS_DISPATCHED: Type = 4;
-    pub const OS_PM_MMCR0_PMC2_L1_ICACHE_MISSES: Type = 5;
-    pub const OS_PM_MMCR0_PMC2_ITLB_MISSES: Type = 6;
-    pub const OS_PM_MMCR0_PMC2_L2_INSTRUCTION_MISSES: Type = 7;
-    pub const OS_PM_MMCR0_PMC2_PRED_BRANCHES_NOT_TAKEN: Type = 8;
-    pub const OS_PM_MMCR0_PMC2_RESERVED_LOADS: Type = 10;
-    pub const OS_PM_MMCR0_PMC2_LOADS_AND_STORES: Type = 11;
-    pub const OS_PM_MMCR0_PMC2_CACHE_SNOOPS: Type = 12;
-    pub const OS_PM_MMCR0_PMC2_L1_TO_L2_CASTOUTS: Type = 13;
-    pub const OS_PM_MMCR0_PMC2_SYSTEM_UNIT_INSTRUCTIONS: Type = 14;
-    pub const OS_PM_MMCR0_PMC2_L1_INSTRUCTION_MISS_CYCLES: Type = 15;
-    pub const OS_PM_MMCR0_PMC2_FIRST_SPECULATIVE_BRANCH_RESOLVES: Type = 16;
-    pub const OS_PM_MMCR0_PMC2_L2_SHARED_STORES: Type = 17;
-    pub const OS_PM_MMCR0_PMC2_L1_SHARED_INTERVENTIONS: Type = 18;
-    pub const OS_PM_MMCR0_PMC2_CIU_STORE_REQUESTS: Type = 20;
-    pub const OS_PM_MMCR0_PMC2_SLOW_OUTSTANDING_BIU_TRANSACTIONS: Type = 21;
-    pub const OS_PM_MMCR0_PMC2_CIU_MODIFIED_INTERVENTIONS: Type = 22;
-}
-pub mod OSPerfMonMMCR1Flags {
-    pub type Type = ::core::ffi::c_uint;
-    pub const OS_PM_MMCR1_PMC3_CURRENT: Type = 0;
-    pub const OS_PM_MMCR1_PMC3_CPU_CYCLES: Type = 134217728;
-    pub const OS_PM_MMCR1_PMC3_INSTRUCTIONS_COMPLETED: Type = 268435456;
-    pub const OS_PM_MMCR1_PMC3_TBL_RISING_TRANSITIONS: Type = 402653184;
-    pub const OS_PM_MMCR1_PMC3_INSTRUCTIONS_DISPATCHED: Type = 536870912;
-    pub const OS_PM_MMCR1_PMC3_L1_DCACHE_MISSES: Type = 671088640;
-    pub const OS_PM_MMCR1_PMC3_DTLB_MISSES: Type = 805306368;
-    pub const OS_PM_MMCR1_PMC3_L2_DATA_MISSES: Type = 939524096;
-    pub const OS_PM_MMCR1_PMC3_PRED_BRANCHES_TAKEN: Type = 1073741824;
-    pub const OS_PM_MMCR1_PMC3_COND_STORES_COMPLETED: Type = 1342177280;
-    pub const OS_PM_MMCR1_PMC3_FPU_INSTRUCTIONS_COMPLETED: Type = 1476395008;
-    pub const OS_PM_MMCR1_PMC3_L2_CASTOUTS_BY_SNOOPS: Type = 1610612736;
-    pub const OS_PM_MMCR1_PMC3_L2_CACHE_OPERATIONS: Type = 1744830464;
-    pub const OS_PM_MMCR1_PMC3_L1_LOAD_MISS_CYCLES: Type = 2013265920;
-    pub const OS_PM_MMCR1_PMC3_SECOND_SPECULATIVE_BRANCH_RESOLVES: Type = 2147483648;
-    pub const OS_PM_MMCR1_PMC3_BPU_STALL_LR_CR_CYCLES: Type = 2281701376;
-    pub const OS_PM_MMCR1_PMC3_L1_MODIFIED_INTERVENTIONS: Type = 2415919104;
-    pub const OS_PM_MMCR1_PMC3_ICBI_SNOOPS: Type = 2550136832;
-    pub const OS_PM_MMCR1_PMC3_CIU_ADDRESS_ONLY_REQUESTS: Type = 2684354560;
-    pub const OS_PM_MMCR1_PMC3_BIU_LOAD_REQUESTS: Type = 2818572288;
-    pub const OS_PM_MMCR1_PMC3_CIU_SHARED_INTERVENTIONS: Type = 2952790016;
-    pub const OS_PM_MMCR1_PMC4_CURRENT: Type = 0;
-    pub const OS_PM_MMCR1_PMC4_CPU_CYCLES: Type = 4194304;
-    pub const OS_PM_MMCR1_PMC4_INSTRUCTIONS_COMPLETED: Type = 8388608;
-    pub const OS_PM_MMCR1_PMC4_TBL_RISING_TRANSITIONS: Type = 12582912;
-    pub const OS_PM_MMCR1_PMC4_INSTRUCTIONS_DISPATCHED: Type = 16777216;
-    pub const OS_PM_MMCR1_PMC4_L2_CASTOUTS: Type = 20971520;
-    pub const OS_PM_MMCR1_PMC4_DTLB_SEARCH_CYCLES: Type = 25165824;
-    pub const OS_PM_MMCR1_PMC4_BRANCHES_MISPREDICTED: Type = 33554432;
-    pub const OS_PM_MMCR1_PMC4_INTACT_COND_STORES_COMPLETED: Type = 41943040;
-    pub const OS_PM_MMCR1_PMC4_SYNC_INSTRUCTIONS_COMPLETED: Type = 46137344;
-    pub const OS_PM_MMCR1_PMC4_SNOOP_RETRIES: Type = 50331648;
-    pub const OS_PM_MMCR1_PMC4_INTEGER_OPERATIONS: Type = 54525952;
-    pub const OS_PM_MMCR1_PMC4_BPU_STALL_TWO_BRANCHES_CYCLES: Type = 58720256;
-    pub const OS_PM_MMCR1_PMC4_L2_MODIFIED_INTERVENTIONS: Type = 67108864;
-    pub const OS_PM_MMCR1_PMC4_TLBIE_SNOOPS: Type = 71303168;
-    pub const OS_PM_MMCR1_PMC4_L2_BANK_REFRESH_OVERFLOWS: Type = 75497472;
-    pub const OS_PM_MMCR1_PMC4_CIU_ARTRY_COUNT: Type = 83886080;
-    pub const OS_PM_MMCR1_PMC4_BIU_STORE_REQUESTS: Type = 88080384;
-    pub const OS_PM_MMCR1_PMC4_CIU_TWO_CORE_SHARED_INTERVENTIONS: Type = 92274688;
-}
+pub const OS_PM_ARG_MMCR0: OSPerfMonArg = 1;
+pub const OS_PM_ARG_MMCR1: OSPerfMonArg = 2;
+pub const OS_PM_ARG_PMC1: OSPerfMonArg = 4;
+pub const OS_PM_ARG_PMC2: OSPerfMonArg = 8;
+pub const OS_PM_ARG_PMC3: OSPerfMonArg = 16;
+pub const OS_PM_ARG_PMC4: OSPerfMonArg = 32;
+pub type OSPerfMonArg = ::core::ffi::c_uint;
+pub const OS_PM_MMCR0_PMC1_CURRENT: OSPerfMonMMCR0Flags = 0;
+pub const OS_PM_MMCR0_PMC1_CPU_CYCLES: OSPerfMonMMCR0Flags = 64;
+pub const OS_PM_MMCR0_PMC1_INSTRUCTIONS_COMPLETED: OSPerfMonMMCR0Flags = 128;
+pub const OS_PM_MMCR0_PMC1_TBL_RISING_TRANSITIONS: OSPerfMonMMCR0Flags = 192;
+pub const OS_PM_MMCR0_PMC1_INSTRUCTIONS_DISPATCHED: OSPerfMonMMCR0Flags = 256;
+pub const OS_PM_MMCR0_PMC1_EIEIO_INSTRUCTIONS_COMPLETED: OSPerfMonMMCR0Flags = 320;
+pub const OS_PM_MMCR0_PMC1_ITLB_SEARCH_CYCLES: OSPerfMonMMCR0Flags = 384;
+pub const OS_PM_MMCR0_PMC1_L2_HITS: OSPerfMonMMCR0Flags = 448;
+pub const OS_PM_MMCR0_PMC1_INSTRUCTIONS_EA_DELIVERED: OSPerfMonMMCR0Flags = 512;
+pub const OS_PM_MMCR0_PMC1_INSTRUCTIONS_COMPLETED_MATCHES_IABR: OSPerfMonMMCR0Flags = 576;
+pub const OS_PM_MMCR0_PMC1_SLOW_L1_MISSES: OSPerfMonMMCR0Flags = 640;
+pub const OS_PM_MMCR0_PMC1_UNRESOLVED_BRANCHES: OSPerfMonMMCR0Flags = 704;
+pub const OS_PM_MMCR0_PMC1_UNRESOLVED_STALL_CYCLES: OSPerfMonMMCR0Flags = 768;
+pub const OS_PM_MMCR0_PMC1_L1_SHARED_STORES: OSPerfMonMMCR0Flags = 896;
+pub const OS_PM_MMCR0_PMC1_L2_SHARED_INTERVENTIONS: OSPerfMonMMCR0Flags = 960;
+pub const OS_PM_MMCR0_PMC1_CACHE_PARADOXES: OSPerfMonMMCR0Flags = 1024;
+pub const OS_PM_MMCR0_PMC1_CIU_LOAD_REQUESTS: OSPerfMonMMCR0Flags = 1280;
+pub const OS_PM_MMCR0_PMC1_BIU_ADDRESS_ONLY_REQUESTS: OSPerfMonMMCR0Flags = 1344;
+pub const OS_PM_MMCR0_PMC1_CIU_PARADOXES: OSPerfMonMMCR0Flags = 1408;
+pub const OS_PM_MMCR0_PMC1_60XE_BUS_DATA_BEATS: OSPerfMonMMCR0Flags = 1472;
+pub const OS_PM_MMCR0_PMC2_CURRENT: OSPerfMonMMCR0Flags = 0;
+pub const OS_PM_MMCR0_PMC2_CPU_CYCLES: OSPerfMonMMCR0Flags = 1;
+pub const OS_PM_MMCR0_PMC2_INSTRUCTIONS_COMPLETED: OSPerfMonMMCR0Flags = 2;
+pub const OS_PM_MMCR0_PMC2_TBL_RISING_TRANSITIONS: OSPerfMonMMCR0Flags = 3;
+pub const OS_PM_MMCR0_PMC2_INSTRUCTIONS_DISPATCHED: OSPerfMonMMCR0Flags = 4;
+pub const OS_PM_MMCR0_PMC2_L1_ICACHE_MISSES: OSPerfMonMMCR0Flags = 5;
+pub const OS_PM_MMCR0_PMC2_ITLB_MISSES: OSPerfMonMMCR0Flags = 6;
+pub const OS_PM_MMCR0_PMC2_L2_INSTRUCTION_MISSES: OSPerfMonMMCR0Flags = 7;
+pub const OS_PM_MMCR0_PMC2_PRED_BRANCHES_NOT_TAKEN: OSPerfMonMMCR0Flags = 8;
+pub const OS_PM_MMCR0_PMC2_RESERVED_LOADS: OSPerfMonMMCR0Flags = 10;
+pub const OS_PM_MMCR0_PMC2_LOADS_AND_STORES: OSPerfMonMMCR0Flags = 11;
+pub const OS_PM_MMCR0_PMC2_CACHE_SNOOPS: OSPerfMonMMCR0Flags = 12;
+pub const OS_PM_MMCR0_PMC2_L1_TO_L2_CASTOUTS: OSPerfMonMMCR0Flags = 13;
+pub const OS_PM_MMCR0_PMC2_SYSTEM_UNIT_INSTRUCTIONS: OSPerfMonMMCR0Flags = 14;
+pub const OS_PM_MMCR0_PMC2_L1_INSTRUCTION_MISS_CYCLES: OSPerfMonMMCR0Flags = 15;
+pub const OS_PM_MMCR0_PMC2_FIRST_SPECULATIVE_BRANCH_RESOLVES: OSPerfMonMMCR0Flags = 16;
+pub const OS_PM_MMCR0_PMC2_L2_SHARED_STORES: OSPerfMonMMCR0Flags = 17;
+pub const OS_PM_MMCR0_PMC2_L1_SHARED_INTERVENTIONS: OSPerfMonMMCR0Flags = 18;
+pub const OS_PM_MMCR0_PMC2_CIU_STORE_REQUESTS: OSPerfMonMMCR0Flags = 20;
+pub const OS_PM_MMCR0_PMC2_SLOW_OUTSTANDING_BIU_TRANSACTIONS: OSPerfMonMMCR0Flags = 21;
+pub const OS_PM_MMCR0_PMC2_CIU_MODIFIED_INTERVENTIONS: OSPerfMonMMCR0Flags = 22;
+pub type OSPerfMonMMCR0Flags = ::core::ffi::c_uint;
+pub const OS_PM_MMCR1_PMC3_CURRENT: OSPerfMonMMCR1Flags = 0;
+pub const OS_PM_MMCR1_PMC3_CPU_CYCLES: OSPerfMonMMCR1Flags = 134217728;
+pub const OS_PM_MMCR1_PMC3_INSTRUCTIONS_COMPLETED: OSPerfMonMMCR1Flags = 268435456;
+pub const OS_PM_MMCR1_PMC3_TBL_RISING_TRANSITIONS: OSPerfMonMMCR1Flags = 402653184;
+pub const OS_PM_MMCR1_PMC3_INSTRUCTIONS_DISPATCHED: OSPerfMonMMCR1Flags = 536870912;
+pub const OS_PM_MMCR1_PMC3_L1_DCACHE_MISSES: OSPerfMonMMCR1Flags = 671088640;
+pub const OS_PM_MMCR1_PMC3_DTLB_MISSES: OSPerfMonMMCR1Flags = 805306368;
+pub const OS_PM_MMCR1_PMC3_L2_DATA_MISSES: OSPerfMonMMCR1Flags = 939524096;
+pub const OS_PM_MMCR1_PMC3_PRED_BRANCHES_TAKEN: OSPerfMonMMCR1Flags = 1073741824;
+pub const OS_PM_MMCR1_PMC3_COND_STORES_COMPLETED: OSPerfMonMMCR1Flags = 1342177280;
+pub const OS_PM_MMCR1_PMC3_FPU_INSTRUCTIONS_COMPLETED: OSPerfMonMMCR1Flags = 1476395008;
+pub const OS_PM_MMCR1_PMC3_L2_CASTOUTS_BY_SNOOPS: OSPerfMonMMCR1Flags = 1610612736;
+pub const OS_PM_MMCR1_PMC3_L2_CACHE_OPERATIONS: OSPerfMonMMCR1Flags = 1744830464;
+pub const OS_PM_MMCR1_PMC3_L1_LOAD_MISS_CYCLES: OSPerfMonMMCR1Flags = 2013265920;
+pub const OS_PM_MMCR1_PMC3_SECOND_SPECULATIVE_BRANCH_RESOLVES: OSPerfMonMMCR1Flags = 2147483648;
+pub const OS_PM_MMCR1_PMC3_BPU_STALL_LR_CR_CYCLES: OSPerfMonMMCR1Flags = 2281701376;
+pub const OS_PM_MMCR1_PMC3_L1_MODIFIED_INTERVENTIONS: OSPerfMonMMCR1Flags = 2415919104;
+pub const OS_PM_MMCR1_PMC3_ICBI_SNOOPS: OSPerfMonMMCR1Flags = 2550136832;
+pub const OS_PM_MMCR1_PMC3_CIU_ADDRESS_ONLY_REQUESTS: OSPerfMonMMCR1Flags = 2684354560;
+pub const OS_PM_MMCR1_PMC3_BIU_LOAD_REQUESTS: OSPerfMonMMCR1Flags = 2818572288;
+pub const OS_PM_MMCR1_PMC3_CIU_SHARED_INTERVENTIONS: OSPerfMonMMCR1Flags = 2952790016;
+pub const OS_PM_MMCR1_PMC4_CURRENT: OSPerfMonMMCR1Flags = 0;
+pub const OS_PM_MMCR1_PMC4_CPU_CYCLES: OSPerfMonMMCR1Flags = 4194304;
+pub const OS_PM_MMCR1_PMC4_INSTRUCTIONS_COMPLETED: OSPerfMonMMCR1Flags = 8388608;
+pub const OS_PM_MMCR1_PMC4_TBL_RISING_TRANSITIONS: OSPerfMonMMCR1Flags = 12582912;
+pub const OS_PM_MMCR1_PMC4_INSTRUCTIONS_DISPATCHED: OSPerfMonMMCR1Flags = 16777216;
+pub const OS_PM_MMCR1_PMC4_L2_CASTOUTS: OSPerfMonMMCR1Flags = 20971520;
+pub const OS_PM_MMCR1_PMC4_DTLB_SEARCH_CYCLES: OSPerfMonMMCR1Flags = 25165824;
+pub const OS_PM_MMCR1_PMC4_BRANCHES_MISPREDICTED: OSPerfMonMMCR1Flags = 33554432;
+pub const OS_PM_MMCR1_PMC4_INTACT_COND_STORES_COMPLETED: OSPerfMonMMCR1Flags = 41943040;
+pub const OS_PM_MMCR1_PMC4_SYNC_INSTRUCTIONS_COMPLETED: OSPerfMonMMCR1Flags = 46137344;
+pub const OS_PM_MMCR1_PMC4_SNOOP_RETRIES: OSPerfMonMMCR1Flags = 50331648;
+pub const OS_PM_MMCR1_PMC4_INTEGER_OPERATIONS: OSPerfMonMMCR1Flags = 54525952;
+pub const OS_PM_MMCR1_PMC4_BPU_STALL_TWO_BRANCHES_CYCLES: OSPerfMonMMCR1Flags = 58720256;
+pub const OS_PM_MMCR1_PMC4_L2_MODIFIED_INTERVENTIONS: OSPerfMonMMCR1Flags = 67108864;
+pub const OS_PM_MMCR1_PMC4_TLBIE_SNOOPS: OSPerfMonMMCR1Flags = 71303168;
+pub const OS_PM_MMCR1_PMC4_L2_BANK_REFRESH_OVERFLOWS: OSPerfMonMMCR1Flags = 75497472;
+pub const OS_PM_MMCR1_PMC4_CIU_ARTRY_COUNT: OSPerfMonMMCR1Flags = 83886080;
+pub const OS_PM_MMCR1_PMC4_BIU_STORE_REQUESTS: OSPerfMonMMCR1Flags = 88080384;
+pub const OS_PM_MMCR1_PMC4_CIU_TWO_CORE_SHARED_INTERVENTIONS: OSPerfMonMMCR1Flags = 92274688;
+pub type OSPerfMonMMCR1Flags = ::core::ffi::c_uint;
 extern "C" {
     pub fn OSSetPerformanceMonitor(
         arg_mask: u32,
@@ -18386,11 +19769,9 @@ extern "C" {
         pmc4: u32,
     );
 }
-pub mod OSCodegenSecMode {
-    pub type Type = ::core::ffi::c_uint;
-    pub const CODEGEN_RW_: Type = 0;
-    pub const CODEGEN_R_X: Type = 1;
-}
+pub const CODEGEN_RW_: OSCodegenSecMode = 0;
+pub const CODEGEN_R_X: OSCodegenSecMode = 1;
+pub type OSCodegenSecMode = ::core::ffi::c_uint;
 extern "C" {
     pub fn OSGetCodegenVirtAddrRange(
         outVirtualAddress: *mut *mut ::core::ffi::c_void,
@@ -18404,7 +19785,7 @@ extern "C" {
     pub fn OSGetCodegenMode() -> u32;
 }
 extern "C" {
-    pub fn OSSwitchSecCodeGenMode(mode: OSCodegenSecMode::Type) -> BOOL;
+    pub fn OSSwitchSecCodeGenMode(mode: OSCodegenSecMode) -> BOOL;
 }
 extern "C" {
     pub fn OSGetSecCodeGenMode() -> u32;
@@ -18416,22 +19797,18 @@ extern "C" {
         size: usize,
     ) -> BOOL;
 }
-pub mod OSMemoryType {
-    pub type Type = ::core::ffi::c_uint;
-    pub const OS_MEM1: Type = 1;
-    pub const OS_MEM2: Type = 2;
-}
-pub mod OSSharedDataType {
-    pub type Type = ::core::ffi::c_uint;
-    pub const OS_SHAREDDATATYPE_FONT_CHINESE: Type = 0;
-    pub const OS_SHAREDDATATYPE_FONT_KOREAN: Type = 1;
-    pub const OS_SHAREDDATATYPE_FONT_STANDARD: Type = 2;
-    pub const OS_SHAREDDATATYPE_FONT_TAIWANESE: Type = 3;
-    pub const OS_SHAREDDATATYPE_FONT_MAX: Type = 4;
-}
+pub const OS_MEM1: OSMemoryType = 1;
+pub const OS_MEM2: OSMemoryType = 2;
+pub type OSMemoryType = ::core::ffi::c_uint;
+pub const OS_SHAREDDATATYPE_FONT_CHINESE: OSSharedDataType = 0;
+pub const OS_SHAREDDATATYPE_FONT_KOREAN: OSSharedDataType = 1;
+pub const OS_SHAREDDATATYPE_FONT_STANDARD: OSSharedDataType = 2;
+pub const OS_SHAREDDATATYPE_FONT_TAIWANESE: OSSharedDataType = 3;
+pub const OS_SHAREDDATATYPE_FONT_MAX: OSSharedDataType = 4;
+pub type OSSharedDataType = ::core::ffi::c_uint;
 extern "C" {
     pub fn OSGetSharedData(
-        type_: OSSharedDataType::Type,
+        type_: OSSharedDataType,
         unk_r4: u32,
         outPtr: *mut *mut ::core::ffi::c_void,
         outSize: *mut u32,
@@ -18469,7 +19846,7 @@ extern "C" {
 }
 extern "C" {
     pub fn OSGetMemBound(
-        type_: OSMemoryType::Type,
+        type_: OSMemoryType,
         outAddr: *mut u32,
         outSize: *mut u32,
     ) -> ::core::ffi::c_int;
@@ -18481,7 +19858,7 @@ extern "C" {
     pub fn OSGetTitleID() -> u64;
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct OSCoroutine {
     pub nia: u32,
     pub cr: u32,
@@ -18509,11 +19886,9 @@ extern "C" {
 extern "C" {
     pub fn OSSwitchCoroutine(from: *mut OSCoroutine, to: *mut OSCoroutine);
 }
-pub mod OSScreenID {
-    pub type Type = ::core::ffi::c_uint;
-    pub const SCREEN_TV: Type = 0;
-    pub const SCREEN_DRC: Type = 1;
-}
+pub const SCREEN_TV: OSScreenID = 0;
+pub const SCREEN_DRC: OSScreenID = 1;
+pub type OSScreenID = ::core::ffi::c_uint;
 extern "C" {
     pub fn OSScreenInit();
 }
@@ -18521,33 +19896,33 @@ extern "C" {
     pub fn OSScreenShutdown();
 }
 extern "C" {
-    pub fn OSScreenGetBufferSizeEx(screen: OSScreenID::Type) -> u32;
+    pub fn OSScreenGetBufferSizeEx(screen: OSScreenID) -> u32;
 }
 extern "C" {
-    pub fn OSScreenSetBufferEx(screen: OSScreenID::Type, addr: *mut ::core::ffi::c_void);
+    pub fn OSScreenSetBufferEx(screen: OSScreenID, addr: *mut ::core::ffi::c_void);
 }
 extern "C" {
-    pub fn OSScreenClearBufferEx(screen: OSScreenID::Type, colour: u32);
+    pub fn OSScreenClearBufferEx(screen: OSScreenID, colour: u32);
 }
 extern "C" {
-    pub fn OSScreenFlipBuffersEx(screen: OSScreenID::Type);
+    pub fn OSScreenFlipBuffersEx(screen: OSScreenID);
 }
 extern "C" {
     pub fn OSScreenPutFontEx(
-        screen: OSScreenID::Type,
+        screen: OSScreenID,
         column: u32,
         row: u32,
         buffer: *const ::core::ffi::c_char,
     );
 }
 extern "C" {
-    pub fn OSScreenPutPixelEx(screen: OSScreenID::Type, x: u32, y: u32, colour: u32);
+    pub fn OSScreenPutPixelEx(screen: OSScreenID, x: u32, y: u32, colour: u32);
 }
 extern "C" {
-    pub fn OSScreenEnableEx(screen: OSScreenID::Type, enable: BOOL);
+    pub fn OSScreenEnableEx(screen: OSScreenID, enable: BOOL);
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct mallinfo {
     pub arena: usize,
     pub ordblks: usize,

@@ -1,12 +1,20 @@
 #![no_std]
 
 extern crate alloc;
+extern crate flagset;
 
 use core::ffi;
 
 pub mod bindings;
+pub mod io;
 pub mod macros;
 pub mod process;
+pub mod sync;
+pub mod thread;
+
+pub mod prelude {
+    pub use crate::println;
+}
 
 #[cfg(feature = "default_panic_handler")]
 #[panic_handler]
@@ -34,7 +42,3 @@ unsafe impl core::alloc::GlobalAlloc for WiiUAllocator {
 
 #[global_allocator]
 static GLOBAL_ALLOCATOR: WiiUAllocator = WiiUAllocator;
-
-pub mod prelude {
-    pub use crate::{print, println};
-}

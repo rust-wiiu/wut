@@ -36,8 +36,10 @@ fn main() {
         .emit_builtins()
         .generate_cstr(true)
         .generate_comments(false)
-        .default_enum_style(bindgen::EnumVariation::ModuleConsts)
+        // .default_enum_style(bindgen::EnumVariation::ModuleConsts)
+        .prepend_enum_name(false)
         .layout_tests(false)
+        .derive_default(true)
         .clang_args(vec![
             "--target=powerpc-none-eabi",
             "-m32",

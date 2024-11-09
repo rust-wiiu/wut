@@ -15,11 +15,12 @@ default_panic_handler = []
 name = "wut"
 crate-type = ["lib"]
 
-[dependencies]
-
 [build-dependencies]
 bindgen = "0.70.1"
 
 [profile]
 dev.panic = "abort"
 release.panic = "abort"
+
+[dependencies]
+flagset = { version = "0.4.6", default-features = false }
