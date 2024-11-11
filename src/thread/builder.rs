@@ -1,10 +1,10 @@
 // use crate::bindings as c_wut;
 use crate::thread::thread::*;
-use alloc::string::String;
+use alloc::{string::String, sync::Arc};
 use flagset::FlagSet;
 
 pub struct Builder {
-    name: String,
+    name: Option<String>,
     attribute: FlagSet<ThreadAttribute>,
     priority: i32,
     stack_size: usize,
@@ -13,7 +13,7 @@ pub struct Builder {
 impl Default for Builder {
     fn default() -> Self {
         Self {
-            name: "Rust Thread".into(),
+            name: None,
             attribute: ThreadAttribute::CpuAny.into(),
             priority: 15,
             stack_size: 128 * 1024,
@@ -23,7 +23,7 @@ impl Default for Builder {
 
 impl Builder {
     pub fn name(mut self, name: impl Into<String>) -> Self {
-        self.name = name.into();
+        self.name = Some(name.into());
         self
     }
 
@@ -49,11 +49,38 @@ impl Builder {
         self
     }
 
-    pub fn create() -> Thread {
-        todo!()
-    }
+    // pub fn create() -> Thread {
+    //     todo!()
+    // }
 
-    pub fn spawn() -> Thread {
-        todo!()
-    }
+    // pub fn spawn<F, T>(self, f: F)
+    // /*-> io::Result<JoinHandle<T>> */
+    // where
+    //     F: FnOnce() -> T,
+    //     F: Send + 'static,
+    //     T: Send + 'static,
+    // {
+    //     unsafe {
+    //         self.spawn_unchecked(f);
+    //     }
+    // }
+
+    // pub unsafe fn spawn_unchecked<F, T>(self, f: F)
+    // where
+    //     F: FnOnce() -> T,
+    //     F: Send,
+    //     T: Send,
+    // {
+    //     unsafe {
+    //         self.spawn_unchecked_(f, None);
+    //     }
+    // }
+
+    // unsafe fn spawn_unchecked_<'scope, F, T>(self, f: F, scope_data: Option<Arc<scoped::ScopeData>>)
+    // where
+    //     F: FnOnce() -> T,
+    //     F: Send,
+    //     T: Send,
+    // {
+    // }
 }

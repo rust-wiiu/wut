@@ -7,10 +7,11 @@ use core::ffi;
 
 pub mod bindings;
 pub mod io;
-pub mod macros;
+mod macros;
 pub mod process;
 pub mod sync;
 pub mod thread;
+pub mod time;
 
 pub mod prelude {
     pub use crate::println;

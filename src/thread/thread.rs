@@ -51,6 +51,14 @@ impl Thread {
     pub fn priority(&self) -> i32 {
         unsafe { (*self.os_thread.get()).priority }
     }
+
+    pub fn park(&self) {
+        todo!()
+    }
+
+    pub fn unpark(&self) {
+        todo!()
+    }
 }
 
 impl From<OSThread> for Thread {
