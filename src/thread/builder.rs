@@ -1,6 +1,10 @@
-// use crate::bindings as c_wut;
-use crate::thread::thread::*;
-use alloc::{string::String, sync::Arc};
+use crate::thread::{
+    thread::{Thread, ThreadAttribute, ThreadError},
+    JoinHandle,
+};
+use crate::{bindings as c_wut, GLOBAL_ALLOCATOR};
+use alloc::{alloc::Layout, boxed::Box, ffi::CString, string::String};
+use core::{alloc::GlobalAlloc, ffi};
 use flagset::FlagSet;
 
 pub struct Builder {
@@ -8,15 +12,18 @@ pub struct Builder {
     attribute: FlagSet<ThreadAttribute>,
     priority: i32,
     stack_size: usize,
+    quantum: u32,
 }
 
 impl Default for Builder {
     fn default() -> Self {
         Self {
             name: None,
-            attribute: ThreadAttribute::CpuAny.into(),
+            attribute: ThreadAttribute::default().into(),
             priority: 15,
             stack_size: 128 * 1024,
+            // Set a thread run quantum to 1 millisecond, to force the threads to behave more like pre-emptive scheduling rather than co-operative.
+            quantum: 1000,
         }
     }
 }
@@ -49,38 +56,87 @@ impl Builder {
         self
     }
 
-    // pub fn create() -> Thread {
-    //     todo!()
-    // }
+    /// Set a thread's run quantum.
+    ///
+    /// This is the maximum amount of time the thread can run for before being forced to yield.
+    pub fn quantum(mut self, quantum: u32) -> Self {
+        self.quantum = quantum;
+        self
+    }
 
-    // pub fn spawn<F, T>(self, f: F)
-    // /*-> io::Result<JoinHandle<T>> */
-    // where
-    //     F: FnOnce() -> T,
-    //     F: Send + 'static,
-    //     T: Send + 'static,
-    // {
-    //     unsafe {
-    //         self.spawn_unchecked(f);
-    //     }
-    // }
+    pub fn spawn<F>(self, f: F) -> Result<JoinHandle, ThreadError>
+    where
+        F: FnOnce() + Send + 'static,
+    {
+        unsafe { self.spawn_unchecked(f) }
+    }
 
-    // pub unsafe fn spawn_unchecked<F, T>(self, f: F)
-    // where
-    //     F: FnOnce() -> T,
-    //     F: Send,
-    //     T: Send,
-    // {
-    //     unsafe {
-    //         self.spawn_unchecked_(f, None);
-    //     }
-    // }
+    pub unsafe fn spawn_unchecked<F>(self, f: F) -> Result<JoinHandle, ThreadError>
+    where
+        F: FnOnce() + Send,
+    {
+        Ok(JoinHandle::new(unsafe { self.spawn_unchecked_(f)? }))
+    }
 
-    // unsafe fn spawn_unchecked_<'scope, F, T>(self, f: F, scope_data: Option<Arc<scoped::ScopeData>>)
-    // where
-    //     F: FnOnce() -> T,
-    //     F: Send,
-    //     T: Send,
-    // {
-    // }
+    /// There 100% is a better and more rusty way of doing this, but it works for now
+    unsafe fn spawn_unchecked_<F>(self, f: F) -> Result<Thread, ThreadError>
+    where
+        F: FnOnce() + Send,
+    {
+        let layout = Layout::new::<c_wut::OSThread>();
+        let thread = GLOBAL_ALLOCATOR.alloc_zeroed(layout) as *mut c_wut::OSThread;
+        if thread.is_null() {
+            return Err(ThreadError::AllocationFailed);
+        }
+
+        let layout = Layout::from_size_align(self.stack_size, 16).unwrap();
+        let stack = GLOBAL_ALLOCATOR.alloc_zeroed(layout);
+        if stack.is_null() {
+            return Err(ThreadError::AllocationFailed);
+        }
+
+        let f: Box<Box<dyn FnOnce()>> = Box::new(Box::new(f));
+
+        if c_wut::OSCreateThread(
+            thread,
+            Some(thread_entry),
+            0,
+            Box::into_raw(f) as *mut _,
+            (stack as usize + layout.size()) as *mut _,
+            layout.size() as u32,
+            self.priority,
+            self.attribute.bits(),
+        ) == 0
+        {
+            return Err(ThreadError::ThreadCreationFailed);
+        }
+
+        if let Some(name) = self.name {
+            c_wut::OSSetThreadName(thread, CString::new(name).unwrap().as_c_str().as_ptr());
+        }
+        c_wut::OSSetThreadDeallocator(thread, Some(thread_dealloc));
+        c_wut::OSSetThreadRunQuantum(thread, self.quantum);
+
+        c_wut::OSContinueThread(thread);
+
+        Ok(Thread::new(thread))
+    }
+}
+
+/// Thread entry point
+///
+/// Abuses `argv` to pass `FnOnce()` into thread
+unsafe extern "C" fn thread_entry(_argc: ffi::c_int, argv: *mut *const ffi::c_char) -> ffi::c_int {
+    let closure = unsafe { Box::from_raw(argv as *mut Box<dyn FnOnce()>) };
+    closure();
+    0
+}
+
+unsafe extern "C" fn thread_dealloc(thread: *mut c_wut::OSThread, stack: *mut ffi::c_void) {
+    let stack_size = (*thread).stackStart as usize - (*thread).stackEnd as usize;
+    let layout = Layout::from_size_align(stack_size, 16).unwrap();
+    GLOBAL_ALLOCATOR.dealloc(stack as *mut u8, layout);
+
+    let layout = Layout::new::<c_wut::OSThread>();
+    GLOBAL_ALLOCATOR.dealloc(thread as *mut u8, layout);
 }
