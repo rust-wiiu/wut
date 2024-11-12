@@ -2,6 +2,7 @@
 
 extern crate alloc;
 extern crate flagset;
+extern crate thiserror;
 
 pub mod bindings;
 pub mod io;

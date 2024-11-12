@@ -3,6 +3,7 @@ use alloc::{
     ffi::{CString, IntoStringError},
     string::String,
 };
+use core::cell::UnsafeCell;
 use flagset::{flags, FlagSet};
 
 flags! {
@@ -31,7 +32,6 @@ flags! {
     }
 }
 
-#[derive(Copy, Clone)]
 pub struct Thread(*mut c_wut::OSThread);
 
 /// I think I should split this up as the errors don't really correlate
@@ -45,10 +45,6 @@ pub enum ThreadError {
 }
 
 impl Thread {
-    pub fn new(thread: *mut c_wut::OSThread) -> Self {
-        Self(thread)
-    }
-
     pub fn name(&self) -> Result<String, ThreadError> {
         // unsafe { CString::from_raw((*self.0).name as *mut i8).into_string() }
         unsafe {
