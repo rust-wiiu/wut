@@ -45,6 +45,10 @@ pub enum ThreadError {
 }
 
 impl Thread {
+    pub fn new(thread: *mut c_wut::OSThread) -> Self {
+        Self(thread)
+    }
+
     pub fn name(&self) -> Result<String, ThreadError> {
         // unsafe { CString::from_raw((*self.0).name as *mut i8).into_string() }
         unsafe {

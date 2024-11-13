@@ -9,10 +9,12 @@ pub mod io;
 mod macros;
 pub mod net;
 pub mod process;
+pub mod screen;
 pub mod sync;
 pub mod thread;
 pub mod time;
 
+pub use core::alloc::{GlobalAlloc, Layout};
 use core::ffi;
 
 pub mod prelude {
@@ -21,19 +23,28 @@ pub mod prelude {
 
 #[cfg(feature = "default_panic_handler")]
 #[panic_handler]
-fn panic_handler(_panic_info: &core::panic::PanicInfo) -> ! {
-    unsafe {
-        bindings::OSFatal(c"PANIC!".as_ptr());
+fn panic_handler(info: &core::panic::PanicInfo) -> ! {
+    if let Some(location) = info.location() {
+        crate::println!(
+            "Panic! - {} [{} : Ln {}, Col {}]",
+            info.message(),
+            location.file(),
+            location.line(),
+            location.column(),
+        );
+    } else {
+        crate::println!("Panic! - {}", info.message());
     }
+
     loop {}
 }
 
 pub struct WiiUAllocator;
 
-unsafe impl core::alloc::GlobalAlloc for WiiUAllocator {
+unsafe impl GlobalAlloc for WiiUAllocator {
     unsafe fn alloc(&self, layout: core::alloc::Layout) -> *mut u8 {
         let mem = bindings::memalign(
-            layout.align().max(16) as ffi::c_ulong,
+            layout.align() as ffi::c_ulong,
             layout.size() as ffi::c_ulong,
         );
 

@@ -2,6 +2,7 @@
 
 use crate::bindings as c_wut;
 use crate::io;
+use crate::screen;
 use flagset::FlagSet;
 
 pub fn default() {
@@ -21,6 +22,7 @@ pub fn new(stdout: impl Into<FlagSet<io::Stdout>>) {
 pub fn exit() {
     unsafe {
         io::_stdout_deinit();
+        screen::_screen_deinit(true);
         c_wut::WHBProcShutdown();
     }
 }

@@ -8,8 +8,8 @@ use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum TcpError {
-    #[error("failed to create socket")]
-    SocketCreationError(#[from] SocketError),
+    #[error("socket failed")]
+    SocketFailure(#[from] SocketError),
 }
 
 pub struct TcpListener {
@@ -19,6 +19,7 @@ pub struct TcpListener {
 impl TcpListener {
     pub fn bind(addr: impl ToSocketAddrs) -> Result<Self, TcpError> {
         let socket = Socket::tcp()?;
+        socket.bind(addr)?;
 
         //
         //

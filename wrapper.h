@@ -270,3 +270,4 @@
 #include <coreinit/systeminfo.h>
 
 #include <malloc.h>
+#include <errno.h>
