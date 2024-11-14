@@ -1,6 +1,7 @@
 #![no_std]
 
 extern crate alloc;
+// extern crate compiler_builtins;
 extern crate flagset;
 extern crate thiserror;
 
@@ -43,16 +44,10 @@ pub struct WiiUAllocator;
 
 unsafe impl GlobalAlloc for WiiUAllocator {
     unsafe fn alloc(&self, layout: core::alloc::Layout) -> *mut u8 {
-        let mem = bindings::memalign(
+        bindings::memalign(
             layout.align() as ffi::c_ulong,
             layout.size() as ffi::c_ulong,
-        );
-
-        if mem.is_null() {
-            panic!("Failed to allocate memory!");
-        }
-
-        mem as *mut u8
+        ) as *mut u8
     }
 
     unsafe fn dealloc(&self, ptr: *mut u8, _layout: core::alloc::Layout) {

@@ -8,7 +8,7 @@ mod color;
 mod position;
 
 use crate::alloc::string::String;
-use crate::bindings as c_wut;
+use crate::bindings::{self as c_wut, _MB_LEN_MAX};
 use crate::{GlobalAlloc, Layout, GLOBAL_ALLOCATOR};
 use ::alloc::ffi::CString;
 use alloc::alloc::{self};
@@ -16,10 +16,11 @@ pub use color::{Color, ColorParseError};
 use core::{
     ffi,
     marker::PhantomData,
+    slice,
     sync::atomic::{AtomicU8, Ordering},
 };
 use position::TextPosition;
-// use thiserror::Error;
+use thiserror::Error;
 
 static OSSCREEN_INSTANCE_COUNT: AtomicU8 = AtomicU8::new(0);
 
@@ -58,38 +59,26 @@ impl DisplayType for DRC {
     }
 }
 
-pub struct Screen<Display> {
+pub struct Screen<'a, Display: DisplayType> {
     display: PhantomData<Display>,
-    buffer: FrameBuffer,
+    pub buffer: FrameBuffer<'a>,
 }
 
-impl<Display: DisplayType> Screen<Display> {
-    fn screen(&self) -> u32 {
+impl<Display: DisplayType> Screen<'_, Display> {
+    fn id(&self) -> u32 {
         Display::id()
-    }
-
-    pub fn enable(&self) {
-        unsafe {
-            c_wut::OSScreenEnableEx(self.screen(), 1);
-        }
-    }
-
-    pub fn disable(&self) {
-        unsafe {
-            c_wut::OSScreenEnableEx(self.screen(), 0);
-        }
     }
 
     pub fn fill(&self, color: Color) {
         unsafe {
-            c_wut::OSScreenClearBufferEx(self.screen(), color.into());
+            c_wut::OSScreenClearBufferEx(self.id(), color.into());
         }
     }
 
-    pub fn draw(&self) {
+    pub fn draw(&mut self) {
         self.buffer.flush();
         unsafe {
-            c_wut::OSScreenFlipBuffersEx(self.screen());
+            c_wut::OSScreenFlipBuffersEx(self.id());
         }
     }
 
@@ -101,7 +90,7 @@ impl<Display: DisplayType> Screen<Display> {
             crate::println!("\"{}\" - {} x {}", line, column, row);
             unsafe {
                 c_wut::OSScreenPutFontEx(
-                    self.screen(),
+                    self.id(),
                     column,
                     row,
                     CString::new(line).unwrap().as_c_str().as_ptr(),
@@ -110,75 +99,99 @@ impl<Display: DisplayType> Screen<Display> {
         }
     }
 
-    fn set_buffer(&self) {
-        unsafe {
-            c_wut::OSScreenSetBufferEx(self.screen(), self.buffer.get());
-        }
+    pub fn pixel(&self) {
+        todo!()
+    }
+
+    /// Get underlying memory
+    pub fn as_ref(&self) -> &[u8] {
+        self.buffer.0.as_ref()
+    }
+
+    /// Get underlying memory
+    pub fn as_mut(&mut self) -> &mut [u8] {
+        self.buffer.0.as_mut()
     }
 }
 
-impl<Display> Drop for Screen<Display> {
+impl<Display: DisplayType> Drop for Screen<'_, Display> {
     fn drop(&mut self) {
-        crate::println!("drop screen");
+        unsafe {
+            c_wut::OSScreenEnableEx(self.id(), 0);
+        }
         _screen_deinit(false);
     }
 }
 
-impl Screen<TV> {
-    pub fn tv() -> Screen<TV> {
+impl<'a> Screen<'a, TV> {
+    pub fn tv() -> Screen<'a, TV> {
         _screen_init();
-        let s = Screen {
+        let mut s = Screen {
             display: PhantomData,
             buffer: FrameBuffer::new(TV::id()),
         };
-        s.set_buffer();
+        unsafe {
+            c_wut::OSScreenSetBufferEx(s.id(), s.buffer.as_mut_ptr());
+            c_wut::OSScreenEnableEx(s.id(), 1);
+        }
         s
     }
 }
 
-impl Screen<DRC> {
-    pub fn drc() -> Screen<DRC> {
+impl<'a> Screen<'a, DRC> {
+    pub fn drc() -> Screen<'a, DRC> {
         _screen_init();
-        let s = Screen {
+        let mut s = Screen {
             display: PhantomData,
             buffer: FrameBuffer::new(DRC::id()),
         };
-        s.set_buffer();
+        unsafe {
+            c_wut::OSScreenSetBufferEx(s.id(), s.buffer.as_mut_ptr());
+            c_wut::OSScreenEnableEx(s.id(), 1);
+        }
         s
     }
 }
+struct FrameBuffer<'a>(&'a mut [u8]);
 
-struct FrameBuffer {
-    data: *mut u8,
-    layout: alloc::Layout,
-}
-
-impl FrameBuffer {
+impl FrameBuffer<'_> {
     fn new(screen: c_wut::OSScreenID) -> Self {
         unsafe {
             let size = c_wut::OSScreenGetBufferSizeEx(screen) as usize;
             let layout = Layout::from_size_align(size, 0x100).unwrap();
+            crate::println!("{:?}", layout);
             let data = GLOBAL_ALLOCATOR.alloc_zeroed(layout);
 
-            Self { data, layout }
+            if data.is_null() {
+                panic!("Framebuffer allocation failed!");
+            } else {
+                crate::println!("aligned? {}", (data as usize) % 0x100 == 0);
+
+                Self(slice::from_raw_parts_mut(data, size))
+            }
         }
     }
 
-    fn get(&self) -> *mut ffi::c_void {
-        self.data as *mut ffi::c_void
+    // fn as_ptr(&self) -> *const ffi::c_void {
+    //     self.0.as_ptr() as *const _
+    // }
+
+    fn as_mut_ptr(&mut self) -> *mut ffi::c_void {
+        self.0.as_mut_ptr() as *mut _
     }
 
-    fn flush(&self) {
+    fn flush(&mut self) {
         unsafe {
-            c_wut::DCFlushRange(self.get(), self.layout.size() as u32);
+            c_wut::DCFlushRange(self.as_mut_ptr(), self.0.len() as u32);
         }
     }
 }
 
-impl Drop for FrameBuffer {
+impl Drop for FrameBuffer<'_> {
     fn drop(&mut self) {
         unsafe {
-            GLOBAL_ALLOCATOR.dealloc(self.data, self.layout);
+            let layout = Layout::from_size_align(self.0.len(), 0x100).unwrap();
+            GLOBAL_ALLOCATOR.dealloc(self.0.as_mut_ptr(), layout);
         }
     }
 }

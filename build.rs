@@ -1,7 +1,6 @@
 use std::env;
 
 extern crate bindgen;
-// extern crate cc;
 
 fn main() {
     let link_search_path = "cargo:rustc-link-search=native";
@@ -32,7 +31,7 @@ fn main() {
      */
     let bindings = bindgen::Builder::default()
         .use_core()
-        .header("wrapper.h")
+        .header("src/wrapper.h")
         .emit_builtins()
         .generate_cstr(true)
         .generate_comments(false)
@@ -54,8 +53,8 @@ fn main() {
         .generate()
         .expect("Unable to generate bindings");
 
-    let out = std::path::PathBuf::from("./src/");
+    let out = std::path::PathBuf::from("./src/bindings.rs");
     bindings
-        .write_to_file(out.join("bindings.rs"))
+        .write_to_file(out)
         .expect("Unable to write bindings to file");
 }
