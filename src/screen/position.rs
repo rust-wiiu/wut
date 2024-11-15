@@ -35,6 +35,18 @@ impl Into<TextPosition> for (u32, u32, TextAlign) {
     }
 }
 
+impl Into<TextPosition> for (f32, f32) {
+    fn into(self) -> TextPosition {
+        todo!()
+    }
+}
+
+impl Into<TextPosition> for (f32, f32, TextAlign) {
+    fn into(self) -> TextPosition {
+        todo!()
+    }
+}
+
 impl TextPosition {
     pub fn format<'a>(&self, text: &'a str) -> impl Iterator<Item = (&'a str, u32, u32)> {
         let mut row = self.row;

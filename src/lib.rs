@@ -6,6 +6,7 @@ extern crate flagset;
 extern crate thiserror;
 
 pub mod bindings;
+pub mod gamepad;
 pub mod io;
 mod macros;
 pub mod net;

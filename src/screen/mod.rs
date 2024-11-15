@@ -8,7 +8,7 @@ mod color;
 mod position;
 
 use crate::alloc::string::String;
-use crate::bindings::{self as c_wut, _MB_LEN_MAX};
+use crate::bindings as c_wut;
 use crate::{GlobalAlloc, Layout, GLOBAL_ALLOCATOR};
 use ::alloc::ffi::CString;
 use alloc::alloc::{self};
@@ -20,7 +20,6 @@ use core::{
     sync::atomic::{AtomicU8, Ordering},
 };
 use position::TextPosition;
-use thiserror::Error;
 
 static OSSCREEN_INSTANCE_COUNT: AtomicU8 = AtomicU8::new(0);
 
@@ -61,7 +60,7 @@ impl DisplayType for DRC {
 
 pub struct Screen<'a, Display: DisplayType> {
     display: PhantomData<Display>,
-    pub buffer: FrameBuffer<'a>,
+    buffer: FrameBuffer<'a>,
 }
 
 impl<Display: DisplayType> Screen<'_, Display> {
@@ -75,11 +74,12 @@ impl<Display: DisplayType> Screen<'_, Display> {
         }
     }
 
-    pub fn draw(&mut self) {
+    pub fn update(&mut self) {
         self.buffer.flush();
-        unsafe {
-            c_wut::OSScreenFlipBuffersEx(self.id());
-        }
+        // FIXME: THIS CRASHES CEMU
+        // unsafe {
+        //     c_wut::OSScreenFlipBuffersEx(self.id());
+        // }
     }
 
     pub fn text(&self, text: &str, position: impl Into<TextPosition>) {
@@ -159,14 +159,11 @@ impl FrameBuffer<'_> {
         unsafe {
             let size = c_wut::OSScreenGetBufferSizeEx(screen) as usize;
             let layout = Layout::from_size_align(size, 0x100).unwrap();
-            crate::println!("{:?}", layout);
             let data = GLOBAL_ALLOCATOR.alloc_zeroed(layout);
 
             if data.is_null() {
                 panic!("Framebuffer allocation failed!");
             } else {
-                crate::println!("aligned? {}", (data as usize) % 0x100 == 0);
-
                 Self(slice::from_raw_parts_mut(data, size))
             }
         }
