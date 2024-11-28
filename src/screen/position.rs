@@ -68,3 +68,19 @@ impl TextPosition {
             .into_iter()
     }
 }
+
+pub trait Position {
+    fn into(self, max_value: u32) -> u32;
+}
+
+impl Position for u32 {
+    fn into(self, _max_value: u32) -> u32 {
+        self
+    }
+}
+
+impl Position for f32 {
+    fn into(self, max_value: u32) -> u32 {
+        (self.clamp(0.0, 1.0) * max_value as f32) as u32
+    }
+}

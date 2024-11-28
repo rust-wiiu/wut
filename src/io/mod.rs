@@ -3,19 +3,22 @@
 use crate::bindings as c_wut;
 use core::ffi::CStr;
 use flagset::{flags, FlagSet};
+pub use Stdout::{Cafe, Console, Module, Udp};
 
 pub(crate) static mut STDOUT: u8 = 0;
 
 flags! {
     pub enum Stdout: u8 {
+        /// Default Wii U logging system
         Cafe,
+        /// Write to screen. Requires exclusive access over screen.
         Console,
+        /// Write to WUMS Logging Module.
         Module,
+        /// Write to UDP server on port ...
         Udp
     }
 }
-
-pub use Stdout::{Cafe, Console, Module, Udp};
 
 pub(crate) unsafe fn _stdout_init(stdout: FlagSet<Stdout>) {
     let mut stdout = stdout;

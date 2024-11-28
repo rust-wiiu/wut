@@ -2,39 +2,149 @@
 //!
 //! [...]  is much more straightforward than GX2, which makes it appealing for situations that do not require complex graphics. It can draw text and pixels (one at a time!) to both the Gamepad and TV.
 //!
-//! This clashes with Stdout::Console on the main screen (TV).
+//! There is only one framebuffer per screen to write to so multiple instances of Screen<...> will write to the same framebuffer.
 
 mod color;
 mod position;
 
 use crate::bindings as c_wut;
 use crate::sync::{ResourceGuard, Rrc};
-use crate::{GlobalAlloc, Layout, GLOBAL_ALLOCATOR};
 use alloc::{ffi::CString, string::String};
 pub use color::{Color, ColorParseError};
-use core::fmt::Debug;
-use core::{ffi, marker::PhantomData, slice};
-use position::TextPosition;
+use core::{ffi, marker::PhantomData, ptr};
+use position::Position;
+pub use position::{TextAlign, TextPosition};
 
 pub(crate) static OSSCREEN: Rrc<fn(), fn()> = Rrc::new(
     || unsafe {
         c_wut::OSScreenInit();
+        let _ = _alloc_framebuffer(ptr::null_mut());
+        c_wut::ProcUIRegisterCallback(
+            c_wut::PROCUI_CALLBACK_ACQUIRE,
+            Some(_alloc_framebuffer),
+            ptr::null_mut(),
+            100,
+        );
+        c_wut::ProcUIRegisterCallback(
+            c_wut::PROCUI_CALLBACK_ACQUIRE,
+            Some(_dealloc_framebuffer),
+            ptr::null_mut(),
+            100,
+        );
     },
     || unsafe {
         c_wut::OSScreenShutdown();
     },
 );
 
+const FRAMEBUFFER_HEAP_TAG: u32 = 0x8E8B30C2;
+static mut FRAMEBUFFER_TV: (*mut ffi::c_void, u32) = (ptr::null_mut(), 0);
+static mut FRAMEBUFFER_DRC: (*mut ffi::c_void, u32) = (ptr::null_mut(), 0);
+
+unsafe extern "C" fn _alloc_framebuffer(_: *mut ffi::c_void) -> u32 {
+    let heap = c_wut::MEMGetBaseHeapHandle(c_wut::MEM_BASE_HEAP_MEM1);
+    let _ = c_wut::MEMRecordStateForFrmHeap(heap, FRAMEBUFFER_HEAP_TAG);
+
+    if (FRAMEBUFFER_TV.0.is_null()) {
+        let size = c_wut::OSScreenGetBufferSizeEx(c_wut::SCREEN_TV);
+        FRAMEBUFFER_TV = (c_wut::MEMAllocFromFrmHeapEx(heap, size, 0x100), size);
+    }
+
+    if (FRAMEBUFFER_DRC.0.is_null()) {
+        let size = c_wut::OSScreenGetBufferSizeEx(c_wut::SCREEN_DRC);
+        FRAMEBUFFER_DRC = (c_wut::MEMAllocFromFrmHeapEx(heap, size, 0x100), size);
+    }
+
+    c_wut::OSScreenSetBufferEx(c_wut::SCREEN_TV, FRAMEBUFFER_TV.0);
+    c_wut::OSScreenSetBufferEx(c_wut::SCREEN_DRC, FRAMEBUFFER_DRC.0);
+
+    0
+}
+
+unsafe extern "C" fn _dealloc_framebuffer(_: *mut ffi::c_void) -> u32 {
+    let heap = c_wut::MEMGetBaseHeapHandle(c_wut::MEM_BASE_HEAP_MEM1);
+    let _ = c_wut::MEMFreeByStateToFrmHeap(heap, FRAMEBUFFER_HEAP_TAG);
+
+    FRAMEBUFFER_TV = (ptr::null_mut(), 0);
+    FRAMEBUFFER_DRC = (ptr::null_mut(), 0);
+
+    0
+}
+
 pub struct TV;
+// impl TV {
+//     pub const ROWS: u32 = 30;
+//     pub const COLS: u32 = 80;
+// }
 pub struct DRC;
 
 pub trait DisplayType {
     fn id() -> u32;
+
+    fn width() -> u32;
+
+    fn height() -> u32;
+
+    fn resolution() -> (u32, u32);
+
+    fn rows() -> u32;
+
+    fn columns() -> u32;
 }
 
 impl DisplayType for TV {
     fn id() -> u32 {
         c_wut::SCREEN_TV
+    }
+
+    fn width() -> u32 {
+        TV::resolution().0
+    }
+
+    fn height() -> u32 {
+        TV::resolution().1
+    }
+
+    fn resolution() -> (u32, u32) {
+        // it is (theoretically?) possible that no resolution is found?!
+        let mut resolution = c_wut::AVMTvResolution::default();
+
+        unsafe {
+            c_wut::AVMGetTVScanMode(&mut resolution);
+
+            if resolution == 0 {
+                if c_wut::AVMReadSystemVideoResConfig(&mut resolution) != 0 {
+                    panic!("No resolution was returned by the system");
+                }
+            }
+        }
+
+        match resolution {
+            c_wut::AVM_TV_RESOLUTION_576I | c_wut::AVM_TV_RESOLUTION_576P => (720, 576),
+            c_wut::AVM_TV_RESOLUTION_480I
+            | c_wut::AVM_TV_RESOLUTION_480I_PAL60
+            | c_wut::AVM_TV_RESOLUTION_480P => (720, 480),
+            c_wut::AVM_TV_RESOLUTION_720P
+            | c_wut::AVM_TV_RESOLUTION_720P_3D
+            | c_wut::AVM_TV_RESOLUTION_720P_50HZ => (1280, 720),
+            c_wut::AVM_TV_RESOLUTION_1080I
+            | c_wut::AVM_TV_RESOLUTION_1080I_50HZ
+            | c_wut::AVM_TV_RESOLUTION_1080P
+            | c_wut::AVM_TV_RESOLUTION_1080P_50HZ => (1920, 1080),
+            0 => {
+                crate::println!("Fallback to default resolution (1280, 720)");
+                (1280, 720)
+            }
+            _ => panic!("Returned resolution couldn't be matched"),
+        }
+    }
+
+    fn rows() -> u32 {
+        30
+    }
+
+    fn columns() -> u32 {
+        80
     }
 }
 
@@ -42,142 +152,140 @@ impl DisplayType for DRC {
     fn id() -> u32 {
         c_wut::SCREEN_DRC
     }
+
+    fn width() -> u32 {
+        854
+    }
+
+    fn height() -> u32 {
+        480
+    }
+
+    fn resolution() -> (u32, u32) {
+        (DRC::width(), DRC::height())
+    }
+
+    fn rows() -> u32 {
+        20
+    }
+
+    fn columns() -> u32 {
+        53
+    }
 }
 
 pub struct Screen<'a, Display: DisplayType> {
     display: PhantomData<Display>,
-    buffer: FrameBuffer<'a>,
-    resource: ResourceGuard<'a>,
+    _resource: ResourceGuard<'a>,
 }
 
 impl<Display: DisplayType> Screen<'_, Display> {
-    fn id(&self) -> u32 {
-        Display::id()
+    pub fn width(&self) -> u32 {
+        Display::width()
+    }
+
+    pub fn height(&self) -> u32 {
+        Display::height()
+    }
+
+    pub fn resolution(&self) -> (u32, u32) {
+        Display::resolution()
+    }
+
+    pub fn rows(&self) -> u32 {
+        Display::rows()
+    }
+
+    pub fn columns(&self) -> u32 {
+        Display::columns()
+    }
+
+    pub fn enable(&self) {
+        unsafe {
+            c_wut::OSScreenEnableEx(Display::id(), 1);
+        }
+    }
+
+    pub fn disable(&self) {
+        unsafe {
+            c_wut::OSScreenEnableEx(Display::id(), 0);
+        }
     }
 
     pub fn fill(&self, color: Color) {
         unsafe {
-            c_wut::OSScreenClearBufferEx(self.id(), color.into());
+            c_wut::OSScreenClearBufferEx(Display::id(), color.into());
         }
     }
 
-    pub fn update(&mut self) {
-        self.buffer.flush();
-        // FIXME: THIS CRASHES CEMU
+    pub fn update(&self) {
         unsafe {
-            c_wut::OSScreenFlipBuffersEx(self.id());
+            c_wut::OSScreenFlipBuffersEx(Display::id());
         }
     }
 
-    pub fn text(&self, text: &str, position: impl Into<TextPosition>) {
-        let text = String::from(text);
-        let position: TextPosition = position.into();
+    // pub fn text(&self, text: &str, position: impl Into<TextPosition>) {
+    //     let text = String::from(text);
+    //     let position: TextPosition = position.into();
 
-        for (line, column, row) in position.format(&text) {
-            crate::println!("\"{}\" - {} x {}", line, column, row);
-            unsafe {
-                c_wut::OSScreenPutFontEx(
-                    self.id(),
-                    column,
-                    row,
-                    CString::new(line).unwrap().as_c_str().as_ptr(),
-                );
-            }
-        }
-    }
-
-    pub fn pixel(&self) {
-        todo!()
-    }
-
-    /// Get underlying memory
-    pub fn as_ref(&self) -> &[u8] {
-        self.buffer.0.as_ref()
-    }
-
-    /// Get underlying memory
-    pub fn as_mut(&mut self) -> &mut [u8] {
-        self.buffer.0.as_mut()
-    }
-}
-
-impl<Display: DisplayType> Drop for Screen<'_, Display> {
-    fn drop(&mut self) {
-        unsafe {
-            c_wut::OSScreenEnableEx(self.id(), 0);
-        }
-    }
-}
-
-impl<'a> Screen<'a, TV> {
-    pub fn tv() -> Screen<'a, TV> {
-        let mut s = Screen {
-            display: PhantomData,
-            buffer: FrameBuffer::new(TV::id()),
-            resource: OSSCREEN.acquire(),
-        };
-        unsafe {
-            c_wut::OSScreenSetBufferEx(s.id(), s.buffer.as_mut_ptr());
-            c_wut::OSScreenEnableEx(s.id(), 1);
-        }
-        s
-    }
-}
-
-impl<'a> Screen<'a, DRC> {
-    pub fn drc() -> Screen<'a, DRC> {
-        crate::println!("drc - 1");
-        let mut s = Screen {
-            display: PhantomData,
-            buffer: FrameBuffer::new(DRC::id()),
-            resource: OSSCREEN.acquire(),
-        };
-        crate::println!("drc - 2");
-        unsafe {
-            c_wut::OSScreenSetBufferEx(s.id(), s.buffer.as_mut_ptr());
-            c_wut::OSScreenEnableEx(s.id(), 1);
-        }
-        crate::println!("drc - 3");
-        s
-    }
-}
-struct FrameBuffer<'a>(&'a mut [u8]);
-
-impl FrameBuffer<'_> {
-    fn new(screen: c_wut::OSScreenID) -> Self {
-        unsafe {
-            let size = c_wut::OSScreenGetBufferSizeEx(screen) as usize;
-            let layout = Layout::from_size_align(size, 0x100).unwrap();
-            let data = GLOBAL_ALLOCATOR.alloc_zeroed(layout);
-
-            if data.is_null() {
-                panic!("Framebuffer allocation failed!");
-            } else {
-                Self(slice::from_raw_parts_mut(data, size))
-            }
-        }
-    }
-
-    // fn as_ptr(&self) -> *const ffi::c_void {
-    //     self.0.as_ptr() as *const _
+    //     for (line, column, row) in position.format(&text) {
+    //         crate::println!("\"{}\" - {} x {}", line, column, row);
+    //         unsafe {
+    //             c_wut::OSScreenPutFontEx(
+    //                 Display::id(),
+    //                 column,
+    //                 row,
+    //                 CString::new(line).unwrap().as_c_str().as_ptr(),
+    //             );
+    //         }
+    //     }
     // }
 
-    fn as_mut_ptr(&mut self) -> *mut ffi::c_void {
-        self.0.as_mut_ptr() as *mut _
+    pub fn text<C: Position, R: Position>(&self, text: &str, col: C, row: R, align: TextAlign) {
+        // let text = CString::new(text).unwrap();
+        let text = String::from(text);
+        let col = col.into(Display::columns());
+        let mut row = row.into(Display::rows());
+
+        text.split('\n').for_each(move |line| unsafe {
+            let c = match align {
+                TextAlign::Left => col,
+                TextAlign::Center => col.saturating_sub(line.len() as u32 / 2),
+                TextAlign::Right => col.saturating_sub(line.len() as u32),
+            };
+
+            c_wut::OSScreenPutFontEx(
+                Display::id(),
+                c,
+                row,
+                CString::new(line).unwrap().as_c_str().as_ptr(),
+            );
+            row += 1;
+        });
     }
 
-    fn flush(&mut self) {
+    pub fn pixel<X: Position, Y: Position>(&self, x: X, y: Y, color: Color) {
         unsafe {
-            c_wut::DCFlushRange(self.as_mut_ptr(), self.0.len() as u32);
+            c_wut::OSScreenPutPixelEx(
+                Display::id(),
+                x.into(Display::width()),
+                y.into(Display::height()),
+                color.into(),
+            );
         }
     }
 }
 
-impl Drop for FrameBuffer<'_> {
-    fn drop(&mut self) {
-        unsafe {
-            let layout = Layout::from_size_align(self.0.len(), 0x100).unwrap();
-            GLOBAL_ALLOCATOR.dealloc(self.0.as_mut_ptr(), layout);
-        }
+pub fn tv<'a>() -> Screen<'a, TV> {
+    Screen {
+        display: PhantomData,
+        _resource: OSSCREEN.acquire(),
+    }
+}
+
+pub fn drc<'a>() -> Screen<'a, DRC> {
+    Screen {
+        display: PhantomData,
+        _resource: OSSCREEN.acquire(),
     }
 }

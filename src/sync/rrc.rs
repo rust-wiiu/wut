@@ -15,21 +15,15 @@ use core::sync::atomic::{AtomicI32, Ordering};
 ///     || { LibraryDeinit(); }
 /// )
 ///
-/// struct LibStruct;
+/// struct LibStruct {
+///     _resource: ResourceGuard<'a>
+/// };
 ///
 /// impl LibStruct {
 ///     fn new() -> Self {
-///         LIBRARY.acquire();
-///         todo!()
+///         Self { _resource: LIBRARY.acquire() }
 ///     }
 /// }
-///
-/// impl Drop for LibStruct {
-///     fn drop(&mut self) {
-///         LIBRARY.release();
-///     }
-/// }
-///
 /// ```
 pub struct Rrc<F: Fn() + Sync, G: Fn() + Sync> {
     ref_count: AtomicI32,
