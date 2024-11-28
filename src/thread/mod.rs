@@ -5,9 +5,12 @@ mod ticks;
 use crate::bindings as c_wut;
 pub use builder::Builder;
 use core::time::Duration;
+use thiserror::Error;
 pub use thread::{Thread, ThreadError};
 
+#[derive(Debug, Error)]
 pub enum JoinError {
+    #[error("This thread was detached")]
     Detached,
 }
 
@@ -77,9 +80,9 @@ pub fn num_threads() -> i32 {
 /// Exit the current thread with a exit code.
 ///
 /// Be careful when calling this function in the main thread!
-pub fn terminate(exit_code: Option<i32>) {
+pub fn terminate(exit_code: i32) {
     unsafe {
-        c_wut::OSExitThread(exit_code.unwrap_or(0));
+        c_wut::OSExitThread(exit_code);
     }
 }
 

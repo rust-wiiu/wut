@@ -22,8 +22,7 @@ impl Default for Builder {
             attribute: ThreadAttribute::default().into(),
             priority: 15,
             stack_size: 128 * 1024,
-            // Set a thread run quantum to 1 millisecond, to force the threads to behave more like pre-emptive scheduling rather than co-operative.
-            quantum: 1000,
+            quantum: 100_000, // ticks
         }
     }
 }

@@ -22,7 +22,7 @@ pub fn new(stdout: impl Into<FlagSet<io::Stdout>>) {
 pub fn exit() {
     unsafe {
         io::_stdout_deinit();
-        screen::_screen_deinit(true);
+        screen::OSSCREEN.clear();
         c_wut::WHBProcShutdown();
     }
 }

@@ -12201,8 +12201,7 @@ pub const MEM_HEAP_FLAG_ZERO_ALLOCATED: MEMHeapFlags = 1;
 pub const MEM_HEAP_FLAG_DEBUG_MODE: MEMHeapFlags = 2;
 pub const MEM_HEAP_FLAG_USE_LOCK: MEMHeapFlags = 4;
 pub type MEMHeapFlags = ::core::ffi::c_uint;
-#[repr(C)]
-#[repr(align(16))]
+#[repr(C, align(16))]
 #[derive(Debug, Copy, Clone)]
 pub struct MEMHeapHeader {
     pub tag: MEMHeapTag,
@@ -19855,6 +19854,82 @@ extern "C" {
         pmc3: u32,
         pmc4: u32,
     );
+}
+pub const MEM_FRM_HEAP_FREE_HEAD: MEMFrmHeapFreeMode = 1;
+pub const MEM_FRM_HEAP_FREE_TAIL: MEMFrmHeapFreeMode = 2;
+pub const MEM_FRM_HEAP_FREE_ALL: MEMFrmHeapFreeMode = 3;
+pub type MEMFrmHeapFreeMode = ::core::ffi::c_uint;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct MEMFrmHeapState {
+    pub tag: u32,
+    pub head: *mut ::core::ffi::c_void,
+    pub tail: *mut ::core::ffi::c_void,
+    pub previous: *mut MEMFrmHeapState,
+}
+impl Default for MEMFrmHeapState {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct MEMFrmHeap {
+    pub header: MEMHeapHeader,
+    pub head: *mut ::core::ffi::c_void,
+    pub tail: *mut ::core::ffi::c_void,
+    pub previousState: *mut MEMFrmHeapState,
+}
+impl Default for MEMFrmHeap {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
+extern "C" {
+    pub fn MEMCreateFrmHeapEx(
+        heap: *mut ::core::ffi::c_void,
+        size: u32,
+        flags: u32,
+    ) -> MEMHeapHandle;
+}
+extern "C" {
+    pub fn MEMDestroyFrmHeap(heap: MEMHeapHandle) -> *mut ::core::ffi::c_void;
+}
+extern "C" {
+    pub fn MEMAllocFromFrmHeapEx(
+        heap: MEMHeapHandle,
+        size: u32,
+        alignment: ::core::ffi::c_int,
+    ) -> *mut ::core::ffi::c_void;
+}
+extern "C" {
+    pub fn MEMFreeToFrmHeap(heap: MEMHeapHandle, mode: MEMFrmHeapFreeMode);
+}
+extern "C" {
+    pub fn MEMRecordStateForFrmHeap(heap: MEMHeapHandle, tag: u32) -> BOOL;
+}
+extern "C" {
+    pub fn MEMFreeByStateToFrmHeap(heap: MEMHeapHandle, tag: u32) -> BOOL;
+}
+extern "C" {
+    pub fn MEMAdjustFrmHeap(heap: MEMHeapHandle) -> u32;
+}
+extern "C" {
+    pub fn MEMResizeForMBlockFrmHeap(heap: MEMHeapHandle, addr: u32, size: u32) -> u32;
+}
+extern "C" {
+    pub fn MEMGetAllocatableSizeForFrmHeapEx(
+        heap: MEMHeapHandle,
+        alignment: ::core::ffi::c_int,
+    ) -> u32;
 }
 pub const CODEGEN_RW_: OSCodegenSecMode = 0;
 pub const CODEGEN_R_X: OSCodegenSecMode = 1;

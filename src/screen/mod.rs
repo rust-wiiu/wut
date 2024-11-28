@@ -7,37 +7,23 @@
 mod color;
 mod position;
 
-use crate::alloc::string::String;
 use crate::bindings as c_wut;
+use crate::sync::{ResourceGuard, Rrc};
 use crate::{GlobalAlloc, Layout, GLOBAL_ALLOCATOR};
-use ::alloc::ffi::CString;
-use alloc::alloc::{self};
+use alloc::{ffi::CString, string::String};
 pub use color::{Color, ColorParseError};
-use core::{
-    ffi,
-    marker::PhantomData,
-    slice,
-    sync::atomic::{AtomicU8, Ordering},
-};
+use core::fmt::Debug;
+use core::{ffi, marker::PhantomData, slice};
 use position::TextPosition;
 
-static OSSCREEN_INSTANCE_COUNT: AtomicU8 = AtomicU8::new(0);
-
-pub(crate) fn _screen_init() {
-    if OSSCREEN_INSTANCE_COUNT.fetch_add(1, Ordering::SeqCst) == 0 {
-        unsafe {
-            c_wut::OSScreenInit();
-        }
-    }
-}
-
-pub(crate) fn _screen_deinit(force: bool) {
-    if force || OSSCREEN_INSTANCE_COUNT.fetch_sub(1, Ordering::SeqCst) == 1 {
-        unsafe {
-            c_wut::OSScreenShutdown();
-        }
-    }
-}
+pub(crate) static OSSCREEN: Rrc<fn(), fn()> = Rrc::new(
+    || unsafe {
+        c_wut::OSScreenInit();
+    },
+    || unsafe {
+        c_wut::OSScreenShutdown();
+    },
+);
 
 pub struct TV;
 pub struct DRC;
@@ -61,6 +47,7 @@ impl DisplayType for DRC {
 pub struct Screen<'a, Display: DisplayType> {
     display: PhantomData<Display>,
     buffer: FrameBuffer<'a>,
+    resource: ResourceGuard<'a>,
 }
 
 impl<Display: DisplayType> Screen<'_, Display> {
@@ -77,9 +64,9 @@ impl<Display: DisplayType> Screen<'_, Display> {
     pub fn update(&mut self) {
         self.buffer.flush();
         // FIXME: THIS CRASHES CEMU
-        // unsafe {
-        //     c_wut::OSScreenFlipBuffersEx(self.id());
-        // }
+        unsafe {
+            c_wut::OSScreenFlipBuffersEx(self.id());
+        }
     }
 
     pub fn text(&self, text: &str, position: impl Into<TextPosition>) {
@@ -119,16 +106,15 @@ impl<Display: DisplayType> Drop for Screen<'_, Display> {
         unsafe {
             c_wut::OSScreenEnableEx(self.id(), 0);
         }
-        _screen_deinit(false);
     }
 }
 
 impl<'a> Screen<'a, TV> {
     pub fn tv() -> Screen<'a, TV> {
-        _screen_init();
         let mut s = Screen {
             display: PhantomData,
             buffer: FrameBuffer::new(TV::id()),
+            resource: OSSCREEN.acquire(),
         };
         unsafe {
             c_wut::OSScreenSetBufferEx(s.id(), s.buffer.as_mut_ptr());
@@ -140,15 +126,18 @@ impl<'a> Screen<'a, TV> {
 
 impl<'a> Screen<'a, DRC> {
     pub fn drc() -> Screen<'a, DRC> {
-        _screen_init();
+        crate::println!("drc - 1");
         let mut s = Screen {
             display: PhantomData,
             buffer: FrameBuffer::new(DRC::id()),
+            resource: OSSCREEN.acquire(),
         };
+        crate::println!("drc - 2");
         unsafe {
             c_wut::OSScreenSetBufferEx(s.id(), s.buffer.as_mut_ptr());
             c_wut::OSScreenEnableEx(s.id(), 1);
         }
+        crate::println!("drc - 3");
         s
     }
 }

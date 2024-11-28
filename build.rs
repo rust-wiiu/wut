@@ -29,6 +29,8 @@ fn main() {
      * a 64bit system. There are alignment and size checks which will
      * fail, because pointers have different sizes.
      */
+
+    /*
     let bindings = bindgen::Builder::default()
         .use_core()
         .header("src/wrapper.h")
@@ -55,6 +57,7 @@ fn main() {
 
     let out = std::path::PathBuf::from("./src/bindings.rs");
     bindings
-        .write_to_file(out)
+        .write_to_file(&out)
         .expect("Unable to write bindings to file");
+    */
 }

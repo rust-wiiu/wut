@@ -22,14 +22,19 @@ pub(crate) unsafe fn _stdout_init(stdout: FlagSet<Stdout>) {
     if stdout.contains(Stdout::Cafe) {
         if c_wut::WHBLogCafeInit() == 0 {
             stdout ^= Stdout::Cafe;
-            c_wut::OSReportWarn(c"WHBLogCafeInit() failed!".as_ptr());
+
+            let msg = c"WHBLogCafeInit() failed!\n";
+            c_wut::OSConsoleWrite(msg.as_ptr(), msg.to_bytes_with_nul().len() as u32);
         }
     }
 
     if stdout.contains(Stdout::Console) {
-        if c_wut::WHBLogConsoleInit() == 0 {
-            // stdout ^= Stdout::Console;
-            c_wut::OSReportWarn(c"WHBLogConsoleInit() failed!".as_ptr());
+        // for some reason, this returns FALSE on success
+        if c_wut::WHBLogConsoleInit() != 0 {
+            stdout ^= Stdout::Console;
+
+            let msg = c"WHBLogConsoleInit() failed!\n";
+            c_wut::OSConsoleWrite(msg.as_ptr(), msg.to_bytes_with_nul().len() as u32);
         } else {
             c_wut::WHBLogConsoleSetColor(0xFF000000);
         }
@@ -38,13 +43,17 @@ pub(crate) unsafe fn _stdout_init(stdout: FlagSet<Stdout>) {
     if stdout.contains(Stdout::Module) {
         if c_wut::WHBLogModuleInit() == 0 {
             stdout ^= Stdout::Module;
-            c_wut::OSReportWarn(c"WHBLogModuleInit() failed!".as_ptr());
+
+            let msg = c"WHBLogModuleInit() failed!\n";
+            c_wut::OSConsoleWrite(msg.as_ptr(), msg.to_bytes_with_nul().len() as u32);
         }
     }
     if stdout.contains(Stdout::Udp) {
         if c_wut::WHBLogUdpInit() == 0 {
             stdout ^= Stdout::Udp;
-            c_wut::OSReportWarn(c"WHBLogUdpInit() failed!".as_ptr());
+
+            let msg = c"WHBLogUdpInit() failed!\n";
+            c_wut::OSConsoleWrite(msg.as_ptr(), msg.to_bytes_with_nul().len() as u32);
         }
     }
 

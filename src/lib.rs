@@ -1,7 +1,6 @@
 #![no_std]
 
-extern crate alloc;
-// extern crate compiler_builtins;
+pub extern crate alloc;
 extern crate flagset;
 extern crate thiserror;
 
@@ -26,6 +25,7 @@ pub mod prelude {
 #[cfg(feature = "default_panic_handler")]
 #[panic_handler]
 fn panic_handler(info: &core::panic::PanicInfo) -> ! {
+    /*
     if let Some(location) = info.location() {
         crate::println!(
             "Panic! - {} [{} : Ln {}, Col {}]",
@@ -37,6 +37,26 @@ fn panic_handler(info: &core::panic::PanicInfo) -> ! {
     } else {
         crate::println!("Panic! - {}", info.message());
     }
+
+    loop {}
+    */
+
+    use alloc::string::ToString;
+
+    let (file, line) = if let Some(location) = info.location() {
+        (
+            alloc::ffi::CString::new(location.file()).unwrap(),
+            location.line(),
+        )
+    } else {
+        (alloc::ffi::CString::from(c"<unknown>"), 0)
+    };
+    let msg = alloc::ffi::CString::new(info.message().to_string()).unwrap();
+
+    unsafe {
+        crate::bindings::OSPanic(file.as_ptr(), line, msg.as_ptr());
+    }
+    crate::thread::sleep(core::time::Duration::from_secs(5));
 
     loop {}
 }

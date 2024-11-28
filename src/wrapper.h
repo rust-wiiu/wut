@@ -256,7 +256,7 @@
 #include <coreinit/performancemonitor.h>
 #include <coreinit/messagequeue.h>
 #include <coreinit/thread.h>
-// #include <coreinit/memfrmheap.h>
+#include <coreinit/memfrmheap.h>
 #include <coreinit/mcp.h>
 #include <coreinit/codegen.h>
 #include <coreinit/memory.h>
