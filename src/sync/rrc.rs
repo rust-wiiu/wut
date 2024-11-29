@@ -1,30 +1,28 @@
-// rrs
+//! Resource Reference Counter (RRC)
+//!
+//! Resources are typically FFI functionalties or libraries which require manual (de)initialization.
+//!
+//! # Examples
+//!
+//! ```
+//! static LIBRARY: Rrc<fn(), fn()> = Rrc::new(
+//!     || { LibraryInit(); },
+//!     || { LibraryDeinit(); }
+//! )
+//!
+//! struct LibStruct {
+//!     _resource: ResourceGuard<'a>
+//! };
+//!
+//! impl LibStruct {
+//!     fn new() -> Self {
+//!         Self { _resource: LIBRARY.acquire() }
+//!     }
+//! }
+//! ```
 
-use alloc::boxed::Box;
 use core::sync::atomic::{AtomicI32, Ordering};
 
-/// Resource Reference Counter (RRC)
-///
-/// Resources are typically FFI functionalties or libraries which require manual (de)initialization.
-///
-/// # Examples
-///
-/// ```
-/// static LIBRARY: Rrc<fn(), fn()> = Rrc::new(
-///     || { LibraryInit(); },
-///     || { LibraryDeinit(); }
-/// )
-///
-/// struct LibStruct {
-///     _resource: ResourceGuard<'a>
-/// };
-///
-/// impl LibStruct {
-///     fn new() -> Self {
-///         Self { _resource: LIBRARY.acquire() }
-///     }
-/// }
-/// ```
 pub struct Rrc<F: Fn() + Sync, G: Fn() + Sync> {
     ref_count: AtomicI32,
     init_fn: F,

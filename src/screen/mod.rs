@@ -45,12 +45,12 @@ unsafe extern "C" fn _alloc_framebuffer(_: *mut ffi::c_void) -> u32 {
     let heap = c_wut::MEMGetBaseHeapHandle(c_wut::MEM_BASE_HEAP_MEM1);
     let _ = c_wut::MEMRecordStateForFrmHeap(heap, FRAMEBUFFER_HEAP_TAG);
 
-    if (FRAMEBUFFER_TV.0.is_null()) {
+    if FRAMEBUFFER_TV.0.is_null() {
         let size = c_wut::OSScreenGetBufferSizeEx(c_wut::SCREEN_TV);
         FRAMEBUFFER_TV = (c_wut::MEMAllocFromFrmHeapEx(heap, size, 0x100), size);
     }
 
-    if (FRAMEBUFFER_DRC.0.is_null()) {
+    if FRAMEBUFFER_DRC.0.is_null() {
         let size = c_wut::OSScreenGetBufferSizeEx(c_wut::SCREEN_DRC);
         FRAMEBUFFER_DRC = (c_wut::MEMAllocFromFrmHeapEx(heap, size, 0x100), size);
     }

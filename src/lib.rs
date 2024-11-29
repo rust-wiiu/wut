@@ -20,6 +20,7 @@ use core::ffi;
 
 pub mod prelude {
     pub use crate::println;
+    pub use alloc::format;
 }
 
 #[cfg(feature = "default_panic_handler")]

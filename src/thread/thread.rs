@@ -1,9 +1,10 @@
+//! Thread
+
 use crate::bindings as c_wut;
 use alloc::{
     ffi::{CString, IntoStringError},
     string::String,
 };
-use core::cell::UnsafeCell;
 use flagset::{flags, FlagSet};
 
 flags! {

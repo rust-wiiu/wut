@@ -40,6 +40,30 @@ impl Color {
     pub fn blue() -> Self {
         Self { r: 0, g: 0, b: 255 }
     }
+
+    pub fn light_red() -> Self {
+        Self {
+            r: 255,
+            g: 204,
+            b: 203,
+        }
+    }
+
+    pub fn light_blue() -> Self {
+        Self {
+            r: 173,
+            g: 216,
+            b: 230,
+        }
+    }
+
+    pub fn light_green() -> Self {
+        Self {
+            r: 144,
+            g: 238,
+            b: 144,
+        }
+    }
 }
 
 impl Into<u32> for Color {

@@ -12,7 +12,7 @@ pub fn default() {
     }
 }
 
-pub fn new(stdout: impl Into<FlagSet<io::Stdout>>) {
+pub fn custom(stdout: impl Into<FlagSet<io::Stdout>>) {
     unsafe {
         c_wut::WHBProcInit();
         io::_stdout_init(stdout.into());
