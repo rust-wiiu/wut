@@ -192,12 +192,12 @@
 #include <nsysccr/cfg.h>
 #include <nsysccr/irda.h>
 #include <ntag/ntag.h>
-#include <nsysnet/netconfig.h>
-#include <nsysnet/_socket.h>
-#include <nsysnet/_netdb.h>
+// #include <nsysnet/netconfig.h>
+// #include <nsysnet/_socket.h>
+// #include <nsysnet/_netdb.h>
 // #include <nsysnet/socket.h>
-#include <nsysnet/nssl.h>
-#include <nsysnet/misc.h>
+// #include <nsysnet/nssl.h>
+// #include <nsysnet/misc.h>
 #include <avm/cec.h>
 #include <avm/drc.h>
 #include <avm/tv.h>
