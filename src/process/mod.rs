@@ -1,8 +1,7 @@
 // process.rs
 
 use crate::bindings as c_wut;
-use crate::io;
-use crate::screen;
+use crate::*;
 use flagset::FlagSet;
 
 pub fn default() {
@@ -23,6 +22,7 @@ pub fn exit() {
     unsafe {
         io::_stdout_deinit();
         screen::OSSCREEN.clear();
+        fs::FS.clear();
         c_wut::WHBProcShutdown();
     }
 }

@@ -1,15 +1,19 @@
 #![no_std]
 
+#[macro_use]
 pub extern crate alloc;
 extern crate flagset;
 extern crate thiserror;
 
 pub mod bindings;
+pub mod fs;
 pub mod gamepad;
 pub mod io;
 mod macros;
 pub mod net;
+pub mod path;
 pub mod process;
+pub mod rrc;
 pub mod screen;
 pub mod sync;
 pub mod thread;

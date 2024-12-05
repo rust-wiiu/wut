@@ -8,7 +8,7 @@ mod color;
 mod position;
 
 use crate::bindings as c_wut;
-use crate::sync::{ResourceGuard, Rrc};
+use crate::rrc::{ResourceGuard, Rrc};
 use alloc::{ffi::CString, string::String};
 pub use color::{Color, ColorParseError};
 use core::{ffi, marker::PhantomData, ptr};

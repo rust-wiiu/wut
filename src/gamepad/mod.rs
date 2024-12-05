@@ -4,7 +4,7 @@
 //! If finer controll and access to controller specific features is required, use the more complex "..." (which I maybe add later)
 
 use crate::bindings as c_wut;
-use crate::sync::{ResourceGuard, Rrc};
+use crate::rrc::{ResourceGuard, Rrc};
 use core::fmt::Debug;
 use core::panic;
 use flagset::{flags, FlagSet};
