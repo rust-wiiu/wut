@@ -26,6 +26,10 @@ pub enum FilesystemError {
     Unknown(i32),
     #[error("Conversion into utf-8 encoding failed")]
     InvalidCharacters(#[from] Utf8Error),
+    #[error("Object at given path cannot be found")]
+    NotFound,
+    #[error("Object was read to end")]
+    AllRead, // not sure if this also applies to files or just to directories (then maybe change the name)
 }
 
 impl TryFrom<i32> for FilesystemError {
@@ -33,6 +37,8 @@ impl TryFrom<i32> for FilesystemError {
     fn try_from(value: i32) -> Result<Self, Self::Error> {
         match value {
             c_wut::FS_STATUS_OK => Ok(Self::Unknown(value)),
+            c_wut::FS_STATUS_END => Err(Self::AllRead),
+            c_wut::FS_STATUS_NOT_FOUND => Err(Self::NotFound),
             _ => Err(Self::Unknown(value)),
         }
     }
@@ -117,11 +123,16 @@ impl Iterator for ReadDir {
         };
         match FilesystemError::try_from(status) {
             Ok(_) => (),
-            // Err(-2) => return None,
-            Err(e) => return None,
+            Err(FilesystemError::AllRead) => return None,
+            Err(e) => return Some(Err(e)),
         };
 
-        Some(DirEntry::try_from(entry))
+        let mut entry = match DirEntry::try_from(entry) {
+            Ok(entry) => entry,
+            Err(error) => return Some(Err(error)),
+        };
+        entry.path = self.base.join(&entry.path);
+        Some(Ok(entry))
     }
 }
 
@@ -170,23 +181,21 @@ pub fn read_dir<P: AsRef<Path>>(path: P) -> Result<ReadDir, FilesystemError> {
     let mut io = IoHandler::new()?;
     let mut handle = c_wut::FSDirectoryHandle::default();
 
-    let path = path.as_ref();
+    let path = PathBuf::from(path.as_ref());
+    let str = CString::new(path.as_str()).unwrap();
 
     let status = unsafe {
         c_wut::FSOpenDir(
             io.client.as_mut(),
             io.block.as_mut(),
-            path.as_c_str().as_ptr(),
+            str.as_c_str().as_ptr(),
             &mut handle,
             io.errorMask,
         )
     };
     FilesystemError::try_from(status)?;
 
-    Ok(ReadDir {
-        handle,
-        base: PathBuf::from(path),
-    })
+    Ok(ReadDir { handle, base: path })
 }
 
 pub fn metadata<P: AsRef<Path>>(path: P) -> Result<Metadata, FilesystemError> {
@@ -194,12 +203,13 @@ pub fn metadata<P: AsRef<Path>>(path: P) -> Result<Metadata, FilesystemError> {
     let mut info = c_wut::FSStat::default();
 
     let path = path.as_ref();
+    let str = CString::new(path.as_str()).unwrap();
 
     let status = unsafe {
         c_wut::FSGetStat(
             io.client.as_mut(),
             io.block.as_mut(),
-            path.as_c_str().as_ptr(),
+            str.as_c_str().as_ptr(),
             &mut info,
             io.errorMask,
         )

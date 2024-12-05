@@ -66,6 +66,7 @@ use core::{
 use alloc::{
     borrow::{Cow, ToOwned},
     boxed::Box,
+    ffi::CString,
     rc::Rc,
     str::FromStr,
     string::{String, ToString},
@@ -1366,21 +1367,6 @@ impl Path {
     /// ```
     pub fn as_str(&self) -> &str {
         &self.inner
-    }
-
-    /// Yields the underlying ffi compatible bytes.
-    // /
-    // / # Examples
-    // /
-    // / ```
-    // / use path::Path;
-    // / use ffi::CStr;
-    // /
-    // / let str = Path::new("foo.txt").as_c_str();
-    // / assert_eq!(str, str::new("foo.txt"));
-    // / ```
-    pub fn as_c_str(&self) -> &ffi::CStr {
-        unsafe { ffi::CStr::from_ptr(self.inner.as_ptr() as *const _) }
     }
 
     /// Converts a `Path` to an owned [`PathBuf`].
