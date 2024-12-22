@@ -2,16 +2,18 @@
 //! Module level documentation
 //!
 
-use crate::bindings::{OSInitMutex, OSLockMutex, OSMutex, OSTryLockMutex, OSUnlockMutex};
-use core::cell::UnsafeCell;
-use core::ops::{Deref, DerefMut};
+use crate::bindings as c_wut;
+use core::{
+    cell::UnsafeCell,
+    ops::{Deref, DerefMut},
+};
 
 /// CafeOS Mutex
 ///
 /// Usage similar to std::sync::Mutex
 pub struct Mutex<T> {
     inner: UnsafeCell<T>,
-    mutex: UnsafeCell<OSMutex>,
+    mutex: UnsafeCell<c_wut::OSMutex>,
 }
 
 pub struct MutexGuard<'a, T> {
@@ -30,9 +32,9 @@ unsafe impl<T: Send> Sync for Mutex<T> {}
 impl<T> Mutex<T> {
     /// Create a new mutex
     pub fn new(inner: T) -> Self {
-        let mut mutex = OSMutex::default();
+        let mut mutex = c_wut::OSMutex::default();
         unsafe {
-            OSInitMutex(&mut mutex);
+            c_wut::OSInitMutex(&mut mutex);
         }
 
         Self {
@@ -44,7 +46,7 @@ impl<T> Mutex<T> {
     /// Lock mutex in current thread
     pub fn lock(&self) -> Result<MutexGuard<T>, MutexError> {
         unsafe {
-            OSLockMutex(self.mutex.get());
+            c_wut::OSLockMutex(self.mutex.get());
         }
         Ok(MutexGuard { mutex: self })
     }
@@ -52,7 +54,7 @@ impl<T> Mutex<T> {
     /// Try to lock mutex in current thread
     pub fn try_lock(&self) -> Result<MutexGuard<T>, MutexError> {
         unsafe {
-            let res = OSTryLockMutex(self.mutex.get());
+            let res = c_wut::OSTryLockMutex(self.mutex.get());
             match res {
                 1 => Ok(MutexGuard { mutex: self }),
                 _ => Err(MutexError::AlreadyLocked),
@@ -84,7 +86,7 @@ impl<T> Drop for MutexGuard<'_, T> {
     fn drop(&mut self) {
         // check for panic and poison thread if needed
         unsafe {
-            OSUnlockMutex(self.mutex.mutex.get());
+            c_wut::OSUnlockMutex(self.mutex.mutex.get());
         }
     }
 }

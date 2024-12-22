@@ -1,10 +1,10 @@
 // socket
 
-use crate::bindings as c_wut;
-use crate::net::socket_addrs::{ToSocketAddrs, ToSocketAddrsError};
-use core::fmt::Debug;
-use core::net::Ipv4Addr;
-use core::{ffi, net::SocketAddrV4};
+use crate::{
+    bindings as c_wut,
+    net::socket_addrs::{ToSocketAddrs, ToSocketAddrsError},
+};
+use core::{ffi, fmt::Debug, net::Ipv4Addr, net::SocketAddrV4};
 use thiserror::Error;
 
 pub struct Socket(ffi::c_int);

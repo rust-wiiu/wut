@@ -3,10 +3,11 @@
 //! Purposefully kept simple and not supporting all features of the controllers.
 //! If finer controll and access to controller specific features is required, use the more complex "..." (which I maybe add later)
 
-use crate::bindings as c_wut;
-use crate::rrc::{ResourceGuard, Rrc};
-use core::fmt::Debug;
-use core::panic;
+use crate::{
+    bindings as c_wut,
+    rrc::{ResourceGuard, Rrc},
+};
+use core::{fmt::Debug, panic};
 use flagset::{flags, FlagSet};
 use thiserror::Error;
 

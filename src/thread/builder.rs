@@ -1,8 +1,11 @@
-use crate::thread::{
-    thread::{Thread, ThreadAttribute, ThreadError},
-    JoinHandle,
+use crate::{
+    bindings as c_wut,
+    thread::{
+        thread::{Thread, ThreadAttribute, ThreadError},
+        JoinHandle,
+    },
+    GLOBAL_ALLOCATOR,
 };
-use crate::{bindings as c_wut, GLOBAL_ALLOCATOR};
 use alloc::{alloc::Layout, boxed::Box, ffi::CString, string::String};
 use core::{alloc::GlobalAlloc, ffi};
 use flagset::FlagSet;

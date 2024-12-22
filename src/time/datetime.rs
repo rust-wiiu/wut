@@ -1,9 +1,7 @@
 // datetime
 
-use crate::bindings as c_wut;
-use crate::time::SystemTime;
-use core::cmp::Ordering;
-use core::fmt;
+use crate::{bindings as c_wut, time::SystemTime};
+use core::{cmp::Ordering, fmt};
 
 /// WiiU local system datetime.
 ///
