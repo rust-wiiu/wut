@@ -1,6 +1,5 @@
 #![no_std]
 
-#[macro_use]
 pub extern crate alloc;
 extern crate flagset;
 extern crate thiserror;

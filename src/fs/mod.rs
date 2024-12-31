@@ -1,17 +1,20 @@
 //! Filesystem
 
 use crate::{
-    bindings::{self as c_wut, FSInit},
+    bindings as c_wut,
     path::{Component, Path, PathBuf, MAIN_SEPARATOR},
     rrc::{ResourceGuard, Rrc},
+    time::SystemTime,
 };
 use alloc::{
     boxed::Box,
     ffi::CString,
     string::{String, ToString},
+    vec::Vec,
 };
 use core::{
     ffi::{self, CStr},
+    ptr::metadata,
     str::Utf8Error,
     time::Duration,
 };
@@ -51,7 +54,12 @@ impl TryFrom<i32> for FilesystemError {
     }
 }
 
-struct IoHandler<'a> {
+trait AsHandle {
+    type Handle;
+    fn as_handle(&self) -> Self::Handle;
+}
+
+pub struct FsHandler<'a> {
     // not entirely sure why Box is required, but I think it has something to do with copied/moved memory, which the API apperently doesnt like. So: BOX IS REQUIRED. Trust me.
     client: Box<c_wut::FSClient>,
     block: Box<c_wut::FSCmdBlock>,
@@ -59,8 +67,8 @@ struct IoHandler<'a> {
     _resource: ResourceGuard<'a>,
 }
 
-impl<'a> IoHandler<'_> {
-    fn new() -> Result<Self, FilesystemError> {
+impl<'a> FsHandler<'_> {
+    pub fn new() -> Result<Self, FilesystemError> {
         let mut io = Self {
             client: Box::new(c_wut::FSClient::default()),
             block: Box::new(c_wut::FSCmdBlock::default()),
@@ -77,16 +85,486 @@ impl<'a> IoHandler<'_> {
 
         Ok(io)
     }
+
+    // #TEST
+    pub fn exists<P: AsRef<Path>>(&mut self, path: P) -> Result<bool, FilesystemError> {
+        let _ = self.metadata_path(path)?;
+        Ok(true)
+    }
+
+    // #TEST
+    pub fn metadata_path<P: AsRef<Path>>(&mut self, path: P) -> Result<Metadata, FilesystemError> {
+        let str = CString::new(path.as_ref().as_str()).unwrap();
+        let mut stat = c_wut::FSStat::default();
+
+        let status = unsafe {
+            c_wut::FSGetStat(
+                self.client.as_mut(),
+                self.block.as_mut(),
+                str.as_ptr(),
+                &mut stat,
+                self.error_mask,
+            )
+        };
+        FilesystemError::try_from(status)?;
+
+        Ok(Metadata::from(stat))
+    }
+
+    // #TEST
+    pub fn remove<P: AsRef<Path>>(&mut self, path: P) -> Result<(), FilesystemError> {
+        let str = CString::new(path.as_ref().as_str()).unwrap();
+
+        let status = unsafe {
+            c_wut::FSRemove(
+                self.client.as_mut(),
+                self.block.as_mut(),
+                str.as_ptr(),
+                self.error_mask,
+            )
+        };
+        FilesystemError::try_from(status)?;
+
+        Ok(())
+    }
+
+    //region: File
+
+    // #TEST
+    pub fn metadata_file(&mut self, file: &File) -> Result<Metadata, FilesystemError> {
+        let handle = file.as_handle();
+        let mut stat = c_wut::FSStat::default();
+
+        let status = unsafe {
+            c_wut::FSGetStatFile(
+                self.client.as_mut(),
+                self.block.as_mut(),
+                handle,
+                &mut stat,
+                self.error_mask,
+            )
+        };
+        FilesystemError::try_from(status)?;
+
+        Ok(Metadata::from(stat))
+    }
+
+    // #TEST
+    pub fn open_file<P: AsRef<Path>>(
+        &mut self,
+        path: P,
+        mode: FileMode,
+    ) -> Result<File, FilesystemError> {
+        let str = CString::new(path.as_ref().as_str()).unwrap();
+        let mut handle = c_wut::FSFileHandle::default();
+
+        let status = unsafe {
+            c_wut::FSOpenFile(
+                self.client.as_mut(),
+                self.block.as_mut(),
+                str.as_ptr(),
+                mode.as_c_str().as_ptr(),
+                &mut handle,
+                self.error_mask,
+            )
+        };
+        FilesystemError::try_from(status)?;
+
+        Ok(File {
+            handle,
+            path: path.as_ref().to_path_buf(),
+        })
+    }
+
+    // #TEST
+    pub fn read_file(&mut self, file: &File) -> Result<Vec<u8>, FilesystemError> {
+        let metadata = self.metadata_file(file)?;
+        let size = metadata.len() as usize;
+        let mut buffer: Vec<u8> = Vec::with_capacity(size);
+
+        let status = unsafe {
+            c_wut::FSReadFile(
+                self.client.as_mut(),
+                self.block.as_mut(),
+                buffer.as_mut_ptr(),
+                size as u32,
+                1,
+                file.as_handle(),
+                0,
+                self.error_mask,
+            )
+        };
+        FilesystemError::try_from(status)?;
+
+        Ok(buffer)
+    }
+
+    // #TEST
+    pub fn close_file(&mut self, file: &File) -> Result<(), FilesystemError> {
+        let status = unsafe {
+            c_wut::FSCloseFile(
+                self.client.as_mut(),
+                self.block.as_mut(),
+                file.as_handle(),
+                self.error_mask,
+            )
+        };
+        FilesystemError::try_from(status)?;
+
+        Ok(())
+    }
+
+    //endregion
+
+    //region: Directory
+
+    // #TEST
+    pub fn create_dir<P: AsRef<Path>>(&mut self, path: P) -> Result<(), FilesystemError> {
+        let str = CString::new(path.as_ref().as_str()).unwrap();
+
+        let status = unsafe {
+            c_wut::FSMakeDir(
+                self.client.as_mut(),
+                self.block.as_mut(),
+                str.as_ptr(),
+                self.error_mask,
+            )
+        };
+        FilesystemError::try_from(status)?;
+
+        Ok(())
+    }
+
+    // #TEST
+    pub fn open_dir<P: AsRef<Path>>(&mut self, path: P) -> Result<ReadDir, FilesystemError> {
+        let str = CString::new(path.as_ref().as_str()).unwrap();
+        let mut handle = c_wut::FSDirectoryHandle::default();
+
+        let status = unsafe {
+            c_wut::FSOpenDir(
+                self.client.as_mut(),
+                self.block.as_mut(),
+                str.as_ptr(),
+                &mut handle,
+                self.error_mask,
+            )
+        };
+        FilesystemError::try_from(status)?;
+
+        Ok(ReadDir {
+            handle,
+            path: path.as_ref().to_path_buf(),
+        })
+    }
+
+    // #TEST
+    pub fn read_dir(&mut self, dir: &ReadDir) -> Result<DirEntry, FilesystemError> {
+        let mut entry = c_wut::FSDirectoryEntry::default();
+
+        let status = unsafe {
+            c_wut::FSReadDir(
+                self.client.as_mut(),
+                self.block.as_mut(),
+                dir.as_handle(),
+                &mut entry,
+                self.error_mask,
+            )
+        };
+        FilesystemError::try_from(status)?;
+
+        Ok(DirEntry {
+            entry,
+            path: dir.path(),
+        })
+    }
+
+    // #TEST
+    pub fn close_dir(&mut self, dir: &ReadDir) -> Result<(), FilesystemError> {
+        let status = unsafe {
+            c_wut::FSCloseDir(
+                self.client.as_mut(),
+                self.block.as_mut(),
+                dir.as_handle(),
+                self.error_mask,
+            )
+        };
+        FilesystemError::try_from(status)?;
+
+        Ok(())
+    }
+
+    //endregion
 }
 
-impl<'a> Drop for IoHandler<'_> {
+impl<'a> Drop for FsHandler<'_> {
     fn drop(&mut self) {
         unsafe { c_wut::FSDelClient(self.client.as_mut(), self.error_mask) };
     }
 }
 
+flags! {
+    enum MetadataFlags: u32 {
+        /// The retrieved file entry is a (link to a) directory.
+        Directory = c_wut::FS_STAT_DIRECTORY,
+        /// The retrieved file entry also has a quota set.
+        Quota = c_wut::FS_STAT_QUOTA,
+        /// The retrieved file entry is a (link to a) file.
+        File = c_wut::FS_STAT_FILE,
+        /// The retrieved file entry also is encrypted and can't be opened (see vWii files for example).
+        Encrypted = c_wut::FS_STAT_ENCRYPTED_FILE,
+        /// The retrieved file entry also is a link to a different file on the filesystem.
+        ///
+        /// Note: It's currently not known how one can read the linked-to file entry.
+        Link = c_wut::FS_STAT_LINK
+    }
+
+    pub enum Mode: u8 {
+        Read,
+        Write,
+        Execute
+    }
+}
+
+pub struct FileType(FlagSet<MetadataFlags>);
+
+impl FileType {
+    pub fn is_dir(&self) -> bool {
+        self.0.contains(MetadataFlags::Directory)
+    }
+
+    pub fn is_file(&self) -> bool {
+        self.0.contains(MetadataFlags::File)
+    }
+
+    pub fn is_symlink(&self) -> bool {
+        self.0.contains(MetadataFlags::Link)
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct Permissions {
+    owner: FlagSet<Mode>,
+    group: FlagSet<Mode>,
+    other: FlagSet<Mode>,
+}
+
+impl From<c_wut::FSMode> for Permissions {
+    fn from(value: c_wut::FSMode) -> Self {
+        let mut p = Permissions::default();
+
+        if (value & c_wut::FS_MODE_READ_OWNER) != 0 {
+            p.owner |= Mode::Read;
+        }
+
+        if (value & c_wut::FS_MODE_WRITE_OWNER) != 0 {
+            p.owner |= Mode::Write;
+        }
+
+        if (value & c_wut::FS_MODE_EXEC_OWNER) != 0 {
+            p.owner |= Mode::Execute;
+        }
+
+        if (value & c_wut::FS_MODE_READ_GROUP) != 0 {
+            p.group |= Mode::Read;
+        }
+
+        if (value & c_wut::FS_MODE_WRITE_GROUP) != 0 {
+            p.group |= Mode::Write;
+        }
+
+        if (value & c_wut::FS_MODE_EXEC_GROUP) != 0 {
+            p.group |= Mode::Execute;
+        }
+
+        if (value & c_wut::FS_MODE_READ_OTHER) != 0 {
+            p.other |= Mode::Read;
+        }
+
+        if (value & c_wut::FS_MODE_WRITE_OTHER) != 0 {
+            p.other |= Mode::Write;
+        }
+
+        if (value & c_wut::FS_MODE_EXEC_OTHER) != 0 {
+            p.other |= Mode::Execute;
+        }
+
+        p
+    }
+}
+
+impl Into<c_wut::FSMode> for Permissions {
+    fn into(self) -> c_wut::FSMode {
+        let mut m = c_wut::FSMode::default();
+
+        if self.owner.contains(Mode::Read) {
+            m &= c_wut::FS_MODE_READ_OWNER;
+        }
+
+        if self.owner.contains(Mode::Write) {
+            m &= c_wut::FS_MODE_WRITE_OWNER;
+        }
+
+        if self.owner.contains(Mode::Execute) {
+            m &= c_wut::FS_MODE_EXEC_OWNER;
+        }
+
+        if self.group.contains(Mode::Read) {
+            m &= c_wut::FS_MODE_READ_GROUP;
+        }
+
+        if self.group.contains(Mode::Write) {
+            m &= c_wut::FS_MODE_WRITE_GROUP;
+        }
+
+        if self.group.contains(Mode::Execute) {
+            m &= c_wut::FS_MODE_EXEC_GROUP;
+        }
+
+        if self.other.contains(Mode::Read) {
+            m &= c_wut::FS_MODE_READ_OTHER;
+        }
+
+        if self.other.contains(Mode::Write) {
+            m &= c_wut::FS_MODE_WRITE_OTHER;
+        }
+
+        if self.other.contains(Mode::Execute) {
+            m &= c_wut::FS_MODE_EXEC_OTHER;
+        }
+
+        m
+    }
+}
+
+pub struct Metadata(c_wut::FSStat);
+
+impl Metadata {
+    pub fn created(&self) -> Result<SystemTime, FilesystemError> {
+        Ok(SystemTime::from(self.0.created as i64))
+    }
+
+    pub fn modified(&self) -> Result<SystemTime, FilesystemError> {
+        Ok(SystemTime::from(self.0.modified as i64))
+    }
+
+    pub fn file_type(&self) -> FileType {
+        FileType(FlagSet::<MetadataFlags>::new_truncated(self.0.flags))
+    }
+
+    pub fn is_dir(&self) -> bool {
+        self.file_type().is_dir()
+    }
+
+    pub fn is_file(&self) -> bool {
+        self.file_type().is_file()
+    }
+
+    pub fn is_symlink(&self) -> bool {
+        self.file_type().is_symlink()
+    }
+
+    pub fn len(&self) -> u64 {
+        self.0.size as u64
+    }
+
+    pub fn permissions(&self) -> Permissions {
+        Permissions::from(self.0.mode)
+    }
+}
+
+impl From<c_wut::FSStat> for Metadata {
+    fn from(value: c_wut::FSStat) -> Self {
+        Self(value)
+    }
+}
+
+pub enum FileMode {
+    /// Open for reading. The file must exist.
+    Read,
+    /// Open for writing. Creates an empty file or truncates an existing file.
+    Write,
+    /// Open for appending. Writes data at the end of the file. Creates the file if it does not exist.
+    Append,
+    /// Open for reading and writing. The file must exist.
+    ReadWrite,
+    /// Open for reading and writing. Creates an empty file or truncates an existing file.
+    ReadWriteCreate,
+    /// Open for reading and appending. The file is created if it does not exist.
+    ReadAppendCreate,
+}
+
+impl FileMode {
+    pub fn as_c_str(&self) -> &CStr {
+        match self {
+            FileMode::Read => c"r",
+            FileMode::Write => c"w",
+            FileMode::Append => c"a",
+            FileMode::ReadWrite => c"r+",
+            FileMode::ReadWriteCreate => c"w+",
+            FileMode::ReadAppendCreate => c"a+",
+        }
+    }
+}
+
+pub struct File {
+    handle: c_wut::FSFileHandle,
+    path: PathBuf,
+}
+
+impl File {
+    pub fn path(&self) -> PathBuf {
+        self.path.clone()
+    }
+}
+
+impl AsHandle for File {
+    type Handle = c_wut::FSFileHandle;
+
+    fn as_handle(&self) -> Self::Handle {
+        self.handle
+    }
+}
+
+pub struct ReadDir {
+    handle: c_wut::FSDirectoryHandle,
+    path: PathBuf,
+}
+
+impl ReadDir {
+    pub fn path(&self) -> PathBuf {
+        self.path.clone()
+    }
+}
+
+impl AsHandle for ReadDir {
+    type Handle = c_wut::FSDirectoryHandle;
+    fn as_handle(&self) -> Self::Handle {
+        self.handle
+    }
+}
+
+pub struct DirEntry {
+    entry: c_wut::FSDirectoryEntry,
+    path: PathBuf,
+}
+
+impl DirEntry {
+    pub fn path(&self) -> PathBuf {
+        self.path.clone()
+    }
+}
+
+impl AsHandle for DirEntry {
+    type Handle = c_wut::FSDirectoryEntry;
+    fn as_handle(&self) -> Self::Handle {
+        self.handle
+    }
+}
+
+/*
+
 pub fn current_dir() -> Result<PathBuf, FilesystemError> {
-    let mut io = IoHandler::new()?;
+    let mut io = FsHandler::new()?;
     let mut buffer: [ffi::c_char; 256] = [0; 256];
 
     let status = unsafe {
@@ -112,7 +590,7 @@ impl Iterator for ReadDir {
     type Item = Result<DirEntry, FilesystemError>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let mut io = match IoHandler::new() {
+        let mut io = match FsHandler::new() {
             Ok(io) => io,
             Err(e) => return Some(Err(e)),
         };
@@ -144,7 +622,7 @@ impl Iterator for ReadDir {
 
 impl Drop for ReadDir {
     fn drop(&mut self) {
-        let mut io = IoHandler::new().unwrap();
+        let mut io = FsHandler::new().unwrap();
 
         let status = unsafe {
             c_wut::FSCloseDir(
@@ -184,7 +662,7 @@ impl TryFrom<c_wut::FSDirectoryEntry> for DirEntry {
 }
 
 pub fn read_dir<P: AsRef<Path>>(path: P) -> Result<ReadDir, FilesystemError> {
-    let mut io = IoHandler::new()?;
+    let mut io = FsHandler::new()?;
     let mut handle = c_wut::FSDirectoryHandle::default();
 
     let path = PathBuf::from(path.as_ref());
@@ -205,7 +683,7 @@ pub fn read_dir<P: AsRef<Path>>(path: P) -> Result<ReadDir, FilesystemError> {
 }
 
 pub fn metadata<P: AsRef<Path>>(path: P) -> Result<Metadata, FilesystemError> {
-    let mut io = IoHandler::new()?;
+    let mut io = FsHandler::new()?;
     let mut info = c_wut::FSStat::default();
 
     let path = path.as_ref();
@@ -263,7 +741,7 @@ impl PathBufExt for PathBuf {
 }
 
 pub fn create_dir<P: AsRef<Path>>(path: P) -> Result<(), FilesystemError> {
-    let mut io = IoHandler::new()?;
+    let mut io = FsHandler::new()?;
 
     let str = CString::new(path.as_ref().as_str()).unwrap();
 
@@ -390,7 +868,7 @@ pub struct File {
 
 impl File {
     pub fn create<P: AsRef<Path>>(path: P) -> Result<Self, FilesystemError> {
-        let mut io = IoHandler::new()?;
+        let mut io = FsHandler::new()?;
 
         let path = PathBuf::from(path.as_ref());
         let str = CString::new(path.as_str()).unwrap();
@@ -429,3 +907,4 @@ impl File {
 
     // pub fn open_buffered
 }
+*/

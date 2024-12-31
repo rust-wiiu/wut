@@ -3,12 +3,12 @@
 use crate::bindings as c_wut;
 
 #[inline]
-pub(crate) fn timer_clock_speed() -> u32 {
+pub fn timer_clock_speed() -> u32 {
     unsafe { (*c_wut::OSGetSystemInfo()).busClockSpeed / 4 }
 }
 
 #[inline]
-pub(crate) fn nanos_to_ticks(nanos: u64) -> u64 {
+pub fn nanos_to_ticks(nanos: u64) -> u64 {
     (nanos * timer_clock_speed() as u64 / 31_250) / 32_000
 }
 
