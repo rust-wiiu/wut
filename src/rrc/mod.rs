@@ -29,7 +29,7 @@ pub struct Rrc<F: Fn() + Sync, G: Fn() + Sync> {
     deinit_fn: G,
 }
 
-pub trait RrcGuarded {
+pub trait RrcGuarded: Sync {
     fn release(&self);
 }
 
@@ -92,6 +92,8 @@ impl<F: Fn() + Sync, G: Fn() + Sync> RrcGuarded for Rrc<F, G> {
         }
     }
 }
+
+unsafe impl<F: Fn() + Sync, G: Fn() + Sync> Sync for Rrc<F, G> {}
 
 pub struct ResourceGuard<'a> {
     rrc: &'a dyn RrcGuarded,

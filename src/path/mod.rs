@@ -74,6 +74,8 @@ use alloc::{
     vec::Vec,
 };
 
+use crate::{env, fs::FilesystemError};
+
 ////////////////////////////////////////////////////////////////////////////////
 // Exposed parsing helpers
 ////////////////////////////////////////////////////////////////////////////////
@@ -1027,6 +1029,13 @@ impl PathBuf {
     pub fn shrink_to_fit(&mut self) {
         self.inner.shrink_to_fit()
     }
+
+    /// Makes the path absolute without accessing the filesystem.
+    ///
+    /// More info: [absolute][crate::path::absolute]
+    pub fn absolute(&self) -> Result<PathBuf, FilesystemError> {
+        absolute(self)
+    }
 }
 
 impl From<&Path> for Box<Path> {
@@ -1820,11 +1829,57 @@ impl Path {
         }
     }
 
+    /// Makes the path absolute without accessing the filesystem.
+    ///
+    /// More info: [absolute][crate::path::absolute]
+    pub fn absolute(&self) -> Result<PathBuf, FilesystemError> {
+        absolute(self)
+    }
+
     // /// Returns a newtype that implements Display for safely printing paths
     // /// that may contain non-Unicode data.
     // pub fn display(&self) -> Display<'_> {
     //     Display { path: self }
     // }
+}
+
+/// Makes the path absolute without accessing the filesystem.
+///
+/// If the path is relative, the current directory is used as the base directory.
+/// All intermediate components will be resolved according to platform-specific
+/// rules, but unlike [`canonicalize`][crate::fs::canonicalize], this does not
+/// resolve symlinks and may succeed even if the path does not exist.
+///
+/// If the `path` is empty or getting the
+/// [current directory][crate::env::current_dir] fails, then an error will be
+/// returned.
+pub fn absolute<P: AsRef<Path>>(path: P) -> Result<PathBuf, FilesystemError> {
+    let path = path.as_ref().to_path_buf();
+
+    if path.is_absolute() {
+        return Ok(path);
+    }
+
+    let path = env::current_dir()?.join(path);
+    let mut result = PathBuf::new();
+
+    for part in path.components() {
+        // crate::println!("{:?}", part);
+        match part {
+            Component::RootDir => {
+                result.push(MAIN_SEPARATOR.to_string());
+            }
+            Component::CurDir => (),
+            Component::ParentDir => {
+                result.pop();
+            }
+            Component::Normal(name) => {
+                result.push(name);
+            }
+        }
+    }
+
+    Ok(result)
 }
 
 impl AsRef<str> for Path {

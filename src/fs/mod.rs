@@ -14,7 +14,6 @@ use alloc::{
 };
 use core::{
     ffi::{self, CStr},
-    ptr::metadata,
     str::Utf8Error,
     time::Duration,
 };
@@ -55,9 +54,11 @@ impl TryFrom<i32> for FilesystemError {
 }
 
 trait AsHandle {
-    type Handle;
+    type Handle: Copy;
     fn as_handle(&self) -> Self::Handle;
 }
+
+// region: FsHandler
 
 pub struct FsHandler<'a> {
     // not entirely sure why Box is required, but I think it has something to do with copied/moved memory, which the API apperently doesnt like. So: BOX IS REQUIRED. Trust me.
@@ -128,7 +129,43 @@ impl<'a> FsHandler<'_> {
         Ok(())
     }
 
-    //region: File
+    // #TEST
+    pub fn get_working_dir(&mut self) -> Result<PathBuf, FilesystemError> {
+        const SIZE: usize = c_wut::FS_MAX_PATH as usize + 1;
+        let mut buffer: [ffi::c_char; SIZE] = [0; SIZE];
+
+        let status = unsafe {
+            c_wut::FSGetCwd(
+                self.client.as_mut(),
+                self.block.as_mut(),
+                buffer.as_mut_ptr() as *mut _,
+                (SIZE - 1) as u32,
+                self.error_mask,
+            )
+        };
+        FilesystemError::try_from(status)?;
+
+        Ok(PathBuf::try_from(buffer.as_ptr())?)
+    }
+
+    // #TEST
+    pub fn set_working_dir<P: AsRef<Path>>(&mut self, path: P) -> Result<(), FilesystemError> {
+        let str = CString::new(path.as_ref().as_str()).unwrap();
+
+        let status = unsafe {
+            c_wut::FSChangeDir(
+                self.client.as_mut(),
+                self.block.as_mut(),
+                str.as_ptr(),
+                self.error_mask,
+            )
+        };
+        FilesystemError::try_from(status)?;
+
+        Ok(())
+    }
+
+    // region: File
 
     // #TEST
     pub fn metadata_file(&mut self, file: &File) -> Result<Metadata, FilesystemError> {
@@ -216,7 +253,7 @@ impl<'a> FsHandler<'_> {
 
     //endregion
 
-    //region: Directory
+    // region: Directory
 
     // #TEST
     pub fn create_dir<P: AsRef<Path>>(&mut self, path: P) -> Result<(), FilesystemError> {
@@ -272,9 +309,13 @@ impl<'a> FsHandler<'_> {
         };
         FilesystemError::try_from(status)?;
 
+        let name = String::from_utf8_lossy(unsafe {
+            alloc::slice::from_raw_parts(entry.name.as_ptr() as *const u8, entry.name.len())
+        });
+
         Ok(DirEntry {
-            entry,
-            path: dir.path(),
+            metadata: Metadata::from(entry.info),
+            path: dir.path().join(name),
         })
     }
 
@@ -302,6 +343,8 @@ impl<'a> Drop for FsHandler<'_> {
     }
 }
 
+// endregion
+
 flags! {
     enum MetadataFlags: u32 {
         /// The retrieved file entry is a (link to a) directory.
@@ -325,6 +368,8 @@ flags! {
     }
 }
 
+// region: FileType
+
 pub struct FileType(FlagSet<MetadataFlags>);
 
 impl FileType {
@@ -340,6 +385,10 @@ impl FileType {
         self.0.contains(MetadataFlags::Link)
     }
 }
+
+// endregion
+
+// region: Permissions
 
 #[derive(Debug, Default)]
 pub struct Permissions {
@@ -436,6 +485,10 @@ impl Into<c_wut::FSMode> for Permissions {
     }
 }
 
+// endregion
+
+// region: Metdata
+
 pub struct Metadata(c_wut::FSStat);
 
 impl Metadata {
@@ -477,6 +530,10 @@ impl From<c_wut::FSStat> for Metadata {
         Self(value)
     }
 }
+
+// endregion
+
+// region: File
 
 pub enum FileMode {
     /// Open for reading. The file must exist.
@@ -525,6 +582,10 @@ impl AsHandle for File {
     }
 }
 
+// endregion
+
+// region: ReadDir
+
 pub struct ReadDir {
     handle: c_wut::FSDirectoryHandle,
     path: PathBuf,
@@ -543,8 +604,36 @@ impl AsHandle for ReadDir {
     }
 }
 
+impl Iterator for ReadDir {
+    type Item = Result<DirEntry, FilesystemError>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let mut fs = match FsHandler::new() {
+            Ok(fs) => fs,
+            Err(e) => return Some(Err(e)),
+        };
+
+        match fs.read_dir(self) {
+            Ok(entry) => Some(Ok(entry)),
+            Err(FilesystemError::AllRead) => None,
+            Err(e) => Some(Err(e)),
+        }
+    }
+}
+
+impl Drop for ReadDir {
+    fn drop(&mut self) {
+        let mut fs = FsHandler::new().unwrap();
+        let _ = fs.close_dir(self).unwrap();
+    }
+}
+
+// endregion
+
+// region: DirEntry
+
 pub struct DirEntry {
-    entry: c_wut::FSDirectoryEntry,
+    metadata: Metadata,
     path: PathBuf,
 }
 
@@ -554,32 +643,58 @@ impl DirEntry {
     }
 }
 
-impl AsHandle for DirEntry {
-    type Handle = c_wut::FSDirectoryEntry;
-    fn as_handle(&self) -> Self::Handle {
-        self.handle
+// endregion
+
+/*
+std functions
+*/
+
+pub fn copy<P: AsRef<Path>, Q: AsRef<Path>>(from: P, to: Q) -> Result<u64, FilesystemError> {
+    todo!()
+}
+
+pub fn create_dir<P: AsRef<Path>>(path: P) -> Result<(), FilesystemError> {
+    let mut fs = FsHandler::new()?;
+    fs.create_dir(path)
+}
+
+pub fn create_dir_all<P: AsRef<Path>>(path: P) -> Result<(), FilesystemError> {
+    let mut fs = FsHandler::new()?;
+    let path = path.as_ref().absolute()?;
+
+    let mut sub = PathBuf::new();
+    for component in path.components() {
+        sub = sub.join(component);
+        if !fs.exists(&sub)? {
+            fs.create_dir(&sub)?;
+        }
     }
+
+    Ok(())
+}
+
+pub fn exists<P: AsRef<Path>>(path: P) -> Result<bool, FilesystemError> {
+    let mut fs = FsHandler::new()?;
+    fs.exists(path)
+}
+
+pub fn metadata<P: AsRef<Path>>(path: P) -> Result<Metadata, FilesystemError> {
+    let mut fs = FsHandler::new()?;
+    fs.metadata_path(path)
+}
+
+pub fn read<P: AsRef<Path>>(path: P) -> Result<Vec<u8>, FilesystemError> {
+    let mut fs = FsHandler::new()?;
+    let file = fs.open_file(path, FileMode::Read)?;
+    fs.read_file(&file)
+}
+
+pub fn read_dir<P: AsRef<Path>>(path: P) -> Result<ReadDir, FilesystemError> {
+    let mut fs = FsHandler::new()?;
+    fs.open_dir(path)
 }
 
 /*
-
-pub fn current_dir() -> Result<PathBuf, FilesystemError> {
-    let mut io = FsHandler::new()?;
-    let mut buffer: [ffi::c_char; 256] = [0; 256];
-
-    let status = unsafe {
-        c_wut::FSGetCwd(
-            io.client.as_mut(),
-            io.block.as_mut(),
-            buffer.as_mut_ptr(),
-            (buffer.len() - 1) as u32,
-            io.error_mask,
-        )
-    };
-    FilesystemError::try_from(status)?;
-
-    Ok(PathBuf::try_from(buffer.as_ptr())?)
-}
 
 pub struct ReadDir {
     handle: c_wut::FSDirectoryHandle,
