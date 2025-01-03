@@ -7,6 +7,7 @@ use crate::{
     bindings as c_wut,
     rrc::{ResourceGuard, Rrc},
 };
+use alloc::vec;
 use core::{fmt::Debug, panic};
 use flagset::{flags, FlagSet};
 use thiserror::Error;
@@ -66,33 +67,34 @@ flags! {
 
 impl Button {
     fn from_vpad(buttons: u32) -> FlagSet<Button> {
+        use c_wut::VPADButtons::*;
         let button_mappings = [
-            (c_wut::VPAD_BUTTON_A, Button::A),
-            (c_wut::VPAD_BUTTON_B, Button::B),
-            (c_wut::VPAD_BUTTON_X, Button::X),
-            (c_wut::VPAD_BUTTON_Y, Button::Y),
-            (c_wut::VPAD_BUTTON_LEFT, Button::Left),
-            (c_wut::VPAD_BUTTON_RIGHT, Button::Right),
-            (c_wut::VPAD_BUTTON_UP, Button::Up),
-            (c_wut::VPAD_BUTTON_DOWN, Button::Down),
-            (c_wut::VPAD_BUTTON_L, Button::L),
-            (c_wut::VPAD_BUTTON_R, Button::R),
-            (c_wut::VPAD_BUTTON_ZL, Button::ZL),
-            (c_wut::VPAD_BUTTON_ZR, Button::ZR),
-            (c_wut::VPAD_BUTTON_PLUS, Button::Plus),
-            (c_wut::VPAD_BUTTON_MINUS, Button::Minus),
-            (c_wut::VPAD_BUTTON_HOME, Button::Home),
-            (c_wut::VPAD_BUTTON_SYNC, Button::Sync),
-            (c_wut::VPAD_BUTTON_STICK_R, Button::RStick),
-            (c_wut::VPAD_BUTTON_STICK_L, Button::LStick),
-            (c_wut::VPAD_STICK_R_EMULATION_LEFT, Button::RStickLeft),
-            (c_wut::VPAD_STICK_R_EMULATION_RIGHT, Button::RStickRight),
-            (c_wut::VPAD_STICK_R_EMULATION_UP, Button::RStickUp),
-            (c_wut::VPAD_STICK_R_EMULATION_DOWN, Button::RStickDown),
-            (c_wut::VPAD_STICK_L_EMULATION_LEFT, Button::LStickLeft),
-            (c_wut::VPAD_STICK_L_EMULATION_RIGHT, Button::LStickRight),
-            (c_wut::VPAD_STICK_L_EMULATION_UP, Button::LStickUp),
-            (c_wut::VPAD_STICK_L_EMULATION_DOWN, Button::LStickDown),
+            (VPAD_BUTTON_A, Button::A),
+            (VPAD_BUTTON_B, Button::B),
+            (VPAD_BUTTON_X, Button::X),
+            (VPAD_BUTTON_Y, Button::Y),
+            (VPAD_BUTTON_LEFT, Button::Left),
+            (VPAD_BUTTON_RIGHT, Button::Right),
+            (VPAD_BUTTON_UP, Button::Up),
+            (VPAD_BUTTON_DOWN, Button::Down),
+            (VPAD_BUTTON_L, Button::L),
+            (VPAD_BUTTON_R, Button::R),
+            (VPAD_BUTTON_ZL, Button::ZL),
+            (VPAD_BUTTON_ZR, Button::ZR),
+            (VPAD_BUTTON_PLUS, Button::Plus),
+            (VPAD_BUTTON_MINUS, Button::Minus),
+            (VPAD_BUTTON_HOME, Button::Home),
+            (VPAD_BUTTON_SYNC, Button::Sync),
+            (VPAD_BUTTON_STICK_R, Button::RStick),
+            (VPAD_BUTTON_STICK_L, Button::LStick),
+            (VPAD_STICK_R_EMULATION_LEFT, Button::RStickLeft),
+            (VPAD_STICK_R_EMULATION_RIGHT, Button::RStickRight),
+            (VPAD_STICK_R_EMULATION_UP, Button::RStickUp),
+            (VPAD_STICK_R_EMULATION_DOWN, Button::RStickDown),
+            (VPAD_STICK_L_EMULATION_LEFT, Button::LStickLeft),
+            (VPAD_STICK_L_EMULATION_RIGHT, Button::LStickRight),
+            (VPAD_STICK_L_EMULATION_UP, Button::LStickUp),
+            (VPAD_STICK_L_EMULATION_DOWN, Button::LStickDown),
         ];
 
         button_mappings
@@ -106,99 +108,79 @@ impl Button {
     }
 
     fn from_kpad(buttons: u32) -> FlagSet<Button> {
+        use c_wut::{WPADButton::*, WPADClassicButton::*, WPADNunchukButton::*, WPADProButton::*};
         let button_mappings = [
             // Buttons
-            (c_wut::WPAD_BUTTON_LEFT, Button::Left),
-            (c_wut::WPAD_BUTTON_RIGHT, Button::Right),
-            (c_wut::WPAD_BUTTON_UP, Button::Up),
-            (c_wut::WPAD_BUTTON_DOWN, Button::Down),
-            (c_wut::WPAD_BUTTON_A, Button::A),
-            (c_wut::WPAD_BUTTON_B, Button::B),
-            (c_wut::WPAD_BUTTON_PLUS, Button::Plus),
-            (c_wut::WPAD_BUTTON_MINUS, Button::Minus),
-            (c_wut::WPAD_BUTTON_HOME, Button::Home),
-            (c_wut::WPAD_BUTTON_1, Button::One),
-            (c_wut::WPAD_BUTTON_2, Button::Two),
-            (c_wut::WPAD_BUTTON_Z, Button::Z),
-            (c_wut::WPAD_BUTTON_C, Button::C),
+            (WPAD_BUTTON_LEFT, Button::Left),
+            (WPAD_BUTTON_RIGHT, Button::Right),
+            (WPAD_BUTTON_UP, Button::Up),
+            (WPAD_BUTTON_DOWN, Button::Down),
+            (WPAD_BUTTON_A, Button::A),
+            (WPAD_BUTTON_B, Button::B),
+            (WPAD_BUTTON_PLUS, Button::Plus),
+            (WPAD_BUTTON_MINUS, Button::Minus),
+            (WPAD_BUTTON_HOME, Button::Home),
+            (WPAD_BUTTON_1, Button::One),
+            (WPAD_BUTTON_2, Button::Two),
+            (WPAD_BUTTON_Z, Button::Z),
+            (WPAD_BUTTON_C, Button::C),
             // Nunchuck
-            (c_wut::WPAD_NUNCHUK_STICK_EMULATION_LEFT, Button::LStickLeft),
-            (
-                c_wut::WPAD_NUNCHUK_STICK_EMULATION_RIGHT,
-                Button::LStickRight,
-            ),
-            (c_wut::WPAD_NUNCHUK_STICK_EMULATION_UP, Button::LStickUp),
-            (c_wut::WPAD_NUNCHUK_STICK_EMULATION_DOWN, Button::LStickDown),
-            (c_wut::WPAD_NUNCHUK_BUTTON_Z, Button::Z),
-            (c_wut::WPAD_NUNCHUK_BUTTON_C, Button::C),
+            (WPAD_NUNCHUK_STICK_EMULATION_LEFT, Button::LStickLeft),
+            (WPAD_NUNCHUK_STICK_EMULATION_RIGHT, Button::LStickRight),
+            (WPAD_NUNCHUK_STICK_EMULATION_UP, Button::LStickUp),
+            (WPAD_NUNCHUK_STICK_EMULATION_DOWN, Button::LStickDown),
+            (WPAD_NUNCHUK_BUTTON_Z, Button::Z),
+            (WPAD_NUNCHUK_BUTTON_C, Button::C),
             // Classic controller
-            (c_wut::WPAD_CLASSIC_BUTTON_UP, Button::Up),
-            (c_wut::WPAD_CLASSIC_BUTTON_DOWN, Button::Down),
-            (c_wut::WPAD_CLASSIC_BUTTON_LEFT, Button::Left),
-            (c_wut::WPAD_CLASSIC_BUTTON_RIGHT, Button::Right),
-            (c_wut::WPAD_CLASSIC_BUTTON_A, Button::A),
-            (c_wut::WPAD_CLASSIC_BUTTON_B, Button::B),
-            (c_wut::WPAD_CLASSIC_BUTTON_X, Button::X),
-            (c_wut::WPAD_CLASSIC_BUTTON_Y, Button::Y),
-            (c_wut::WPAD_CLASSIC_BUTTON_L, Button::L),
-            (c_wut::WPAD_CLASSIC_BUTTON_R, Button::R),
-            (c_wut::WPAD_CLASSIC_BUTTON_ZL, Button::Left),
-            (c_wut::WPAD_CLASSIC_BUTTON_ZR, Button::Right),
-            (c_wut::WPAD_CLASSIC_BUTTON_PLUS, Button::Plus),
-            (c_wut::WPAD_CLASSIC_BUTTON_MINUS, Button::Minus),
-            (c_wut::WPAD_CLASSIC_BUTTON_HOME, Button::Home),
-            (
-                c_wut::WPAD_CLASSIC_STICK_L_EMULATION_LEFT,
-                Button::LStickLeft,
-            ),
-            (
-                c_wut::WPAD_CLASSIC_STICK_L_EMULATION_RIGHT,
-                Button::LStickRight,
-            ),
-            (c_wut::WPAD_CLASSIC_STICK_L_EMULATION_UP, Button::LStickUp),
-            (
-                c_wut::WPAD_CLASSIC_STICK_L_EMULATION_DOWN,
-                Button::LStickDown,
-            ),
-            (
-                c_wut::WPAD_CLASSIC_STICK_R_EMULATION_LEFT,
-                Button::RStickLeft,
-            ),
-            (
-                c_wut::WPAD_CLASSIC_STICK_R_EMULATION_RIGHT,
-                Button::RStickRight,
-            ),
-            (c_wut::WPAD_CLASSIC_STICK_R_EMULATION_UP, Button::RStickUp),
-            (
-                c_wut::WPAD_CLASSIC_STICK_R_EMULATION_DOWN,
-                Button::RStickDown,
-            ),
+            (WPAD_CLASSIC_BUTTON_UP, Button::Up),
+            (WPAD_CLASSIC_BUTTON_DOWN, Button::Down),
+            (WPAD_CLASSIC_BUTTON_LEFT, Button::Left),
+            (WPAD_CLASSIC_BUTTON_RIGHT, Button::Right),
+            (WPAD_CLASSIC_BUTTON_A, Button::A),
+            (WPAD_CLASSIC_BUTTON_B, Button::B),
+            (WPAD_CLASSIC_BUTTON_X, Button::X),
+            (WPAD_CLASSIC_BUTTON_Y, Button::Y),
+            (WPAD_CLASSIC_BUTTON_L, Button::L),
+            (WPAD_CLASSIC_BUTTON_R, Button::R),
+            (WPAD_CLASSIC_BUTTON_ZL, Button::Left),
+            (WPAD_CLASSIC_BUTTON_ZR, Button::Right),
+            (WPAD_CLASSIC_BUTTON_PLUS, Button::Plus),
+            (WPAD_CLASSIC_BUTTON_MINUS, Button::Minus),
+            (WPAD_CLASSIC_BUTTON_HOME, Button::Home),
+            (WPAD_CLASSIC_STICK_L_EMULATION_LEFT, Button::LStickLeft),
+            (WPAD_CLASSIC_STICK_L_EMULATION_RIGHT, Button::LStickRight),
+            (WPAD_CLASSIC_STICK_L_EMULATION_UP, Button::LStickUp),
+            (WPAD_CLASSIC_STICK_L_EMULATION_DOWN, Button::LStickDown),
+            (WPAD_CLASSIC_STICK_R_EMULATION_LEFT, Button::RStickLeft),
+            (WPAD_CLASSIC_STICK_R_EMULATION_RIGHT, Button::RStickRight),
+            (WPAD_CLASSIC_STICK_R_EMULATION_UP, Button::RStickUp),
+            (WPAD_CLASSIC_STICK_R_EMULATION_DOWN, Button::RStickDown),
             // Pro controller
-            (c_wut::WPAD_PRO_BUTTON_UP, Button::Up),
-            (c_wut::WPAD_PRO_BUTTON_DOWN, Button::Down),
-            (c_wut::WPAD_PRO_BUTTON_LEFT, Button::Left),
-            (c_wut::WPAD_PRO_BUTTON_RIGHT, Button::Right),
-            (c_wut::WPAD_PRO_BUTTON_A, Button::A),
-            (c_wut::WPAD_PRO_BUTTON_B, Button::B),
-            (c_wut::WPAD_PRO_BUTTON_X, Button::X),
-            (c_wut::WPAD_PRO_BUTTON_Y, Button::Y),
-            (c_wut::WPAD_PRO_TRIGGER_L, Button::L),
-            (c_wut::WPAD_PRO_TRIGGER_R, Button::R),
-            (c_wut::WPAD_PRO_TRIGGER_ZL, Button::ZL),
-            (c_wut::WPAD_PRO_TRIGGER_ZR, Button::ZR),
-            (c_wut::WPAD_PRO_BUTTON_PLUS, Button::Plus),
-            (c_wut::WPAD_PRO_BUTTON_MINUS, Button::Minus),
-            (c_wut::WPAD_PRO_BUTTON_HOME, Button::Home),
-            (c_wut::WPAD_PRO_BUTTON_STICK_L, Button::LStick),
-            (c_wut::WPAD_PRO_BUTTON_STICK_R, Button::RStick),
-            (c_wut::WPAD_PRO_STICK_L_EMULATION_LEFT, Button::LStickLeft),
-            (c_wut::WPAD_PRO_STICK_L_EMULATION_RIGHT, Button::LStickRight),
-            (c_wut::WPAD_PRO_STICK_L_EMULATION_UP, Button::LStickUp),
-            (c_wut::WPAD_PRO_STICK_L_EMULATION_DOWN, Button::LStickDown),
-            (c_wut::WPAD_PRO_STICK_R_EMULATION_LEFT, Button::RStickLeft),
-            (c_wut::WPAD_PRO_STICK_R_EMULATION_RIGHT, Button::RStickRight),
-            (c_wut::WPAD_PRO_STICK_R_EMULATION_UP, Button::RStickUp),
-            (c_wut::WPAD_PRO_STICK_R_EMULATION_DOWN, Button::RStickDown),
+            (WPAD_PRO_BUTTON_UP, Button::Up),
+            (WPAD_PRO_BUTTON_DOWN, Button::Down),
+            (WPAD_PRO_BUTTON_LEFT, Button::Left),
+            (WPAD_PRO_BUTTON_RIGHT, Button::Right),
+            (WPAD_PRO_BUTTON_A, Button::A),
+            (WPAD_PRO_BUTTON_B, Button::B),
+            (WPAD_PRO_BUTTON_X, Button::X),
+            (WPAD_PRO_BUTTON_Y, Button::Y),
+            (WPAD_PRO_TRIGGER_L, Button::L),
+            (WPAD_PRO_TRIGGER_R, Button::R),
+            (WPAD_PRO_TRIGGER_ZL, Button::ZL),
+            (WPAD_PRO_TRIGGER_ZR, Button::ZR),
+            (WPAD_PRO_BUTTON_PLUS, Button::Plus),
+            (WPAD_PRO_BUTTON_MINUS, Button::Minus),
+            (WPAD_PRO_BUTTON_HOME, Button::Home),
+            (WPAD_PRO_BUTTON_STICK_L, Button::LStick),
+            (WPAD_PRO_BUTTON_STICK_R, Button::RStick),
+            (WPAD_PRO_STICK_L_EMULATION_LEFT, Button::LStickLeft),
+            (WPAD_PRO_STICK_L_EMULATION_RIGHT, Button::LStickRight),
+            (WPAD_PRO_STICK_L_EMULATION_UP, Button::LStickUp),
+            (WPAD_PRO_STICK_L_EMULATION_DOWN, Button::LStickDown),
+            (WPAD_PRO_STICK_R_EMULATION_LEFT, Button::RStickLeft),
+            (WPAD_PRO_STICK_R_EMULATION_RIGHT, Button::RStickRight),
+            (WPAD_PRO_STICK_R_EMULATION_UP, Button::RStickUp),
+            (WPAD_PRO_STICK_R_EMULATION_DOWN, Button::RStickDown),
         ];
 
         button_mappings
@@ -212,16 +194,14 @@ impl Button {
     }
 
     fn from_nunchuck(buttons: u32) -> FlagSet<Button> {
+        use c_wut::WPADNunchukButton::*;
         let button_mappings = [
-            (c_wut::WPAD_NUNCHUK_STICK_EMULATION_LEFT, Button::LStickLeft),
-            (
-                c_wut::WPAD_NUNCHUK_STICK_EMULATION_RIGHT,
-                Button::LStickRight,
-            ),
-            (c_wut::WPAD_NUNCHUK_STICK_EMULATION_UP, Button::LStickUp),
-            (c_wut::WPAD_NUNCHUK_STICK_EMULATION_DOWN, Button::LStickDown),
-            (c_wut::WPAD_NUNCHUK_BUTTON_Z, Button::Z),
-            (c_wut::WPAD_NUNCHUK_BUTTON_C, Button::C),
+            (WPAD_NUNCHUK_STICK_EMULATION_LEFT, Button::LStickLeft),
+            (WPAD_NUNCHUK_STICK_EMULATION_RIGHT, Button::LStickRight),
+            (WPAD_NUNCHUK_STICK_EMULATION_UP, Button::LStickUp),
+            (WPAD_NUNCHUK_STICK_EMULATION_DOWN, Button::LStickDown),
+            (WPAD_NUNCHUK_BUTTON_Z, Button::Z),
+            (WPAD_NUNCHUK_BUTTON_C, Button::C),
         ];
 
         button_mappings
@@ -235,48 +215,31 @@ impl Button {
     }
 
     fn from_classic(buttons: u32) -> FlagSet<Button> {
+        use c_wut::WPADClassicButton::*;
         let button_mappings = [
-            (c_wut::WPAD_CLASSIC_BUTTON_UP, Button::Up),
-            (c_wut::WPAD_CLASSIC_BUTTON_DOWN, Button::Down),
-            (c_wut::WPAD_CLASSIC_BUTTON_LEFT, Button::Left),
-            (c_wut::WPAD_CLASSIC_BUTTON_RIGHT, Button::Right),
-            (c_wut::WPAD_CLASSIC_BUTTON_A, Button::A),
-            (c_wut::WPAD_CLASSIC_BUTTON_B, Button::B),
-            (c_wut::WPAD_CLASSIC_BUTTON_X, Button::X),
-            (c_wut::WPAD_CLASSIC_BUTTON_Y, Button::Y),
-            (c_wut::WPAD_CLASSIC_BUTTON_L, Button::L),
-            (c_wut::WPAD_CLASSIC_BUTTON_R, Button::R),
-            (c_wut::WPAD_CLASSIC_BUTTON_ZL, Button::Left),
-            (c_wut::WPAD_CLASSIC_BUTTON_ZR, Button::Right),
-            (c_wut::WPAD_CLASSIC_BUTTON_PLUS, Button::Plus),
-            (c_wut::WPAD_CLASSIC_BUTTON_MINUS, Button::Minus),
-            (c_wut::WPAD_CLASSIC_BUTTON_HOME, Button::Home),
-            (
-                c_wut::WPAD_CLASSIC_STICK_L_EMULATION_LEFT,
-                Button::LStickLeft,
-            ),
-            (
-                c_wut::WPAD_CLASSIC_STICK_L_EMULATION_RIGHT,
-                Button::LStickRight,
-            ),
-            (c_wut::WPAD_CLASSIC_STICK_L_EMULATION_UP, Button::LStickUp),
-            (
-                c_wut::WPAD_CLASSIC_STICK_L_EMULATION_DOWN,
-                Button::LStickDown,
-            ),
-            (
-                c_wut::WPAD_CLASSIC_STICK_R_EMULATION_LEFT,
-                Button::RStickLeft,
-            ),
-            (
-                c_wut::WPAD_CLASSIC_STICK_R_EMULATION_RIGHT,
-                Button::RStickRight,
-            ),
-            (c_wut::WPAD_CLASSIC_STICK_R_EMULATION_UP, Button::RStickUp),
-            (
-                c_wut::WPAD_CLASSIC_STICK_R_EMULATION_DOWN,
-                Button::RStickDown,
-            ),
+            (WPAD_CLASSIC_BUTTON_UP, Button::Up),
+            (WPAD_CLASSIC_BUTTON_DOWN, Button::Down),
+            (WPAD_CLASSIC_BUTTON_LEFT, Button::Left),
+            (WPAD_CLASSIC_BUTTON_RIGHT, Button::Right),
+            (WPAD_CLASSIC_BUTTON_A, Button::A),
+            (WPAD_CLASSIC_BUTTON_B, Button::B),
+            (WPAD_CLASSIC_BUTTON_X, Button::X),
+            (WPAD_CLASSIC_BUTTON_Y, Button::Y),
+            (WPAD_CLASSIC_BUTTON_L, Button::L),
+            (WPAD_CLASSIC_BUTTON_R, Button::R),
+            (WPAD_CLASSIC_BUTTON_ZL, Button::Left),
+            (WPAD_CLASSIC_BUTTON_ZR, Button::Right),
+            (WPAD_CLASSIC_BUTTON_PLUS, Button::Plus),
+            (WPAD_CLASSIC_BUTTON_MINUS, Button::Minus),
+            (WPAD_CLASSIC_BUTTON_HOME, Button::Home),
+            (WPAD_CLASSIC_STICK_L_EMULATION_LEFT, Button::LStickLeft),
+            (WPAD_CLASSIC_STICK_L_EMULATION_RIGHT, Button::LStickRight),
+            (WPAD_CLASSIC_STICK_L_EMULATION_UP, Button::LStickUp),
+            (WPAD_CLASSIC_STICK_L_EMULATION_DOWN, Button::LStickDown),
+            (WPAD_CLASSIC_STICK_R_EMULATION_LEFT, Button::RStickLeft),
+            (WPAD_CLASSIC_STICK_R_EMULATION_RIGHT, Button::RStickRight),
+            (WPAD_CLASSIC_STICK_R_EMULATION_UP, Button::RStickUp),
+            (WPAD_CLASSIC_STICK_R_EMULATION_DOWN, Button::RStickDown),
         ];
 
         button_mappings
@@ -290,32 +253,33 @@ impl Button {
     }
 
     fn from_pro(buttons: u32) -> FlagSet<Button> {
+        use c_wut::WPADProButton::*;
         let button_mappings = [
-            (c_wut::WPAD_PRO_BUTTON_UP, Button::Up),
-            (c_wut::WPAD_PRO_BUTTON_DOWN, Button::Down),
-            (c_wut::WPAD_PRO_BUTTON_LEFT, Button::Left),
-            (c_wut::WPAD_PRO_BUTTON_RIGHT, Button::Right),
-            (c_wut::WPAD_PRO_BUTTON_A, Button::A),
-            (c_wut::WPAD_PRO_BUTTON_B, Button::B),
-            (c_wut::WPAD_PRO_BUTTON_X, Button::X),
-            (c_wut::WPAD_PRO_BUTTON_Y, Button::Y),
-            (c_wut::WPAD_PRO_TRIGGER_L, Button::L),
-            (c_wut::WPAD_PRO_TRIGGER_R, Button::R),
-            (c_wut::WPAD_PRO_TRIGGER_ZL, Button::ZL),
-            (c_wut::WPAD_PRO_TRIGGER_ZR, Button::ZR),
-            (c_wut::WPAD_PRO_BUTTON_PLUS, Button::Plus),
-            (c_wut::WPAD_PRO_BUTTON_MINUS, Button::Minus),
-            (c_wut::WPAD_PRO_BUTTON_HOME, Button::Home),
-            (c_wut::WPAD_PRO_BUTTON_STICK_L, Button::LStick),
-            (c_wut::WPAD_PRO_BUTTON_STICK_R, Button::RStick),
-            (c_wut::WPAD_PRO_STICK_L_EMULATION_LEFT, Button::LStickLeft),
-            (c_wut::WPAD_PRO_STICK_L_EMULATION_RIGHT, Button::LStickRight),
-            (c_wut::WPAD_PRO_STICK_L_EMULATION_UP, Button::LStickUp),
-            (c_wut::WPAD_PRO_STICK_L_EMULATION_DOWN, Button::LStickDown),
-            (c_wut::WPAD_PRO_STICK_R_EMULATION_LEFT, Button::RStickLeft),
-            (c_wut::WPAD_PRO_STICK_R_EMULATION_RIGHT, Button::RStickRight),
-            (c_wut::WPAD_PRO_STICK_R_EMULATION_UP, Button::RStickUp),
-            (c_wut::WPAD_PRO_STICK_R_EMULATION_DOWN, Button::RStickDown),
+            (WPAD_PRO_BUTTON_UP, Button::Up),
+            (WPAD_PRO_BUTTON_DOWN, Button::Down),
+            (WPAD_PRO_BUTTON_LEFT, Button::Left),
+            (WPAD_PRO_BUTTON_RIGHT, Button::Right),
+            (WPAD_PRO_BUTTON_A, Button::A),
+            (WPAD_PRO_BUTTON_B, Button::B),
+            (WPAD_PRO_BUTTON_X, Button::X),
+            (WPAD_PRO_BUTTON_Y, Button::Y),
+            (WPAD_PRO_TRIGGER_L, Button::L),
+            (WPAD_PRO_TRIGGER_R, Button::R),
+            (WPAD_PRO_TRIGGER_ZL, Button::ZL),
+            (WPAD_PRO_TRIGGER_ZR, Button::ZR),
+            (WPAD_PRO_BUTTON_PLUS, Button::Plus),
+            (WPAD_PRO_BUTTON_MINUS, Button::Minus),
+            (WPAD_PRO_BUTTON_HOME, Button::Home),
+            (WPAD_PRO_BUTTON_STICK_L, Button::LStick),
+            (WPAD_PRO_BUTTON_STICK_R, Button::RStick),
+            (WPAD_PRO_STICK_L_EMULATION_LEFT, Button::LStickLeft),
+            (WPAD_PRO_STICK_L_EMULATION_RIGHT, Button::LStickRight),
+            (WPAD_PRO_STICK_L_EMULATION_UP, Button::LStickUp),
+            (WPAD_PRO_STICK_L_EMULATION_DOWN, Button::LStickDown),
+            (WPAD_PRO_STICK_R_EMULATION_LEFT, Button::RStickLeft),
+            (WPAD_PRO_STICK_R_EMULATION_RIGHT, Button::RStickRight),
+            (WPAD_PRO_STICK_R_EMULATION_UP, Button::RStickUp),
+            (WPAD_PRO_STICK_R_EMULATION_DOWN, Button::RStickDown),
         ];
 
         button_mappings
@@ -363,6 +327,22 @@ pub enum Port {
     Port4,
     Port5,
     Port6,
+}
+
+impl Port {
+    pub fn iter() -> core::slice::Iter<'static, Port> {
+        static P: [Port; 8] = [
+            Port::DRC,
+            Port::Port0,
+            Port::Port1,
+            Port::Port2,
+            Port::Port3,
+            Port::Port4,
+            Port::Port5,
+            Port::Port6,
+        ];
+        P.iter()
+    }
 }
 
 impl Into<u32> for Port {
@@ -415,15 +395,15 @@ pub enum GamepadError {
 impl From<i32> for GamepadError {
     #[allow(unreachable_patterns)] // to make it really clear what is matched.
     fn from(value: i32) -> Self {
+        use c_wut::KPADError::*;
+        use c_wut::VPADReadError::*;
         match value {
-            c_wut::VPAD_READ_NO_SAMPLES | c_wut::KPAD_ERROR_NO_SAMPLES => Self::NoSamples,
-            c_wut::VPAD_READ_INVALID_CONTROLLER | c_wut::KPAD_ERROR_INVALID_CONTROLLER => {
-                Self::InvalidController
+            VPAD_READ_NO_SAMPLES | KPAD_ERROR_NO_SAMPLES => Self::NoSamples,
+            VPAD_READ_INVALID_CONTROLLER | KPAD_ERROR_INVALID_CONTROLLER => Self::InvalidController,
+            VPAD_READ_BUSY | KPAD_ERROR_BUSY => Self::Busy,
+            VPAD_READ_UNINITIALIZED | KPAD_ERROR_WPAD_UNINIT | KPAD_ERROR_UNINITIALIZED => {
+                Self::Uninitialized
             }
-            c_wut::VPAD_READ_BUSY | c_wut::KPAD_ERROR_BUSY => Self::Busy,
-            c_wut::VPAD_READ_UNINITIALIZED
-            | c_wut::KPAD_ERROR_WPAD_UNINIT
-            | c_wut::KPAD_ERROR_UNINITIALIZED => Self::Uninitialized,
             _ => panic!("Unknown error code: {}", value),
         }
     }
@@ -446,11 +426,13 @@ impl Gamepad {
     pub fn poll(&self) -> Result<GamepadState, GamepadError> {
         match self.port {
             Port::DRC => {
+                use c_wut::VPADReadError::*;
+
                 let mut status = c_wut::VPADStatus::default();
-                let mut error = c_wut::VPAD_READ_SUCCESS;
+                let mut error = VPAD_READ_SUCCESS;
 
                 if unsafe { c_wut::VPADRead(self.port.into(), &mut status, 1, &mut error) } == 0
-                    && error != c_wut::VPAD_READ_SUCCESS
+                    && error != VPAD_READ_SUCCESS
                 {
                     Err(GamepadError::from(error))
                 } else {
@@ -464,11 +446,13 @@ impl Gamepad {
                 }
             }
             _ => {
+                use c_wut::{KPADError::*, WPADExtensionType::*};
+
                 let mut status = c_wut::KPADStatus::default();
-                let mut error = c_wut::KPAD_ERROR_OK;
+                let mut error = KPAD_ERROR_OK;
 
                 if unsafe { c_wut::KPADReadEx(self.port.into(), &mut status, 1, &mut error) } == 0
-                    && error != c_wut::KPAD_ERROR_OK
+                    && error != KPAD_ERROR_OK
                 {
                     Err(GamepadError::from(error))
                 } else {
@@ -481,7 +465,7 @@ impl Gamepad {
                     };
 
                     match status.extensionType as u32 {
-                        c_wut::WPAD_EXT_NUNCHUK => unsafe {
+                        WPAD_EXT_NUNCHUK => unsafe {
                             s.hold |= Button::from_nunchuck(status.__bindgen_anon_1.nunchuk.hold);
                             s.trigger |=
                                 Button::from_nunchuck(status.__bindgen_anon_1.nunchuk.trigger);
@@ -489,7 +473,7 @@ impl Gamepad {
                                 Button::from_nunchuck(status.__bindgen_anon_1.nunchuk.release);
                             s.left_stick = Some(status.__bindgen_anon_1.nunchuk.stick.into())
                         },
-                        c_wut::WPAD_EXT_CLASSIC => unsafe {
+                        WPAD_EXT_CLASSIC => unsafe {
                             s.hold |= Button::from_classic(status.__bindgen_anon_1.classic.hold);
                             s.trigger |=
                                 Button::from_classic(status.__bindgen_anon_1.classic.trigger);
@@ -498,7 +482,7 @@ impl Gamepad {
                             s.left_stick = Some(status.__bindgen_anon_1.classic.leftStick.into());
                             s.right_stick = Some(status.__bindgen_anon_1.classic.rightStick.into());
                         },
-                        c_wut::WPAD_EXT_PRO_CONTROLLER => unsafe {
+                        WPAD_EXT_PRO_CONTROLLER => unsafe {
                             s.hold |= Button::from_pro(status.__bindgen_anon_1.pro.hold);
                             s.trigger |= Button::from_pro(status.__bindgen_anon_1.pro.trigger);
                             s.release |= Button::from_pro(status.__bindgen_anon_1.pro.release);
@@ -515,11 +499,20 @@ impl Gamepad {
     }
 }
 
-pub fn gamepads() /*-> Iter<Gamepad>*/
-{
-    todo!()
+pub fn gamepads() -> alloc::vec::IntoIter<Gamepad> {
+    let mut pads: vec::Vec<Gamepad> = vec![];
+    for port in Port::iter() {
+        let pad = Gamepad::new(*port);
+        if pad.poll().is_ok() {
+            pads.push(pad);
+        }
+    }
+    pads.into_iter()
 }
 
 pub fn max_gamepads() -> u8 {
-    todo!()
+    let _kpad = KPAD.acquire();
+    unsafe { c_wut::KPADGetGameMaxControllers() }
+        .try_into()
+        .expect("Max # of gamecontroller can NEVER exceed `u8::MAX`")
 }

@@ -9,27 +9,27 @@ use flagset::{flags, FlagSet};
 
 flags! {
     #[derive(Default)]
-    pub enum ThreadAttribute: u8 {
-        Cpu0 = c_wut::OS_THREAD_ATTRIB_AFFINITY_CPU0 as u8,
-        Cpu1 = c_wut::OS_THREAD_ATTRIB_AFFINITY_CPU1 as u8,
-        Cpu2 = c_wut::OS_THREAD_ATTRIB_AFFINITY_CPU2 as u8,
+    pub enum ThreadAttribute: c_wut::OSThreadAttributes {
+        Cpu0 = c_wut::OS_THREAD_ATTRIB::OS_THREAD_ATTRIB_AFFINITY_CPU0 as c_wut::OSThreadAttributes,
+        Cpu1 = c_wut::OS_THREAD_ATTRIB::OS_THREAD_ATTRIB_AFFINITY_CPU1 as c_wut::OSThreadAttributes,
+        Cpu2 = c_wut::OS_THREAD_ATTRIB::OS_THREAD_ATTRIB_AFFINITY_CPU2 as c_wut::OSThreadAttributes,
         #[default]
-        CpuAny = c_wut::OS_THREAD_ATTRIB_AFFINITY_ANY as u8,
-        Detached = c_wut::OS_THREAD_ATTRIB_DETACHED as u8,
-        StackUsage = c_wut::OS_THREAD_ATTRIB_STACK_USAGE as u8,
-        Unknown = c_wut::OS_THREAD_ATTRIB_UNKNOWN as u8
+        CpuAny = c_wut::OS_THREAD_ATTRIB::OS_THREAD_ATTRIB_AFFINITY_ANY as c_wut::OSThreadAttributes,
+        Detached = c_wut::OS_THREAD_ATTRIB::OS_THREAD_ATTRIB_DETACHED as c_wut::OSThreadAttributes,
+        StackUsage = c_wut::OS_THREAD_ATTRIB::OS_THREAD_ATTRIB_STACK_USAGE as c_wut::OSThreadAttributes,
+        Unknown = c_wut::OS_THREAD_ATTRIB::OS_THREAD_ATTRIB_UNKNOWN as c_wut::OSThreadAttributes
     }
 
-    pub enum ThreadState: u8 {
+    pub enum ThreadState: c_wut::OSThreadState {
         // None = c_wut::OS_THREAD_STATE_NONE as u8,
         /// Thread is ready to run.
-        Ready = c_wut::OS_THREAD_STATE_READY as u8,
+        Ready = c_wut::OS_THREAD_STATE::OS_THREAD_STATE_READY as c_wut::OSThreadState,
         /// Thread is running.
-        Running = c_wut::OS_THREAD_STATE_RUNNING as u8,
+        Running = c_wut::OS_THREAD_STATE::OS_THREAD_STATE_RUNNING as c_wut::OSThreadState,
         /// Thread is waiting, i.e. on a mutex
-        Waiting = c_wut::OS_THREAD_STATE_WAITING as u8,
+        Waiting = c_wut::OS_THREAD_STATE::OS_THREAD_STATE_WAITING as c_wut::OSThreadState,
         /// Thread is about to terminate.
-        Moribund = c_wut::OS_THREAD_STATE_MORIBUND as u8
+        Moribund = c_wut::OS_THREAD_STATE::OS_THREAD_STATE_MORIBUND as c_wut::OSThreadState
     }
 }
 

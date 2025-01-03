@@ -2,7 +2,7 @@
 
 use crate::{
     bindings as c_wut,
-    path::{Component, Path, PathBuf, MAIN_SEPARATOR},
+    path::{Path, PathBuf},
     rrc::{ResourceGuard, Rrc},
     time::SystemTime,
 };
@@ -14,8 +14,8 @@ use alloc::{
 };
 use core::{
     ffi::{self, CStr},
+    fmt,
     str::Utf8Error,
-    time::Duration,
 };
 use flagset::{flags, FlagSet};
 use thiserror::Error;
@@ -44,10 +44,11 @@ pub enum FilesystemError {
 impl TryFrom<i32> for FilesystemError {
     type Error = FilesystemError;
     fn try_from(value: i32) -> Result<Self, Self::Error> {
+        use c_wut::FSStatus::*;
         match value {
-            c_wut::FS_STATUS_OK => Ok(Self::Unknown(value)),
-            c_wut::FS_STATUS_END => Err(Self::AllRead),
-            c_wut::FS_STATUS_NOT_FOUND => Err(Self::NotFound),
+            FS_STATUS_OK => Ok(Self::Unknown(value)),
+            FS_STATUS_END => Err(Self::AllRead),
+            FS_STATUS_NOT_FOUND => Err(Self::NotFound),
             _ => Err(Self::Unknown(value)),
         }
     }
@@ -64,7 +65,7 @@ pub struct FsHandler<'a> {
     // not entirely sure why Box is required, but I think it has something to do with copied/moved memory, which the API apperently doesnt like. So: BOX IS REQUIRED. Trust me.
     client: Box<c_wut::FSClient>,
     block: Box<c_wut::FSCmdBlock>,
-    error_mask: c_wut::FSErrorFlag,
+    error_mask: c_wut::FSErrorFlag::Type,
     _resource: ResourceGuard<'a>,
 }
 
@@ -73,11 +74,11 @@ impl<'a> FsHandler<'_> {
         let mut io = Self {
             client: Box::new(c_wut::FSClient::default()),
             block: Box::new(c_wut::FSCmdBlock::default()),
-            error_mask: c_wut::FS_ERROR_FLAG_ALL,
+            error_mask: c_wut::FSErrorFlag::FS_ERROR_FLAG_ALL,
             _resource: FS.acquire(),
         };
 
-        let status = unsafe { c_wut::FSAddClient(io.client.as_mut(), c_wut::FS_ERROR_FLAG_ALL) };
+        let status = unsafe { c_wut::FSAddClient(io.client.as_mut(), io.error_mask) };
         FilesystemError::try_from(status)?;
 
         unsafe {
@@ -309,10 +310,7 @@ impl<'a> FsHandler<'_> {
         };
         FilesystemError::try_from(status)?;
 
-        let name = String::from_utf8_lossy(unsafe {
-            alloc::slice::from_raw_parts(entry.name.as_ptr() as *const u8, entry.name.len())
-        });
-
+        let name = PathBuf::try_from(entry.name.as_ptr())?;
         Ok(DirEntry {
             metadata: Metadata::from(entry.info),
             path: dir.path().join(name),
@@ -346,19 +344,19 @@ impl<'a> Drop for FsHandler<'_> {
 // endregion
 
 flags! {
-    enum MetadataFlags: u32 {
+    enum MetadataFlags: c_wut::FSStatFlags::Type {
         /// The retrieved file entry is a (link to a) directory.
-        Directory = c_wut::FS_STAT_DIRECTORY,
+        Directory = c_wut::FSStatFlags::FS_STAT_DIRECTORY,
         /// The retrieved file entry also has a quota set.
-        Quota = c_wut::FS_STAT_QUOTA,
+        Quota = c_wut::FSStatFlags::FS_STAT_QUOTA,
         /// The retrieved file entry is a (link to a) file.
-        File = c_wut::FS_STAT_FILE,
+        File = c_wut::FSStatFlags::FS_STAT_FILE,
         /// The retrieved file entry also is encrypted and can't be opened (see vWii files for example).
-        Encrypted = c_wut::FS_STAT_ENCRYPTED_FILE,
+        Encrypted = c_wut::FSStatFlags::FS_STAT_ENCRYPTED_FILE,
         /// The retrieved file entry also is a link to a different file on the filesystem.
         ///
         /// Note: It's currently not known how one can read the linked-to file entry.
-        Link = c_wut::FS_STAT_LINK
+        Link = c_wut::FSStatFlags::FS_STAT_LINK
     }
 
     pub enum Mode: u8 {
@@ -397,43 +395,44 @@ pub struct Permissions {
     other: FlagSet<Mode>,
 }
 
-impl From<c_wut::FSMode> for Permissions {
-    fn from(value: c_wut::FSMode) -> Self {
+impl From<c_wut::FSMode::Type> for Permissions {
+    fn from(value: c_wut::FSMode::Type) -> Self {
+        use c_wut::FSMode::*;
         let mut p = Permissions::default();
 
-        if (value & c_wut::FS_MODE_READ_OWNER) != 0 {
+        if (value & FS_MODE_READ_OWNER) != 0 {
             p.owner |= Mode::Read;
         }
 
-        if (value & c_wut::FS_MODE_WRITE_OWNER) != 0 {
+        if (value & FS_MODE_WRITE_OWNER) != 0 {
             p.owner |= Mode::Write;
         }
 
-        if (value & c_wut::FS_MODE_EXEC_OWNER) != 0 {
+        if (value & FS_MODE_EXEC_OWNER) != 0 {
             p.owner |= Mode::Execute;
         }
 
-        if (value & c_wut::FS_MODE_READ_GROUP) != 0 {
+        if (value & FS_MODE_READ_GROUP) != 0 {
             p.group |= Mode::Read;
         }
 
-        if (value & c_wut::FS_MODE_WRITE_GROUP) != 0 {
+        if (value & FS_MODE_WRITE_GROUP) != 0 {
             p.group |= Mode::Write;
         }
 
-        if (value & c_wut::FS_MODE_EXEC_GROUP) != 0 {
+        if (value & FS_MODE_EXEC_GROUP) != 0 {
             p.group |= Mode::Execute;
         }
 
-        if (value & c_wut::FS_MODE_READ_OTHER) != 0 {
+        if (value & FS_MODE_READ_OTHER) != 0 {
             p.other |= Mode::Read;
         }
 
-        if (value & c_wut::FS_MODE_WRITE_OTHER) != 0 {
+        if (value & FS_MODE_WRITE_OTHER) != 0 {
             p.other |= Mode::Write;
         }
 
-        if (value & c_wut::FS_MODE_EXEC_OTHER) != 0 {
+        if (value & FS_MODE_EXEC_OTHER) != 0 {
             p.other |= Mode::Execute;
         }
 
@@ -441,44 +440,45 @@ impl From<c_wut::FSMode> for Permissions {
     }
 }
 
-impl Into<c_wut::FSMode> for Permissions {
-    fn into(self) -> c_wut::FSMode {
-        let mut m = c_wut::FSMode::default();
+impl Into<c_wut::FSMode::Type> for Permissions {
+    fn into(self) -> c_wut::FSMode::Type {
+        use c_wut::FSMode::*;
+        let mut m = Type::default();
 
         if self.owner.contains(Mode::Read) {
-            m &= c_wut::FS_MODE_READ_OWNER;
+            m &= FS_MODE_READ_OWNER;
         }
 
         if self.owner.contains(Mode::Write) {
-            m &= c_wut::FS_MODE_WRITE_OWNER;
+            m &= FS_MODE_WRITE_OWNER;
         }
 
         if self.owner.contains(Mode::Execute) {
-            m &= c_wut::FS_MODE_EXEC_OWNER;
+            m &= FS_MODE_EXEC_OWNER;
         }
 
         if self.group.contains(Mode::Read) {
-            m &= c_wut::FS_MODE_READ_GROUP;
+            m &= FS_MODE_READ_GROUP;
         }
 
         if self.group.contains(Mode::Write) {
-            m &= c_wut::FS_MODE_WRITE_GROUP;
+            m &= FS_MODE_WRITE_GROUP;
         }
 
         if self.group.contains(Mode::Execute) {
-            m &= c_wut::FS_MODE_EXEC_GROUP;
+            m &= FS_MODE_EXEC_GROUP;
         }
 
         if self.other.contains(Mode::Read) {
-            m &= c_wut::FS_MODE_READ_OTHER;
+            m &= FS_MODE_READ_OTHER;
         }
 
         if self.other.contains(Mode::Write) {
-            m &= c_wut::FS_MODE_WRITE_OTHER;
+            m &= FS_MODE_WRITE_OTHER;
         }
 
         if self.other.contains(Mode::Execute) {
-            m &= c_wut::FS_MODE_EXEC_OTHER;
+            m &= FS_MODE_EXEC_OTHER;
         }
 
         m
@@ -489,6 +489,7 @@ impl Into<c_wut::FSMode> for Permissions {
 
 // region: Metdata
 
+#[derive(Clone, Copy)]
 pub struct Metadata(c_wut::FSStat);
 
 impl Metadata {
@@ -640,6 +641,27 @@ pub struct DirEntry {
 impl DirEntry {
     pub fn path(&self) -> PathBuf {
         self.path.clone()
+    }
+
+    pub fn metadata(&self) -> Metadata {
+        self.metadata
+    }
+
+    pub fn file_name(&self) -> String {
+        match self.path.file_name() {
+            Some(n) => n.to_string(),
+            None => "".to_string(),
+        }
+    }
+
+    pub fn file_type(&self) -> FileType {
+        self.metadata.file_type()
+    }
+}
+
+impl fmt::Debug for DirEntry {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "DirEntry({})", self.path)
     }
 }
 

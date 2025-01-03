@@ -223,7 +223,7 @@
 #include <coreinit/energysaver.h>
 #include <coreinit/scheduler.h>
 #include <coreinit/filesystem.h>
-// #include <coreinit/memblockheap.h>
+#include <coreinit/memblockheap.h>
 #include <coreinit/context.h>
 #include <coreinit/spinlock.h>
 #include <coreinit/cache.h>
@@ -235,12 +235,12 @@
 #include <coreinit/copydata.h>
 #include <coreinit/alarm.h>
 #include <coreinit/atomic.h>
-// #include <coreinit/memunitheap.h>
+#include <coreinit/memunitheap.h>
 #include <coreinit/core.h>
 #include <coreinit/smd.h>
 #include <coreinit/transition.h>
 #include <coreinit/debug.h>
-// #include <coreinit/memexpheap.h>
+#include <coreinit/memexpheap.h>
 #include <coreinit/bsp.h>
 #include <coreinit/ios.h>
 #include <coreinit/foreground.h>
@@ -269,5 +269,5 @@
 #include <coreinit/screen.h>
 #include <coreinit/systeminfo.h>
 
-#include <malloc.h>
+// #include <malloc.h>
 #include <errno.h>
