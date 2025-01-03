@@ -49,36 +49,25 @@ fn panic_handler(info: &core::panic::PanicInfo) -> ! {
     tv.enable();
     drc.enable();
 
-    const N: i32 = 15;
-    let mut i = N;
-    let mut last_update = time::SystemTime::now();
+    for i in (0..=15).rev() {
+        // Clear the screens
+        tv.fill(screen::Color::black());
+        drc.fill(screen::Color::black());
 
-    while process::running() && i > 0 {
-        if let Ok(elapsed) = last_update.elapsed() {
-            // Check if it's time to update or this is the initial iteration
-            if elapsed >= time::Duration::from_secs(1) || i == N {
-                // Clear the screens
-                tv.fill(screen::Color::black());
-                drc.fill(screen::Color::black());
+        // Display the message on both screens
+        tv.text(&msg, 0.5, 0.30, screen::TextAlign::Center);
+        drc.text(&msg, 0.5, 0.30, screen::TextAlign::Center);
 
-                // Display the message on both screens
-                tv.text(&msg, 0.5, 0.35, screen::TextAlign::Center);
-                drc.text(&msg, 0.5, 0.35, screen::TextAlign::Center);
+        // Render the progress bar
+        let timer = format!("Restarting console in {}", i - 1);
+        tv.text(&timer, 0.5, 0.8, screen::TextAlign::Center);
+        drc.text(&timer, 0.5, 0.8, screen::TextAlign::Center);
 
-                // Render the progress bar
-                let timer = format!("Restarting console in {}", i - 1);
-                tv.text(&timer, 0.5, 0.8, screen::TextAlign::Center);
-                drc.text(&timer, 0.5, 0.8, screen::TextAlign::Center);
+        // Update screens
+        tv.update();
+        drc.update();
 
-                // Update screens
-                tv.update();
-                drc.update();
-
-                // Reset timer and decrement steps
-                last_update = time::SystemTime::now();
-                i -= 1;
-            }
-        }
+        thread::sleep(time::Duration::from_secs(1));
     }
 
     process::to_menu()

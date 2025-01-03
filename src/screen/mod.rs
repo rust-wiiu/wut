@@ -30,20 +30,44 @@ pub(crate) static OSSCREEN: Rrc<fn(), fn()> = Rrc::new(
             100,
         );
         c_wut::ProcUIRegisterCallback(
-            PROCUI_CALLBACK_ACQUIRE,
+            PROCUI_CALLBACK_RELEASE,
             Some(_dealloc_framebuffer),
             ptr::null_mut(),
             100,
         );
     },
-    || unsafe {
-        c_wut::OSScreenShutdown();
+    || /*unsafe*/ {
+        // _dealloc_framebuffer(ptr::null_mut());
+        // c_wut::OSScreenShutdown();
     },
 );
 
+struct Framebuffer {
+    ptr: *mut ffi::c_void,
+    size: u32,
+}
+
+impl Framebuffer {
+    const fn new() -> Self {
+        Framebuffer {
+            ptr: ptr::null_mut(),
+            size: 0,
+        }
+    }
+}
+
+impl From<(*mut ffi::c_void, u32)> for Framebuffer {
+    fn from(value: (*mut ffi::c_void, u32)) -> Self {
+        Framebuffer {
+            ptr: value.0,
+            size: value.1,
+        }
+    }
+}
+
 const FRAMEBUFFER_HEAP_TAG: u32 = 0x8E8B30C2;
-static mut FRAMEBUFFER_TV: (*mut ffi::c_void, u32) = (ptr::null_mut(), 0);
-static mut FRAMEBUFFER_DRC: (*mut ffi::c_void, u32) = (ptr::null_mut(), 0);
+static mut FRAMEBUFFER_TV: Framebuffer = Framebuffer::new();
+static mut FRAMEBUFFER_DRC: Framebuffer = Framebuffer::new();
 
 unsafe extern "C" fn _alloc_framebuffer(_: *mut ffi::c_void) -> u32 {
     use c_wut::MEMBaseHeapType::*;
@@ -52,18 +76,19 @@ unsafe extern "C" fn _alloc_framebuffer(_: *mut ffi::c_void) -> u32 {
     let heap = c_wut::MEMGetBaseHeapHandle(MEM_BASE_HEAP_MEM1);
     let _ = c_wut::MEMRecordStateForFrmHeap(heap, FRAMEBUFFER_HEAP_TAG);
 
-    if FRAMEBUFFER_TV.0.is_null() {
+    if FRAMEBUFFER_TV.ptr.is_null() {
         let size = c_wut::OSScreenGetBufferSizeEx(SCREEN_TV);
-        FRAMEBUFFER_TV = (c_wut::MEMAllocFromFrmHeapEx(heap, size, 0x100), size);
+        FRAMEBUFFER_TV = Framebuffer::from((c_wut::MEMAllocFromFrmHeapEx(heap, size, 0x100), size));
     }
 
-    if FRAMEBUFFER_DRC.0.is_null() {
+    if FRAMEBUFFER_DRC.ptr.is_null() {
         let size = c_wut::OSScreenGetBufferSizeEx(SCREEN_DRC);
-        FRAMEBUFFER_DRC = (c_wut::MEMAllocFromFrmHeapEx(heap, size, 0x100), size);
+        FRAMEBUFFER_DRC =
+            Framebuffer::from((c_wut::MEMAllocFromFrmHeapEx(heap, size, 0x100), size));
     }
 
-    c_wut::OSScreenSetBufferEx(SCREEN_TV, FRAMEBUFFER_TV.0);
-    c_wut::OSScreenSetBufferEx(SCREEN_DRC, FRAMEBUFFER_DRC.0);
+    c_wut::OSScreenSetBufferEx(SCREEN_TV, FRAMEBUFFER_TV.ptr);
+    c_wut::OSScreenSetBufferEx(SCREEN_DRC, FRAMEBUFFER_DRC.ptr);
 
     0
 }
@@ -74,17 +99,13 @@ unsafe extern "C" fn _dealloc_framebuffer(_: *mut ffi::c_void) -> u32 {
     let heap = c_wut::MEMGetBaseHeapHandle(MEM_BASE_HEAP_MEM1);
     let _ = c_wut::MEMFreeByStateToFrmHeap(heap, FRAMEBUFFER_HEAP_TAG);
 
-    FRAMEBUFFER_TV = (ptr::null_mut(), 0);
-    FRAMEBUFFER_DRC = (ptr::null_mut(), 0);
+    FRAMEBUFFER_TV = Framebuffer::new();
+    FRAMEBUFFER_DRC = Framebuffer::new();
 
     0
 }
 
 pub struct TV;
-// impl TV {
-//     pub const ROWS: u32 = 30;
-//     pub const COLS: u32 = 80;
-// }
 pub struct DRC;
 
 pub trait DisplayType {
@@ -99,6 +120,8 @@ pub trait DisplayType {
     fn rows() -> u32;
 
     fn columns() -> u32;
+
+    fn update();
 }
 
 impl DisplayType for TV {
@@ -155,6 +178,13 @@ impl DisplayType for TV {
     fn columns() -> u32 {
         80
     }
+
+    fn update() {
+        unsafe {
+            c_wut::DCFlushRange(FRAMEBUFFER_TV.ptr, FRAMEBUFFER_TV.size);
+            c_wut::OSScreenFlipBuffersEx(Self::id());
+        }
+    }
 }
 
 impl DisplayType for DRC {
@@ -180,6 +210,13 @@ impl DisplayType for DRC {
 
     fn columns() -> u32 {
         53
+    }
+
+    fn update() {
+        unsafe {
+            c_wut::DCFlushRange(FRAMEBUFFER_DRC.ptr, FRAMEBUFFER_DRC.size);
+            c_wut::OSScreenFlipBuffersEx(Self::id());
+        }
     }
 }
 
@@ -228,27 +265,8 @@ impl<Display: DisplayType> Screen<'_, Display> {
     }
 
     pub fn update(&self) {
-        unsafe {
-            c_wut::OSScreenFlipBuffersEx(Display::id());
-        }
+        Display::update();
     }
-
-    // pub fn text(&self, text: &str, position: impl Into<TextPosition>) {
-    //     let text = String::from(text);
-    //     let position: TextPosition = position.into();
-
-    //     for (line, column, row) in position.format(&text) {
-    //         crate::println!("\"{}\" - {} x {}", line, column, row);
-    //         unsafe {
-    //             c_wut::OSScreenPutFontEx(
-    //                 Display::id(),
-    //                 column,
-    //                 row,
-    //                 CString::new(line).unwrap().as_c_str().as_ptr(),
-    //             );
-    //         }
-    //     }
-    // }
 
     pub fn text<C: Position, R: Position>(&self, text: &str, col: C, row: R, align: TextAlign) {
         // let text = CString::new(text).unwrap();

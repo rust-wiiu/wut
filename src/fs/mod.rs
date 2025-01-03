@@ -88,13 +88,11 @@ impl<'a> FsHandler<'_> {
         Ok(io)
     }
 
-    // #TEST
     pub fn exists<P: AsRef<Path>>(&mut self, path: P) -> Result<bool, FilesystemError> {
         let _ = self.metadata_path(path)?;
         Ok(true)
     }
 
-    // #TEST
     pub fn metadata_path<P: AsRef<Path>>(&mut self, path: P) -> Result<Metadata, FilesystemError> {
         let str = CString::new(path.as_ref().as_str()).unwrap();
         let mut stat = c_wut::FSStat::default();
@@ -371,16 +369,24 @@ impl<'a> FsHandler<'_> {
     pub fn read_dir(&mut self, dir: &ReadDir) -> Result<DirEntry, FilesystemError> {
         let mut entry = c_wut::FSDirectoryEntry::default();
 
+        crate::println!("4");
+        crate::println!("handle: {:?}", dir.handle);
+
         let status = unsafe {
             c_wut::FSReadDir(
                 self.client.as_mut(),
                 self.block.as_mut(),
-                dir.as_handle(),
+                dir.handle,
                 &mut entry,
                 self.error_mask,
             )
         };
+
+        crate::println!("5");
+
         FilesystemError::try_from(status)?;
+
+        crate::println!("6");
 
         let name = PathBuf::try_from(entry.name.as_ptr())?;
         Ok(DirEntry {
@@ -391,6 +397,8 @@ impl<'a> FsHandler<'_> {
 
     // #TEST
     pub fn close_dir(&mut self, dir: &ReadDir) -> Result<(), FilesystemError> {
+        crate::println!("close dir");
+
         let status = unsafe {
             c_wut::FSCloseDir(
                 self.client.as_mut(),
@@ -456,15 +464,29 @@ impl FileType {
     }
 }
 
+impl fmt::Debug for FileType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if self.is_dir() {
+            write!(f, "FileType(Dir)")
+        } else if self.is_file() {
+            write!(f, "FileType(Dir)")
+        } else if self.is_symlink() {
+            write!(f, "FileType(Symlink)")
+        } else {
+            write!(f, "FileType(Unknown)")
+        }
+    }
+}
+
 // endregion
 
 // region: Permissions
 
 #[derive(Debug, Default)]
 pub struct Permissions {
-    owner: FlagSet<Mode>,
-    group: FlagSet<Mode>,
-    other: FlagSet<Mode>,
+    pub owner: FlagSet<Mode>,
+    pub group: FlagSet<Mode>,
+    pub other: FlagSet<Mode>,
 }
 
 impl From<c_wut::FSMode::Type> for Permissions {
@@ -647,6 +669,13 @@ impl File {
     }
 }
 
+impl Drop for File {
+    fn drop(&mut self) {
+        let mut fs = FsHandler::new().unwrap();
+        let _ = fs.close_file(self).unwrap();
+    }
+}
+
 impl AsHandle for File {
     type Handle = c_wut::FSFileHandle;
 
@@ -659,6 +688,7 @@ impl AsHandle for File {
 
 // region: ReadDir
 
+/*
 pub struct ReadDir {
     handle: c_wut::FSDirectoryHandle,
     path: PathBuf,
@@ -699,7 +729,7 @@ impl Drop for ReadDir {
         let mut fs = FsHandler::new().unwrap();
         let _ = fs.close_dir(self).unwrap();
     }
-}
+}*/
 
 // endregion
 
