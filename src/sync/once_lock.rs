@@ -207,7 +207,7 @@ impl<T> OnceLock<T> {
     }
 
     #[inline]
-    fn is_initialized(&self) -> bool {
+    pub(crate) fn is_initialized(&self) -> bool {
         self.is_init.load(Ordering::Acquire)
     }
 
@@ -222,6 +222,7 @@ impl<T> OnceLock<T> {
 
         match f() {
             Ok(value) => {
+                self.is_init.store(true, Ordering::SeqCst);
                 unsafe { (&mut *slot.get()).write(value) };
             }
             Err(e) => {

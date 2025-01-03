@@ -29,59 +29,19 @@ pub mod prelude {
 #[cfg(feature = "default_panic_handler")]
 #[panic_handler]
 fn panic_handler(info: &core::panic::PanicInfo) -> ! {
-    loop {}
-
-    /*
-    if let Some(location) = info.location() {
-        crate::println!(
-            "Panic! - {} [{} : Ln {}, Col {}]",
-            info.message(),
-            location.file(),
-            location.line(),
-            location.column(),
-        );
-    } else {
-        crate::println!("Panic! - {}", info.message());
-    }
-
-    loop {}
-    */
-
-    /*
-    use alloc::string::ToString;
-
-    let (file, line) = if let Some(location) = info.location() {
-        (
-            alloc::ffi::CString::new(location.file()).unwrap(),
-            location.line(),
-        )
-    } else {
-        (alloc::ffi::CString::from(c"<unknown>"), 0)
-    };
-    let msg = alloc::ffi::CString::new(info.message().to_string()).unwrap();
-
-    unsafe {
-        crate::bindings::OSPanic(file.as_ptr(), line, msg.as_ptr());
-    }
-    crate::thread::sleep(core::time::Duration::from_secs(5));
-
-    loop {}
-    */
-
-    /*
-    use crate::{screen, thread, time};
+    use crate::{screen, time};
     use alloc::format;
 
     let msg = if let Some(location) = info.location() {
         format!(
-            "Panic!\n{}\n[{} : Ln {}, Col {}]",
+            "Panic!\n\n{}\n\n[{} : Ln {}, Col {}]",
             info.message(),
             location.file(),
             location.line(),
             location.column()
         )
     } else {
-        format!("Panic!\n{}", info.message())
+        format!("Panic!\n\n{}", info.message())
     };
 
     let tv = screen::tv();
@@ -89,52 +49,39 @@ fn panic_handler(info: &core::panic::PanicInfo) -> ! {
     tv.enable();
     drc.enable();
 
-    let n = 15;
-    for i in (0..n).rev() {
-        tv.fill(screen::Color::black());
-        drc.fill(screen::Color::black());
+    const N: i32 = 15;
+    let mut i = N;
+    let mut last_update = time::SystemTime::now();
 
-        tv.text(&msg, 0.5, 0.45, screen::TextAlign::Center);
-        drc.text(&msg, 0.5, 0.45, screen::TextAlign::Center);
+    while process::running() && i > 0 {
+        if let Ok(elapsed) = last_update.elapsed() {
+            // Check if it's time to update or this is the initial iteration
+            if elapsed >= time::Duration::from_secs(1) || i == N {
+                // Clear the screens
+                tv.fill(screen::Color::black());
+                drc.fill(screen::Color::black());
 
-        let bar = format!("|{:n$}|", "-".repeat(i));
-        tv.text(
-            &bar,
-            0.5 - (n as f32 * 0.0075),
-            0.8,
-            screen::TextAlign::Left,
-        );
-        drc.text(
-            &bar,
-            0.5 - (n as f32 * 0.0075),
-            0.8,
-            screen::TextAlign::Left,
-        );
+                // Display the message on both screens
+                tv.text(&msg, 0.5, 0.35, screen::TextAlign::Center);
+                drc.text(&msg, 0.5, 0.35, screen::TextAlign::Center);
 
-        tv.update();
-        drc.update();
-        thread::sleep(time::Duration::from_secs(1));
+                // Render the progress bar
+                let timer = format!("Restarting console in {}", i - 1);
+                tv.text(&timer, 0.5, 0.8, screen::TextAlign::Center);
+                drc.text(&timer, 0.5, 0.8, screen::TextAlign::Center);
+
+                // Update screens
+                tv.update();
+                drc.update();
+
+                // Reset timer and decrement steps
+                last_update = time::SystemTime::now();
+                i -= 1;
+            }
+        }
     }
 
-    // process::exit();
-    unsafe {
-        bindings::SYSLaunchMenu();
-        // bindings::ProcUIDrawDoneRelease();
-        // bindings::ProcUIShutdown();
-        // process::exit();
-
-        // bindings::ProcUIShutdown();
-
-        // bindings::_Exit(-1)
-        // bindings::OSShutdown();
-
-        // bindings::OSPanic(c"idk".as_ptr(), 123, c"Panic".as_ptr());
-        bindings::OSFatal(c"Fatal".as_ptr());
-    }
-    // while process::running() {}
-
-    todo!()
-    */
+    process::to_menu()
 }
 
 pub struct WiiUAllocator;

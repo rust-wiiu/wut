@@ -1,6 +1,6 @@
 pub mod builder;
 pub mod thread;
-mod ticks;
+pub mod ticks;
 
 use crate::bindings as c_wut;
 pub use builder::Builder;

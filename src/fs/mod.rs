@@ -2,7 +2,7 @@
 
 use crate::{
     bindings as c_wut,
-    path::{Path, PathBuf},
+    path::{self, Path, PathBuf},
     rrc::{ResourceGuard, Rrc},
     time::SystemTime,
 };
@@ -166,6 +166,53 @@ impl<'a> FsHandler<'_> {
         Ok(())
     }
 
+    // #TEST
+    pub fn rename<P: AsRef<Path>, Q: AsRef<Path>>(
+        &mut self,
+        from: P,
+        to: Q,
+    ) -> Result<(), FilesystemError> {
+        let from = CString::new(from.as_ref().as_str()).unwrap();
+        let to = CString::new(to.as_ref().as_str()).unwrap();
+
+        let status = unsafe {
+            c_wut::FSRename(
+                self.client.as_mut(),
+                self.block.as_mut(),
+                from.as_ptr(),
+                to.as_ptr(),
+                self.error_mask,
+            )
+        };
+        FilesystemError::try_from(status)?;
+
+        Ok(())
+    }
+
+    // #TEST
+    pub fn set_permissions<P: AsRef<Path>>(
+        &mut self,
+        path: P,
+        perm: Permissions,
+    ) -> Result<(), FilesystemError> {
+        let str = CString::new(path.as_ref().as_str()).unwrap();
+        let mode = perm.into();
+
+        let status = unsafe {
+            c_wut::FSChangeMode(
+                self.client.as_mut(),
+                self.block.as_mut(),
+                str.as_ptr(),
+                mode,
+                c_wut::FSMode::Type::MAX,
+                self.error_mask,
+            )
+        };
+        FilesystemError::try_from(status)?;
+
+        Ok(())
+    }
+
     // region: File
 
     // #TEST
@@ -235,6 +282,31 @@ impl<'a> FsHandler<'_> {
         FilesystemError::try_from(status)?;
 
         Ok(buffer)
+    }
+
+    // #TEST
+    pub fn write<C: AsRef<[u8]>>(
+        &mut self,
+        file: &File,
+        contents: C,
+    ) -> Result<(), FilesystemError> {
+        let mut buffer = contents.as_ref().to_vec();
+
+        let status = unsafe {
+            c_wut::FSWriteFile(
+                self.client.as_mut(),
+                self.block.as_mut(),
+                buffer.as_mut_ptr(),
+                buffer.len() as u32,
+                1,
+                file.as_handle(),
+                0,
+                self.error_mask,
+            )
+        };
+        FilesystemError::try_from(status)?;
+
+        Ok(())
     }
 
     // #TEST
@@ -714,6 +786,52 @@ pub fn read<P: AsRef<Path>>(path: P) -> Result<Vec<u8>, FilesystemError> {
 pub fn read_dir<P: AsRef<Path>>(path: P) -> Result<ReadDir, FilesystemError> {
     let mut fs = FsHandler::new()?;
     fs.open_dir(path)
+}
+
+pub fn read_to_string<P: AsRef<Path>>(path: P) -> Result<String, FilesystemError> {
+    let mut fs = FsHandler::new()?;
+    let file = fs.open_file(path, FileMode::Read)?;
+    let data = fs.read_file(&file)?;
+    Ok(String::from_utf8_lossy(&data).to_string())
+}
+
+pub fn remove_dir<P: AsRef<Path>>(path: P) -> Result<(), FilesystemError> {
+    let mut fs = FsHandler::new()?;
+    fs.remove(path)
+}
+
+pub fn remove_dir_all<P: AsRef<Path>>(path: P) -> Result<(), FilesystemError> {
+    let mut fs = FsHandler::new()?;
+    let mut path = path.as_ref().absolute()?;
+
+    while path.parent().is_some() {
+        // crate::println!("{:?}", path);
+        fs.remove(&path)?;
+        path = path.parent().unwrap().to_path_buf();
+    }
+
+    Ok(())
+}
+
+pub fn remove_file<P: AsRef<Path>>(path: P) -> Result<(), FilesystemError> {
+    let mut fs = FsHandler::new()?;
+    fs.remove(path)
+}
+
+pub fn rename<P: AsRef<Path>, Q: AsRef<Path>>(from: P, to: Q) -> Result<(), FilesystemError> {
+    let mut fs = FsHandler::new()?;
+    fs.rename(from, to)
+}
+
+pub fn set_permissions<P: AsRef<Path>>(path: P, perm: Permissions) -> Result<(), FilesystemError> {
+    let mut fs = FsHandler::new()?;
+    fs.set_permissions(path, perm)
+}
+
+pub fn write<P: AsRef<Path>, C: AsRef<[u8]>>(path: P, contents: C) -> Result<(), FilesystemError> {
+    let mut fs = FsHandler::new()?;
+    let file = fs.open_file(path, FileMode::Write)?;
+    fs.write(&file, contents)
 }
 
 /*
