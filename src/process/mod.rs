@@ -32,7 +32,7 @@ pub fn exit() {
     unsafe {
         io::_stdout_deinit();
         // screen::OSSCREEN.clear();
-        fs::FS.clear();
+        // fs::FS.clear();
         c_wut::WHBProcShutdown();
     }
     // to_menu()
@@ -47,7 +47,7 @@ pub fn running() -> bool {
 }
 
 /// Forcefully exit the application and return to main menu with a full system reload - this clears any leaking memory.
-pub fn to_menu() -> ! {
+pub fn force_to_menu() -> ! {
     unsafe {
         c_wut::SYSLaunchMenu();
         c_wut::OSForceFullRelaunch();

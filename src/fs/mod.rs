@@ -1,22 +1,22 @@
 //! Filesystem
 
+mod walkdir;
+pub use walkdir::walkdir;
+
 use crate::{
     bindings as c_wut,
-    path::{self, Path, PathBuf},
+    io::_print,
+    path::{Path, PathBuf},
     rrc::{ResourceGuard, Rrc},
     time::SystemTime,
 };
 use alloc::{
     boxed::Box,
-    ffi::CString,
+    ffi::{CString, NulError},
     string::{String, ToString},
     vec::Vec,
 };
-use core::{
-    ffi::{self, CStr},
-    fmt,
-    str::Utf8Error,
-};
+use core::{cell::RefCell, ffi::c_void, fmt, str::Utf8Error};
 use flagset::{flags, FlagSet};
 use thiserror::Error;
 
@@ -39,385 +39,68 @@ pub enum FilesystemError {
     NotFound,
     #[error("Object was read to end")]
     AllRead, // not sure if this also applies to files or just to directories (then maybe change the name)
+    #[error("Pointer was null")]
+    NulError(#[from] NulError),
+    #[error("Object already exists at path")]
+    AlreadyExists,
+    #[error("Object was requested as a file but is none")]
+    NotAFile,
 }
 
 impl TryFrom<i32> for FilesystemError {
     type Error = FilesystemError;
     fn try_from(value: i32) -> Result<Self, Self::Error> {
         use c_wut::FSStatus::*;
+        if value > 0 {
+            return Ok(Self::Unknown(value));
+        }
+
         match value {
             FS_STATUS_OK => Ok(Self::Unknown(value)),
             FS_STATUS_END => Err(Self::AllRead),
             FS_STATUS_NOT_FOUND => Err(Self::NotFound),
+            FS_STATUS_EXISTS => Err(Self::AlreadyExists),
+            FS_STATUS_NOT_FILE => Err(Self::NotAFile),
             _ => Err(Self::Unknown(value)),
         }
     }
 }
 
-trait AsHandle {
-    type Handle: Copy;
-    fn as_handle(&self) -> Self::Handle;
-}
-
 // region: FsHandler
 
 pub struct FsHandler<'a> {
-    // not entirely sure why Box is required, but I think it has something to do with copied/moved memory, which the API apperently doesnt like. So: BOX IS REQUIRED. Trust me.
-    client: Box<c_wut::FSClient>,
-    block: Box<c_wut::FSCmdBlock>,
+    // not sure why Box is required, but it is - trust me
+    // ig think it has something to do with copied/moved memory, which the API apperently doesnt like
+    client: Box<RefCell<c_wut::FSClient>>,
+    block: Box<RefCell<c_wut::FSCmdBlock>>,
     error_mask: c_wut::FSErrorFlag::Type,
     _resource: ResourceGuard<'a>,
 }
 
-impl<'a> FsHandler<'_> {
+impl<'a> FsHandler<'a> {
     pub fn new() -> Result<Self, FilesystemError> {
-        let mut io = Self {
-            client: Box::new(c_wut::FSClient::default()),
-            block: Box::new(c_wut::FSCmdBlock::default()),
+        let fs = Self {
+            client: Box::new(RefCell::new(c_wut::FSClient::default())),
+            block: Box::new(RefCell::new(c_wut::FSCmdBlock::default())),
             error_mask: c_wut::FSErrorFlag::FS_ERROR_FLAG_ALL,
             _resource: FS.acquire(),
         };
 
-        let status = unsafe { c_wut::FSAddClient(io.client.as_mut(), io.error_mask) };
+        let status = unsafe { c_wut::FSAddClient(&mut *fs.client.borrow_mut(), fs.error_mask) };
+
         FilesystemError::try_from(status)?;
 
         unsafe {
-            c_wut::FSInitCmdBlock(io.block.as_mut());
+            c_wut::FSInitCmdBlock(&mut *fs.block.borrow_mut());
         }
 
-        Ok(io)
+        Ok(fs)
     }
-
-    pub fn exists<P: AsRef<Path>>(&mut self, path: P) -> Result<bool, FilesystemError> {
-        let _ = self.metadata_path(path)?;
-        Ok(true)
-    }
-
-    pub fn metadata_path<P: AsRef<Path>>(&mut self, path: P) -> Result<Metadata, FilesystemError> {
-        let str = CString::new(path.as_ref().as_str()).unwrap();
-        let mut stat = c_wut::FSStat::default();
-
-        let status = unsafe {
-            c_wut::FSGetStat(
-                self.client.as_mut(),
-                self.block.as_mut(),
-                str.as_ptr(),
-                &mut stat,
-                self.error_mask,
-            )
-        };
-        FilesystemError::try_from(status)?;
-
-        Ok(Metadata::from(stat))
-    }
-
-    // #TEST
-    pub fn remove<P: AsRef<Path>>(&mut self, path: P) -> Result<(), FilesystemError> {
-        let str = CString::new(path.as_ref().as_str()).unwrap();
-
-        let status = unsafe {
-            c_wut::FSRemove(
-                self.client.as_mut(),
-                self.block.as_mut(),
-                str.as_ptr(),
-                self.error_mask,
-            )
-        };
-        FilesystemError::try_from(status)?;
-
-        Ok(())
-    }
-
-    // #TEST
-    pub fn get_working_dir(&mut self) -> Result<PathBuf, FilesystemError> {
-        const SIZE: usize = c_wut::FS_MAX_PATH as usize + 1;
-        let mut buffer: [ffi::c_char; SIZE] = [0; SIZE];
-
-        let status = unsafe {
-            c_wut::FSGetCwd(
-                self.client.as_mut(),
-                self.block.as_mut(),
-                buffer.as_mut_ptr() as *mut _,
-                (SIZE - 1) as u32,
-                self.error_mask,
-            )
-        };
-        FilesystemError::try_from(status)?;
-
-        Ok(PathBuf::try_from(buffer.as_ptr())?)
-    }
-
-    // #TEST
-    pub fn set_working_dir<P: AsRef<Path>>(&mut self, path: P) -> Result<(), FilesystemError> {
-        let str = CString::new(path.as_ref().as_str()).unwrap();
-
-        let status = unsafe {
-            c_wut::FSChangeDir(
-                self.client.as_mut(),
-                self.block.as_mut(),
-                str.as_ptr(),
-                self.error_mask,
-            )
-        };
-        FilesystemError::try_from(status)?;
-
-        Ok(())
-    }
-
-    // #TEST
-    pub fn rename<P: AsRef<Path>, Q: AsRef<Path>>(
-        &mut self,
-        from: P,
-        to: Q,
-    ) -> Result<(), FilesystemError> {
-        let from = CString::new(from.as_ref().as_str()).unwrap();
-        let to = CString::new(to.as_ref().as_str()).unwrap();
-
-        let status = unsafe {
-            c_wut::FSRename(
-                self.client.as_mut(),
-                self.block.as_mut(),
-                from.as_ptr(),
-                to.as_ptr(),
-                self.error_mask,
-            )
-        };
-        FilesystemError::try_from(status)?;
-
-        Ok(())
-    }
-
-    // #TEST
-    pub fn set_permissions<P: AsRef<Path>>(
-        &mut self,
-        path: P,
-        perm: Permissions,
-    ) -> Result<(), FilesystemError> {
-        let str = CString::new(path.as_ref().as_str()).unwrap();
-        let mode = perm.into();
-
-        let status = unsafe {
-            c_wut::FSChangeMode(
-                self.client.as_mut(),
-                self.block.as_mut(),
-                str.as_ptr(),
-                mode,
-                c_wut::FSMode::Type::MAX,
-                self.error_mask,
-            )
-        };
-        FilesystemError::try_from(status)?;
-
-        Ok(())
-    }
-
-    // region: File
-
-    // #TEST
-    pub fn metadata_file(&mut self, file: &File) -> Result<Metadata, FilesystemError> {
-        let handle = file.as_handle();
-        let mut stat = c_wut::FSStat::default();
-
-        let status = unsafe {
-            c_wut::FSGetStatFile(
-                self.client.as_mut(),
-                self.block.as_mut(),
-                handle,
-                &mut stat,
-                self.error_mask,
-            )
-        };
-        FilesystemError::try_from(status)?;
-
-        Ok(Metadata::from(stat))
-    }
-
-    // #TEST
-    pub fn open_file<P: AsRef<Path>>(
-        &mut self,
-        path: P,
-        mode: FileMode,
-    ) -> Result<File, FilesystemError> {
-        let str = CString::new(path.as_ref().as_str()).unwrap();
-        let mut handle = c_wut::FSFileHandle::default();
-
-        let status = unsafe {
-            c_wut::FSOpenFile(
-                self.client.as_mut(),
-                self.block.as_mut(),
-                str.as_ptr(),
-                mode.as_c_str().as_ptr(),
-                &mut handle,
-                self.error_mask,
-            )
-        };
-        FilesystemError::try_from(status)?;
-
-        Ok(File {
-            handle,
-            path: path.as_ref().to_path_buf(),
-        })
-    }
-
-    // #TEST
-    pub fn read_file(&mut self, file: &File) -> Result<Vec<u8>, FilesystemError> {
-        let metadata = self.metadata_file(file)?;
-        let size = metadata.len() as usize;
-        let mut buffer: Vec<u8> = Vec::with_capacity(size);
-
-        let status = unsafe {
-            c_wut::FSReadFile(
-                self.client.as_mut(),
-                self.block.as_mut(),
-                buffer.as_mut_ptr(),
-                size as u32,
-                1,
-                file.as_handle(),
-                0,
-                self.error_mask,
-            )
-        };
-        FilesystemError::try_from(status)?;
-
-        Ok(buffer)
-    }
-
-    // #TEST
-    pub fn write<C: AsRef<[u8]>>(
-        &mut self,
-        file: &File,
-        contents: C,
-    ) -> Result<(), FilesystemError> {
-        let mut buffer = contents.as_ref().to_vec();
-
-        let status = unsafe {
-            c_wut::FSWriteFile(
-                self.client.as_mut(),
-                self.block.as_mut(),
-                buffer.as_mut_ptr(),
-                buffer.len() as u32,
-                1,
-                file.as_handle(),
-                0,
-                self.error_mask,
-            )
-        };
-        FilesystemError::try_from(status)?;
-
-        Ok(())
-    }
-
-    // #TEST
-    pub fn close_file(&mut self, file: &File) -> Result<(), FilesystemError> {
-        let status = unsafe {
-            c_wut::FSCloseFile(
-                self.client.as_mut(),
-                self.block.as_mut(),
-                file.as_handle(),
-                self.error_mask,
-            )
-        };
-        FilesystemError::try_from(status)?;
-
-        Ok(())
-    }
-
-    //endregion
-
-    // region: Directory
-
-    // #TEST
-    pub fn create_dir<P: AsRef<Path>>(&mut self, path: P) -> Result<(), FilesystemError> {
-        let str = CString::new(path.as_ref().as_str()).unwrap();
-
-        let status = unsafe {
-            c_wut::FSMakeDir(
-                self.client.as_mut(),
-                self.block.as_mut(),
-                str.as_ptr(),
-                self.error_mask,
-            )
-        };
-        FilesystemError::try_from(status)?;
-
-        Ok(())
-    }
-
-    // #TEST
-    pub fn open_dir<P: AsRef<Path>>(&mut self, path: P) -> Result<ReadDir, FilesystemError> {
-        let str = CString::new(path.as_ref().as_str()).unwrap();
-        let mut handle = c_wut::FSDirectoryHandle::default();
-
-        let status = unsafe {
-            c_wut::FSOpenDir(
-                self.client.as_mut(),
-                self.block.as_mut(),
-                str.as_ptr(),
-                &mut handle,
-                self.error_mask,
-            )
-        };
-        FilesystemError::try_from(status)?;
-
-        Ok(ReadDir {
-            handle,
-            path: path.as_ref().to_path_buf(),
-        })
-    }
-
-    // #TEST
-    pub fn read_dir(&mut self, dir: &ReadDir) -> Result<DirEntry, FilesystemError> {
-        let mut entry = c_wut::FSDirectoryEntry::default();
-
-        crate::println!("4");
-        crate::println!("handle: {:?}", dir.handle);
-
-        let status = unsafe {
-            c_wut::FSReadDir(
-                self.client.as_mut(),
-                self.block.as_mut(),
-                dir.handle,
-                &mut entry,
-                self.error_mask,
-            )
-        };
-
-        crate::println!("5");
-
-        FilesystemError::try_from(status)?;
-
-        crate::println!("6");
-
-        let name = PathBuf::try_from(entry.name.as_ptr())?;
-        Ok(DirEntry {
-            metadata: Metadata::from(entry.info),
-            path: dir.path().join(name),
-        })
-    }
-
-    // #TEST
-    pub fn close_dir(&mut self, dir: &ReadDir) -> Result<(), FilesystemError> {
-        crate::println!("close dir");
-
-        let status = unsafe {
-            c_wut::FSCloseDir(
-                self.client.as_mut(),
-                self.block.as_mut(),
-                dir.as_handle(),
-                self.error_mask,
-            )
-        };
-        FilesystemError::try_from(status)?;
-
-        Ok(())
-    }
-
-    //endregion
 }
 
 impl<'a> Drop for FsHandler<'_> {
     fn drop(&mut self) {
-        unsafe { c_wut::FSDelClient(self.client.as_mut(), self.error_mask) };
+        unsafe { c_wut::FSDelClient(&mut *self.client.borrow_mut(), self.error_mask) };
     }
 }
 
@@ -579,6 +262,24 @@ impl Into<c_wut::FSMode::Type> for Permissions {
     }
 }
 
+impl fmt::Display for Permissions {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut s = String::new();
+
+        for mode in [&self.owner, &self.group, &self.other] {
+            s.push(if mode.contains(Mode::Read) { 'r' } else { '-' });
+            s.push(if mode.contains(Mode::Write) { 'w' } else { '-' });
+            s.push(if mode.contains(Mode::Execute) {
+                'x'
+            } else {
+                '-'
+            });
+        }
+
+        write!(f, "{s}")
+    }
+}
+
 // endregion
 
 // region: Metdata
@@ -618,6 +319,14 @@ impl Metadata {
     pub fn permissions(&self) -> Permissions {
         Permissions::from(self.0.mode)
     }
+
+    pub fn owner(&self) -> u32 {
+        self.0.owner
+    }
+
+    pub fn group(&self) -> u32 {
+        self.0.group
+    }
 }
 
 impl From<c_wut::FSStat> for Metadata {
@@ -628,59 +337,268 @@ impl From<c_wut::FSStat> for Metadata {
 
 // endregion
 
-// region: File
+// region: OpenOptions
 
-pub enum FileMode {
-    /// Open for reading. The file must exist.
-    Read,
-    /// Open for writing. Creates an empty file or truncates an existing file.
-    Write,
-    /// Open for appending. Writes data at the end of the file. Creates the file if it does not exist.
-    Append,
-    /// Open for reading and writing. The file must exist.
-    ReadWrite,
-    /// Open for reading and writing. Creates an empty file or truncates an existing file.
-    ReadWriteCreate,
-    /// Open for reading and appending. The file is created if it does not exist.
-    ReadAppendCreate,
+pub struct OpenOptions {
+    read: bool,
+    write: bool,
+    append: bool,
+    create: bool,
+    truncate: bool,
 }
 
-impl FileMode {
-    pub fn as_c_str(&self) -> &CStr {
-        match self {
-            FileMode::Read => c"r",
-            FileMode::Write => c"w",
-            FileMode::Append => c"a",
-            FileMode::ReadWrite => c"r+",
-            FileMode::ReadWriteCreate => c"w+",
-            FileMode::ReadAppendCreate => c"a+",
+impl OpenOptions {
+    pub fn new() -> Self {
+        OpenOptions {
+            read: false,
+            write: false,
+            append: false,
+            create: false,
+            truncate: false,
         }
+    }
+
+    pub fn read(&mut self, read: bool) -> &mut Self {
+        self.read = read;
+        self
+    }
+
+    pub fn write(&mut self, write: bool) -> &mut Self {
+        self.write = write;
+        self
+    }
+
+    pub fn append(&mut self, append: bool) -> &mut Self {
+        self.append = append;
+        self
+    }
+
+    pub fn truncate(&mut self, truncate: bool) -> &mut Self {
+        self.truncate = truncate;
+        self
+    }
+
+    pub fn create(&mut self, create: bool) -> &mut Self {
+        self.create = create;
+        self
+    }
+
+    pub fn open<'a, P: AsRef<Path>>(&self, path: P) -> Result<File<'a>, FilesystemError> {
+        let fs = FsHandler::new()?;
+        let str = CString::new(path.as_ref().as_str())?;
+        // let mode = CString::new(self.file_mode())?;
+        let mode = c"r";
+        let mut handle = c_wut::FSFileHandle::default();
+
+        let status = unsafe {
+            c_wut::FSOpenFile(
+                &mut *fs.client.borrow_mut(),
+                &mut *fs.block.borrow_mut(),
+                str.as_ptr(),
+                mode.as_ptr(),
+                &mut handle,
+                fs.error_mask,
+            )
+        };
+        FilesystemError::try_from(status)?;
+
+        Ok(File {
+            fs,
+            handle,
+            path: path.as_ref().to_path_buf(),
+        })
+    }
+
+    fn file_mode(&self) -> String {
+        let mut mode = String::new();
+
+        if self.read && self.write {
+            mode.push_str("r+");
+        } else if self.read {
+            mode.push_str("r");
+        } else if self.write {
+            if self.truncate {
+                mode.push_str("w");
+            } else if self.append {
+                mode.push_str("a");
+            }
+        }
+
+        if self.write && self.create && !self.truncate && !self.append {
+            // `w+` is appropriate for creating and truncating files
+            mode.push_str("+");
+        }
+
+        mode
     }
 }
 
-pub struct File {
+// endregion
+
+// region: File
+
+// pub enum FileMode {
+//     /// Open for reading. The file must exist.
+//     Read,
+//     /// Open for writing. Creates an empty file or truncates an existing file.
+//     Write,
+//     /// Open for appending. Writes data at the end of the file. Creates the file if it does not exist.
+//     Append,
+//     /// Open for reading and writing. The file must exist.
+//     ReadWrite,
+//     /// Open for reading and writing. Creates an empty file or truncates an existing file.
+//     ReadWriteCreate,
+//     /// Open for reading and appending. The file is created if it does not exist.
+//     ReadAppendCreate,
+// }
+
+// impl FileMode {
+//     pub fn as_c_str(&self) -> &CStr {
+//         match self {
+//             FileMode::Read => c"r",
+//             FileMode::Write => c"w",
+//             FileMode::Append => c"a",
+//             FileMode::ReadWrite => c"r+",
+//             FileMode::ReadWriteCreate => c"w+",
+//             FileMode::ReadAppendCreate => c"a+",
+//         }
+//     }
+// }
+
+pub struct File<'a> {
+    fs: FsHandler<'a>,
     handle: c_wut::FSFileHandle,
     path: PathBuf,
 }
 
-impl File {
+// region: FsBuffer
+
+struct FsBuffer {
+    data: *mut u8,
+    len: u32,
+}
+
+impl FsBuffer {
+    fn new<T: Into<u32>>(len: T) -> Self {
+        let len = len.into();
+        Self {
+            data: unsafe { c_wut::MEMAllocFromDefaultHeapEx.unwrap()(len, 0x40) } as *mut _,
+            len,
+        }
+    }
+
+    fn as_slice(&self) -> &[u8] {
+        unsafe { alloc::slice::from_raw_parts(self.data as *const _, self.len as usize) }
+    }
+}
+
+impl Drop for FsBuffer {
+    fn drop(&mut self) {
+        unsafe {
+            c_wut::MEMFreeToDefaultHeap.unwrap()(self.data as *mut _);
+        }
+    }
+}
+
+// endregion
+
+impl<'a> File<'a> {
+    pub fn open<P: AsRef<Path>>(path: P) -> Result<Self, FilesystemError> {
+        OpenOptions::new().read(true).open(path)
+    }
+
+    pub fn create<P: AsRef<Path>>(path: P) -> Result<Self, FilesystemError> {
+        OpenOptions::new().create(true).open(path)
+    }
+
+    // #TODO
+
+    pub fn metadata(&self) -> Result<Metadata, FilesystemError> {
+        let mut stat = c_wut::FSStat::default();
+
+        let status = unsafe {
+            c_wut::FSGetStatFile(
+                &mut *self.fs.client.borrow_mut(),
+                &mut *self.fs.block.borrow_mut(),
+                self.handle,
+                &mut stat,
+                self.fs.error_mask,
+            )
+        };
+        FilesystemError::try_from(status)?;
+
+        Ok(Metadata::from(stat))
+    }
+
+    pub fn read_to_end(&mut self, buf: &mut Vec<u8>) -> Result<usize, FilesystemError> {
+        let meta = self.metadata().unwrap();
+
+        let buffer = FsBuffer::new(meta.len() as u32);
+        let read = unsafe {
+            c_wut::FSReadFile(
+                &mut *self.fs.client.borrow_mut(),
+                &mut *self.fs.block.borrow_mut(),
+                buffer.data,
+                1,
+                buffer.len,
+                self.handle,
+                0,
+                self.fs.error_mask,
+            )
+        };
+        FilesystemError::try_from(read)?;
+
+        *buf = buffer.as_slice().to_vec();
+        Ok(read as usize)
+    }
+
+    pub fn read_to_string(&mut self, buf: &mut String) -> Result<usize, FilesystemError> {
+        let mut buffer = Vec::new();
+        let size = self.read_to_end(&mut buffer)?;
+        buf.push_str(&String::from_utf8_lossy(&buffer));
+        Ok(size)
+    }
+
+    fn write_all(&mut self, buf: &[u8]) -> Result<(), FilesystemError> {
+        let status = unsafe {
+            c_wut::FSWriteFile(
+                &mut *self.fs.client.borrow_mut(),
+                &mut *self.fs.block.borrow_mut(),
+                buf.as_ptr() as *mut u8,
+                buf.len() as u32,
+                1,
+                self.handle,
+                0,
+                self.fs.error_mask,
+            )
+        };
+        FilesystemError::try_from(status)?;
+
+        Ok(())
+    }
+
     pub fn path(&self) -> PathBuf {
         self.path.clone()
     }
 }
 
-impl Drop for File {
+impl Drop for File<'_> {
     fn drop(&mut self) {
-        let mut fs = FsHandler::new().unwrap();
-        let _ = fs.close_file(self).unwrap();
+        let status = unsafe {
+            c_wut::FSCloseFile(
+                &mut *self.fs.client.borrow_mut(),
+                &mut *self.fs.block.borrow_mut(),
+                self.handle,
+                self.fs.error_mask,
+            )
+        };
+        FilesystemError::try_from(status).unwrap();
     }
 }
 
-impl AsHandle for File {
-    type Handle = c_wut::FSFileHandle;
-
-    fn as_handle(&self) -> Self::Handle {
-        self.handle
+impl fmt::Debug for File<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "File({})", self.path)
     }
 }
 
@@ -688,48 +606,55 @@ impl AsHandle for File {
 
 // region: ReadDir
 
-/*
-pub struct ReadDir {
+pub struct ReadDir<'a> {
+    fs: FsHandler<'a>,
     handle: c_wut::FSDirectoryHandle,
     path: PathBuf,
 }
 
-impl ReadDir {
-    pub fn path(&self) -> PathBuf {
-        self.path.clone()
-    }
-}
-
-impl AsHandle for ReadDir {
-    type Handle = c_wut::FSDirectoryHandle;
-    fn as_handle(&self) -> Self::Handle {
-        self.handle
-    }
-}
-
-impl Iterator for ReadDir {
+impl Iterator for ReadDir<'_> {
     type Item = Result<DirEntry, FilesystemError>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let mut fs = match FsHandler::new() {
-            Ok(fs) => fs,
-            Err(e) => return Some(Err(e)),
+        let mut entry = c_wut::FSDirectoryEntry::default();
+
+        let status = unsafe {
+            c_wut::FSReadDir(
+                &mut *self.fs.client.borrow_mut(),
+                &mut *self.fs.block.borrow_mut(),
+                self.handle,
+                &mut entry,
+                self.fs.error_mask,
+            )
         };
 
-        match fs.read_dir(self) {
-            Ok(entry) => Some(Ok(entry)),
+        match FilesystemError::try_from(status) {
             Err(FilesystemError::AllRead) => None,
             Err(e) => Some(Err(e)),
+            Ok(_) => {
+                let name = PathBuf::try_from(entry.name.as_ptr()).unwrap();
+                Some(Ok(DirEntry {
+                    metadata: Metadata::from(entry.info),
+                    path: self.path.join(name),
+                }))
+            }
         }
     }
 }
 
-impl Drop for ReadDir {
+impl Drop for ReadDir<'_> {
     fn drop(&mut self) {
-        let mut fs = FsHandler::new().unwrap();
-        let _ = fs.close_dir(self).unwrap();
+        let status = unsafe {
+            c_wut::FSCloseDir(
+                self.fs.client.get_mut(),
+                self.fs.block.get_mut(),
+                self.handle,
+                self.fs.error_mask,
+            )
+        };
+        FilesystemError::try_from(status).unwrap();
     }
-}*/
+}
 
 // endregion
 
@@ -778,19 +703,31 @@ pub fn copy<P: AsRef<Path>, Q: AsRef<Path>>(from: P, to: Q) -> Result<u64, Files
 }
 
 pub fn create_dir<P: AsRef<Path>>(path: P) -> Result<(), FilesystemError> {
-    let mut fs = FsHandler::new()?;
-    fs.create_dir(path)
+    let fs = FsHandler::new()?;
+    let str = CString::new(path.as_ref().as_str()).unwrap();
+
+    let status = unsafe {
+        c_wut::FSMakeDir(
+            &mut *fs.client.borrow_mut(),
+            &mut *fs.block.borrow_mut(),
+            str.as_ptr(),
+            fs.error_mask,
+        )
+    };
+    FilesystemError::try_from(status)?;
+
+    Ok(())
 }
 
+// #TEST
 pub fn create_dir_all<P: AsRef<Path>>(path: P) -> Result<(), FilesystemError> {
-    let mut fs = FsHandler::new()?;
     let path = path.as_ref().absolute()?;
 
     let mut sub = PathBuf::new();
     for component in path.components() {
         sub = sub.join(component);
-        if !fs.exists(&sub)? {
-            fs.create_dir(&sub)?;
+        if !exists(&sub)? {
+            create_dir(&sub)?;
         }
     }
 
@@ -798,70 +735,151 @@ pub fn create_dir_all<P: AsRef<Path>>(path: P) -> Result<(), FilesystemError> {
 }
 
 pub fn exists<P: AsRef<Path>>(path: P) -> Result<bool, FilesystemError> {
-    let mut fs = FsHandler::new()?;
-    fs.exists(path)
+    let _ = metadata(path)?;
+    Ok(true)
 }
 
 pub fn metadata<P: AsRef<Path>>(path: P) -> Result<Metadata, FilesystemError> {
-    let mut fs = FsHandler::new()?;
-    fs.metadata_path(path)
+    let fs = FsHandler::new()?;
+    let str = CString::new(path.as_ref().as_str()).unwrap();
+    let mut stat = c_wut::FSStat::default();
+
+    let status = unsafe {
+        c_wut::FSGetStat(
+            &mut *fs.client.borrow_mut(),
+            &mut *fs.block.borrow_mut(),
+            str.as_ptr(),
+            &mut stat,
+            fs.error_mask,
+        )
+    };
+    FilesystemError::try_from(status)?;
+
+    Ok(Metadata::from(stat))
 }
 
+// #TEST
 pub fn read<P: AsRef<Path>>(path: P) -> Result<Vec<u8>, FilesystemError> {
-    let mut fs = FsHandler::new()?;
-    let file = fs.open_file(path, FileMode::Read)?;
-    fs.read_file(&file)
+    let mut file = File::open(path)?;
+    let mut content = Vec::new();
+    file.read_to_end(&mut content)?;
+    Ok(content)
 }
 
-pub fn read_dir<P: AsRef<Path>>(path: P) -> Result<ReadDir, FilesystemError> {
-    let mut fs = FsHandler::new()?;
-    fs.open_dir(path)
+pub fn read_dir<'a, P: AsRef<Path>>(path: P) -> Result<ReadDir<'a>, FilesystemError> {
+    let str = CString::new(path.as_ref().as_str())?;
+
+    let fs = FsHandler::new()?;
+    let mut handle = c_wut::FSDirectoryHandle::default();
+
+    let status = unsafe {
+        c_wut::FSOpenDir(
+            &mut *fs.client.borrow_mut(),
+            &mut *fs.block.borrow_mut(),
+            str.as_ptr(),
+            &mut handle,
+            fs.error_mask,
+        )
+    };
+    FilesystemError::try_from(status)?;
+
+    Ok(ReadDir {
+        fs,
+        handle,
+        path: path.as_ref().to_path_buf(),
+    })
 }
 
+// #TEST
 pub fn read_to_string<P: AsRef<Path>>(path: P) -> Result<String, FilesystemError> {
-    let mut fs = FsHandler::new()?;
-    let file = fs.open_file(path, FileMode::Read)?;
-    let data = fs.read_file(&file)?;
-    Ok(String::from_utf8_lossy(&data).to_string())
+    let mut file = File::open(path)?;
+    let mut content = String::new();
+    file.read_to_string(&mut content)?;
+    Ok(content)
 }
 
-pub fn remove_dir<P: AsRef<Path>>(path: P) -> Result<(), FilesystemError> {
-    let mut fs = FsHandler::new()?;
-    fs.remove(path)
+// #TEST
+pub fn remove<P: AsRef<Path>>(path: P) -> Result<(), FilesystemError> {
+    let fs = FsHandler::new()?;
+    let str = CString::new(path.as_ref().as_str())?;
+
+    let status = unsafe {
+        c_wut::FSRemove(
+            &mut *fs.client.borrow_mut(),
+            &mut *fs.block.borrow_mut(),
+            str.as_ptr(),
+            fs.error_mask,
+        )
+    };
+    FilesystemError::try_from(status)?;
+
+    Ok(())
 }
 
+// #TEST
 pub fn remove_dir_all<P: AsRef<Path>>(path: P) -> Result<(), FilesystemError> {
-    let mut fs = FsHandler::new()?;
     let mut path = path.as_ref().absolute()?;
 
     while path.parent().is_some() {
-        // crate::println!("{:?}", path);
-        fs.remove(&path)?;
+        remove(&path)?;
         path = path.parent().unwrap().to_path_buf();
     }
 
     Ok(())
 }
 
-pub fn remove_file<P: AsRef<Path>>(path: P) -> Result<(), FilesystemError> {
-    let mut fs = FsHandler::new()?;
-    fs.remove(path)
-}
+// pub fn remove_file<P: AsRef<Path>>(path: P) -> Result<(), FilesystemError> {
+//     let mut fs = FsHandler::new()?;
+//     fs.remove(path)
+// }
 
+// #TEST
 pub fn rename<P: AsRef<Path>, Q: AsRef<Path>>(from: P, to: Q) -> Result<(), FilesystemError> {
-    let mut fs = FsHandler::new()?;
-    fs.rename(from, to)
+    let fs = FsHandler::new()?;
+    let from = CString::new(from.as_ref().as_str())?;
+    let to = CString::new(to.as_ref().as_str())?;
+
+    let status = unsafe {
+        c_wut::FSRename(
+            &mut *fs.client.borrow_mut(),
+            &mut *fs.block.borrow_mut(),
+            from.as_ptr(),
+            to.as_ptr(),
+            fs.error_mask,
+        )
+    };
+    FilesystemError::try_from(status)?;
+
+    Ok(())
 }
 
+// #TEST
 pub fn set_permissions<P: AsRef<Path>>(path: P, perm: Permissions) -> Result<(), FilesystemError> {
-    let mut fs = FsHandler::new()?;
-    fs.set_permissions(path, perm)
+    let fs = FsHandler::new()?;
+    let str = CString::new(path.as_ref().as_str()).unwrap();
+    let mode = perm.into();
+
+    let status = unsafe {
+        c_wut::FSChangeMode(
+            &mut *fs.client.borrow_mut(),
+            &mut *fs.block.borrow_mut(),
+            str.as_ptr(),
+            mode,
+            c_wut::FSMode::Type::MAX,
+            fs.error_mask,
+        )
+    };
+    FilesystemError::try_from(status)?;
+
+    Ok(())
 }
 
+// #TEST
 pub fn write<P: AsRef<Path>, C: AsRef<[u8]>>(path: P, contents: C) -> Result<(), FilesystemError> {
-    let mut fs = FsHandler::new()?;
-    let file = fs.open_file(path, FileMode::Write)?;
-    fs.write(&file, contents)
+    let mut file = File::create(path)?;
+    let contents = contents.as_ref().to_vec();
+    let _ = file.write_all(&contents)?;
+    Ok(())
 }
 
 /*
@@ -1122,6 +1140,10 @@ impl OpenOptions {
         self
     }
 
+    pub fn open<P: AsRef<Path>>(&self, path: P) -> Result<File, FilesystemError> {
+        todo!()
+    }
+
     fn to_file_mode(&self) -> FileMode {
         match (
             self.read,
@@ -1139,10 +1161,6 @@ impl OpenOptions {
             (true, _, true, true, _) => FileMode::ReadAppendCreate,
             _ => panic!("Invalid combination of options"),
         }
-    }
-
-    pub fn open<P: AsRef<Path>>(&self, path: P) -> Result<File, FilesystemError> {
-        todo!()
     }
 }
 

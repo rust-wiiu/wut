@@ -59,7 +59,7 @@ use core::{
     cmp, ffi, fmt,
     hash::{Hash, Hasher},
     iter::{self, FusedIterator},
-    ops::{self, Deref, Div},
+    ops::{self, Deref, Div, DivAssign},
     str::Utf8Error,
 };
 
@@ -74,7 +74,7 @@ use alloc::{
     vec::Vec,
 };
 
-use crate::{env, fs::FilesystemError};
+use crate::{env, fs};
 
 ////////////////////////////////////////////////////////////////////////////////
 // Exposed parsing helpers
@@ -721,18 +721,28 @@ pub struct PathBuf {
     inner: String,
 }
 
-impl<'a> Div<&'a str> for &'a PathBuf {
+/// Alternate joining method for PathBuf.
+/// Identical to calling `path.join(rhs)`.
+/// Not present in the rust std, but imho useful for readability.
+impl<P: AsRef<Path>> Div<P> for PathBuf {
     type Output = PathBuf;
 
-    fn div(self, rhs: &'a str) -> Self::Output {
+    fn div(self, rhs: P) -> Self::Output {
         self.join(rhs)
     }
 }
 
-impl Div<&str> for PathBuf {
+impl<P: AsRef<Path>> Div<P> for &PathBuf {
     type Output = PathBuf;
-    fn div(self, rhs: &str) -> Self::Output {
+
+    fn div(self, rhs: P) -> Self::Output {
         self.join(rhs)
+    }
+}
+
+impl<P: AsRef<Path>> DivAssign<P> for PathBuf {
+    fn div_assign(&mut self, rhs: P) {
+        self.push(rhs);
     }
 }
 
@@ -1033,7 +1043,7 @@ impl PathBuf {
     /// Makes the path absolute without accessing the filesystem.
     ///
     /// More info: [absolute][crate::path::absolute]
-    pub fn absolute(&self) -> Result<PathBuf, FilesystemError> {
+    pub fn absolute(&self) -> Result<PathBuf, fs::FilesystemError> {
         absolute(self)
     }
 }
@@ -1115,17 +1125,11 @@ impl FromStr for PathBuf {
     }
 }
 
-// impl From<*const ffi::c_char> for PathBuf {
-//     fn from(value: *const ffi::c_char) -> Self {
-//         todo!()
-//     }
-// }
-
 impl TryFrom<*const ffi::c_char> for PathBuf {
     type Error = Utf8Error;
     fn try_from(value: *const ffi::c_char) -> Result<Self, Self::Error> {
         let c_str = unsafe { ffi::CStr::from_ptr(value) };
-        Ok(PathBuf::from(c_str.to_str()?))
+        Ok(PathBuf::from(c_str.to_string_lossy().to_string()))
     }
 }
 
@@ -1832,15 +1836,40 @@ impl Path {
     /// Makes the path absolute without accessing the filesystem.
     ///
     /// More info: [absolute][crate::path::absolute]
-    pub fn absolute(&self) -> Result<PathBuf, FilesystemError> {
+    pub fn absolute(&self) -> Result<PathBuf, fs::FilesystemError> {
         absolute(self)
     }
 
-    // /// Returns a newtype that implements Display for safely printing paths
-    // /// that may contain non-Unicode data.
-    // pub fn display(&self) -> Display<'_> {
-    //     Display { path: self }
-    // }
+    // FS helper functions
+
+    pub fn is_dir(&self) -> bool {
+        match fs::metadata(&self) {
+            Ok(m) => m.is_dir(),
+            Err(_) => false,
+        }
+    }
+
+    pub fn is_file(&self) -> bool {
+        match fs::metadata(&self) {
+            Ok(m) => m.is_file(),
+            Err(_) => false,
+        }
+    }
+
+    pub fn is_symlink(&self) -> bool {
+        match fs::metadata(&self) {
+            Ok(m) => m.is_symlink(),
+            Err(_) => false,
+        }
+    }
+
+    pub fn metadata(&self) -> Result<fs::Metadata, fs::FilesystemError> {
+        fs::metadata(&self)
+    }
+
+    pub fn read_dir(&self) -> Result<fs::ReadDir, fs::FilesystemError> {
+        fs::read_dir(&self)
+    }
 }
 
 /// Makes the path absolute without accessing the filesystem.
@@ -1853,7 +1882,7 @@ impl Path {
 /// If the `path` is empty or getting the
 /// [current directory][crate::env::current_dir] fails, then an error will be
 /// returned.
-pub fn absolute<P: AsRef<Path>>(path: P) -> Result<PathBuf, FilesystemError> {
+pub fn absolute<P: AsRef<Path>>(path: P) -> Result<PathBuf, fs::FilesystemError> {
     let path = path.as_ref().to_path_buf();
 
     if path.is_absolute() {

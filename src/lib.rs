@@ -24,6 +24,8 @@ use core::{alloc::GlobalAlloc, ffi};
 pub mod prelude {
     pub use crate::println;
     pub use alloc::format;
+    pub use alloc::string::*;
+    pub use alloc::vec::*;
 }
 
 #[cfg(feature = "default_panic_handler")]
@@ -49,7 +51,7 @@ fn panic_handler(info: &core::panic::PanicInfo) -> ! {
     tv.enable();
     drc.enable();
 
-    for i in (0..=15).rev() {
+    for i in (0..=5).rev() {
         // Clear the screens
         tv.fill(screen::Color::black());
         drc.fill(screen::Color::black());
@@ -59,7 +61,7 @@ fn panic_handler(info: &core::panic::PanicInfo) -> ! {
         drc.text(&msg, 0.5, 0.30, screen::TextAlign::Center);
 
         // Render the progress bar
-        let timer = format!("Restarting console in {}", i - 1);
+        let timer = format!("Restarting console in {}", i);
         tv.text(&timer, 0.5, 0.8, screen::TextAlign::Center);
         drc.text(&timer, 0.5, 0.8, screen::TextAlign::Center);
 
@@ -70,7 +72,7 @@ fn panic_handler(info: &core::panic::PanicInfo) -> ! {
         thread::sleep(time::Duration::from_secs(1));
     }
 
-    process::to_menu()
+    process::force_to_menu()
 }
 
 pub struct WiiUAllocator;
