@@ -19,6 +19,8 @@ pub mod sync;
 pub mod thread;
 pub mod time;
 
+mod utils;
+
 use core::{alloc::GlobalAlloc, ffi};
 
 pub mod prelude {
@@ -31,19 +33,22 @@ pub mod prelude {
 #[cfg(feature = "default_panic_handler")]
 #[panic_handler]
 fn panic_handler(info: &core::panic::PanicInfo) -> ! {
-    use crate::{screen, time};
-    use alloc::format;
+    use crate::{screen, time, utils};
+    use alloc::{format, string::ToString};
 
     let msg = if let Some(location) = info.location() {
         format!(
             "Panic!\n\n{}\n\n[{} : Ln {}, Col {}]",
-            info.message(),
+            utils::text_wrap(info.message().to_string(), 55),
             location.file(),
             location.line(),
             location.column()
         )
     } else {
-        format!("Panic!\n\n{}", info.message())
+        format!(
+            "Panic!\n\n{}",
+            utils::text_wrap(info.message().to_string(), 55)
+        )
     };
 
     let tv = screen::tv();

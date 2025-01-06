@@ -5,6 +5,8 @@ use core::ffi::CStr;
 use flagset::{flags, FlagSet};
 pub use Stdout::{Cafe, Console, Module, Udp};
 
+// region: stdout
+
 pub(crate) static mut STDOUT: u8 = 0;
 
 flags! {
@@ -89,3 +91,5 @@ pub unsafe fn _print(str: &CStr) {
         c_wut::WHBLogConsoleDraw();
     }
 }
+
+// endregion
