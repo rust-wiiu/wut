@@ -25,19 +25,6 @@ pub fn custom(stdout: impl Into<FlagSet<io::Stdout>>) {
     }
 }
 
-/// Uninitialize/free important stuff.
-///
-/// This function is required to be ran as late as possible in `main` - not doing this may result in memory leaks.
-pub fn exit() {
-    unsafe {
-        io::_stdout_deinit();
-        // screen::OSSCREEN.clear();
-        // fs::FS.clear();
-        c_wut::WHBProcShutdown();
-    }
-    // to_menu()
-}
-
 /// Check if the OS wants to move application out of foreground.
 ///
 /// Should be ran in resonable intervals or OS may be unresponseable.
@@ -46,8 +33,8 @@ pub fn running() -> bool {
     unsafe { c_wut::WHBProcIsRunning() != 0 }
 }
 
-/// Forcefully exit the application and return to main menu with a full system reload - this clears any leaking memory.
-pub fn force_to_menu() -> ! {
+/// Like [exit][crate::process::exit] but forces a reboot of the console after exit.
+pub fn reboot() -> ! {
     unsafe {
         c_wut::SYSLaunchMenu();
         c_wut::OSForceFullRelaunch();
@@ -59,3 +46,30 @@ pub fn force_to_menu() -> ! {
         }
     }
 }
+
+/// Terminates the process in an abnormal fashion.
+///
+/// The function will never return and will immediately terminate the current process in a platform specific "abnormal" manner.
+///
+/// Note that because this function never returns, and that it terminates the process, no destructors on the current stack or any other thread's stack will be run.
+pub fn exit() -> ! {
+    unsafe {
+        c_wut::SYSLaunchMenu();
+    }
+    while running() {}
+    loop {
+        unsafe {
+            c_wut::_Exit(-1);
+        }
+    }
+}
+
+// old exit (but not really exit).
+// pub fn exit() {
+//     unsafe {
+//         io::_stdout_deinit();
+//         // screen::OSSCREEN.clear();
+//         // fs::FS.clear();
+//         c_wut::WHBProcShutdown();
+//     }
+// }

@@ -1,17 +1,10 @@
 // tcp
 
 use crate::net::{
-    socket::{Socket, SocketError},
+    socket::{Shutdown, Socket, SocketError},
     socket_addrs::ToSocketAddrs,
 };
-use core::net::SocketAddrV4;
-use thiserror::Error;
-
-#[derive(Debug, Error)]
-pub enum TcpError {
-    #[error("socket failed")]
-    SocketFailure(#[from] SocketError),
-}
+use core::{net::SocketAddrV4, time::Duration};
 
 #[derive(Debug)]
 pub struct TcpListener {
@@ -20,7 +13,7 @@ pub struct TcpListener {
 }
 
 impl TcpListener {
-    pub fn bind(address: impl ToSocketAddrs) -> Result<Self, TcpError> {
+    pub fn bind(address: impl ToSocketAddrs) -> Result<Self, SocketError> {
         let socket = Socket::tcp()?;
         let address = socket.bind(address)?;
         socket.listen(16)?;
@@ -28,12 +21,15 @@ impl TcpListener {
         Ok(Self { socket, address })
     }
 
-    pub fn accept(&self) -> Result<Option<TcpStream>, TcpError> {
-        if let Some((socket, address)) = self.socket.accept()? {
-            Ok(Some(TcpStream { socket, address }))
-        } else {
-            Ok(None)
-        }
+    pub fn accept(&self) -> Result<(TcpStream, SocketAddrV4), SocketError> {
+        let (client, address) = self.socket.accept()?;
+        Ok((
+            TcpStream {
+                socket: client,
+                address,
+            },
+            address,
+        ))
     }
 
     pub fn incoming(&self) -> Incoming<'_> {
@@ -46,9 +42,9 @@ pub struct Incoming<'a> {
 }
 
 impl<'a> Iterator for Incoming<'a> {
-    type Item = Result<Option<TcpStream>, TcpError>;
+    type Item = Result<TcpStream, SocketError>;
     fn next(&mut self) -> Option<Self::Item> {
-        Some(self.listener.accept())
+        Some(self.listener.accept().map(|p| p.0))
     }
 }
 
@@ -56,4 +52,53 @@ impl<'a> Iterator for Incoming<'a> {
 pub struct TcpStream {
     socket: Socket,
     pub address: SocketAddrV4,
+}
+
+impl TcpStream {
+    pub fn connect() -> Self {
+        todo!()
+    }
+
+    pub fn read(&mut self, buf: &mut [u8]) -> Result<usize, SocketError> {
+        self.socket.read(buf)
+    }
+
+    pub fn write(&mut self, buf: &[u8]) -> Result<usize, SocketError> {
+        self.socket.write(buf)
+    }
+
+    pub fn shutdown(&mut self, how: Shutdown) -> Result<(), SocketError> {
+        self.socket.shutdown(how)
+    }
+
+    pub fn non(&mut self) -> Result<Option<Duration>, SocketError> {
+        todo!()
+    }
+
+    pub fn linger(&mut self) -> Result<Option<Duration>, SocketError> {
+        todo!()
+    }
+    pub fn read_timeout(&self) -> Result<Option<Duration>, SocketError> {
+        todo!()
+    }
+
+    pub fn write_timeout(&self) -> Result<Option<Duration>, SocketError> {
+        todo!()
+    }
+
+    pub fn set_linger(&mut self, linger: Option<Duration>) -> Result<(), SocketError> {
+        todo!()
+    }
+
+    pub fn set_read_timeout(&mut self, dur: Option<Duration>) -> Result<(), SocketError> {
+        todo!()
+    }
+
+    pub fn set_write_timeout(&mut self, dur: Option<Duration>) -> Result<(), SocketError> {
+        todo!()
+    }
+
+    pub fn set_nonblocking(&mut self, nonblocking: bool) -> Result<(), SocketError> {
+        todo!()
+    }
 }

@@ -157,6 +157,7 @@ impl<T> ::core::cmp::PartialEq for __BindgenUnionField<T> {
     }
 }
 impl<T> ::core::cmp::Eq for __BindgenUnionField<T> {}
+pub const FD_SETSIZE: u32 = 32;
 pub const TRUE: u32 = 1;
 pub const FALSE: u32 = 0;
 pub const OS_MESSAGE_QUEUE_TAG: u32 = 1834182481;
@@ -187,7 +188,6 @@ pub const GFD_BLOCK_VERSION_MAJOR: u32 = 1;
 pub const GFD_PATCH_MASK: u32 = 4293918720;
 pub const GFD_PATCH_DATA: u32 = 3495952384;
 pub const GFD_PATCH_TEXT: u32 = 3396337664;
-pub const FD_SETSIZE: u32 = 32;
 pub const IOCPARM_SHIFT: u32 = 13;
 pub const IOCPARM_MASK: u32 = 8191;
 pub const IOCPARM_MAX: u32 = 8192;
@@ -348,6 +348,242 @@ pub const OS_PAGE_SIZE: u32 = 131072;
 pub type __uint16_t = ::core::ffi::c_ushort;
 pub type __uint32_t = ::core::ffi::c_uint;
 pub type __int64_t = ::core::ffi::c_longlong;
+pub type _off_t = __int64_t;
+pub type _fpos_t = __int64_t;
+pub type wint_t = ::core::ffi::c_int;
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct _mbstate_t {
+    pub __count: ::core::ffi::c_int,
+    pub __value: _mbstate_t__bindgen_ty_1,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union _mbstate_t__bindgen_ty_1 {
+    pub __wch: wint_t,
+    pub __wchb: [::core::ffi::c_uchar; 4usize],
+}
+impl Default for _mbstate_t__bindgen_ty_1 {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
+impl Default for _mbstate_t {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
+pub type in_addr_t = __uint32_t;
+pub type in_port_t = __uint16_t;
+pub type __ULong = ::core::ffi::c_ulong;
+pub type _LOCK_RECURSIVE_T = ::core::ffi::c_int;
+pub type _flock_t = _LOCK_RECURSIVE_T;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct __locale_t {
+    _unused: [u8; 0],
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct _Bigint {
+    pub _next: *mut _Bigint,
+    pub _k: ::core::ffi::c_int,
+    pub _maxwds: ::core::ffi::c_int,
+    pub _sign: ::core::ffi::c_int,
+    pub _wds: ::core::ffi::c_int,
+    pub _x: [__ULong; 1usize],
+}
+impl Default for _Bigint {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
+#[repr(C)]
+#[derive(Debug, Default, Copy, Clone)]
+pub struct __tm {
+    pub __tm_sec: ::core::ffi::c_int,
+    pub __tm_min: ::core::ffi::c_int,
+    pub __tm_hour: ::core::ffi::c_int,
+    pub __tm_mday: ::core::ffi::c_int,
+    pub __tm_mon: ::core::ffi::c_int,
+    pub __tm_year: ::core::ffi::c_int,
+    pub __tm_wday: ::core::ffi::c_int,
+    pub __tm_yday: ::core::ffi::c_int,
+    pub __tm_isdst: ::core::ffi::c_int,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct __sbuf {
+    pub _base: *mut ::core::ffi::c_uchar,
+    pub _size: ::core::ffi::c_int,
+}
+impl Default for __sbuf {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct __sFILE {
+    pub _p: *mut ::core::ffi::c_uchar,
+    pub _r: ::core::ffi::c_int,
+    pub _w: ::core::ffi::c_int,
+    pub _flags: ::core::ffi::c_short,
+    pub _file: ::core::ffi::c_short,
+    pub _bf: __sbuf,
+    pub _lbfsize: ::core::ffi::c_int,
+    pub _cookie: *mut ::core::ffi::c_void,
+    pub _read: ::core::option::Option<
+        unsafe extern "C" fn(
+            arg1: *mut _reent,
+            arg2: *mut ::core::ffi::c_void,
+            arg3: *mut ::core::ffi::c_char,
+            arg4: ::core::ffi::c_int,
+        ) -> ::core::ffi::c_int,
+    >,
+    pub _write: ::core::option::Option<
+        unsafe extern "C" fn(
+            arg1: *mut _reent,
+            arg2: *mut ::core::ffi::c_void,
+            arg3: *const ::core::ffi::c_char,
+            arg4: ::core::ffi::c_int,
+        ) -> ::core::ffi::c_int,
+    >,
+    pub _seek: ::core::option::Option<
+        unsafe extern "C" fn(
+            arg1: *mut _reent,
+            arg2: *mut ::core::ffi::c_void,
+            arg3: _fpos_t,
+            arg4: ::core::ffi::c_int,
+        ) -> _fpos_t,
+    >,
+    pub _close: ::core::option::Option<
+        unsafe extern "C" fn(
+            arg1: *mut _reent,
+            arg2: *mut ::core::ffi::c_void,
+        ) -> ::core::ffi::c_int,
+    >,
+    pub _ub: __sbuf,
+    pub _up: *mut ::core::ffi::c_uchar,
+    pub _ur: ::core::ffi::c_int,
+    pub _ubuf: [::core::ffi::c_uchar; 3usize],
+    pub _nbuf: [::core::ffi::c_uchar; 1usize],
+    pub _lb: __sbuf,
+    pub _blksize: ::core::ffi::c_int,
+    pub _offset: _off_t,
+    pub _data: *mut _reent,
+    pub _lock: _flock_t,
+    pub _mbstate: _mbstate_t,
+    pub _flags2: ::core::ffi::c_int,
+}
+impl Default for __sFILE {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
+pub type __FILE = __sFILE;
+#[repr(C)]
+#[derive(Debug, Default, Copy, Clone)]
+pub struct _rand48 {
+    pub _seed: [::core::ffi::c_ushort; 3usize],
+    pub _mult: [::core::ffi::c_ushort; 3usize],
+    pub _add: ::core::ffi::c_ushort,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct _reent {
+    pub _errno: ::core::ffi::c_int,
+    pub _stdin: *mut __FILE,
+    pub _stdout: *mut __FILE,
+    pub _stderr: *mut __FILE,
+    pub _inc: ::core::ffi::c_int,
+    pub _emergency: [::core::ffi::c_char; 25usize],
+    pub _locale: *mut __locale_t,
+    pub __cleanup: ::core::option::Option<unsafe extern "C" fn(arg1: *mut _reent)>,
+    pub _result: *mut _Bigint,
+    pub _result_k: ::core::ffi::c_int,
+    pub _p5s: *mut _Bigint,
+    pub _freelist: *mut *mut _Bigint,
+    pub _cvtlen: ::core::ffi::c_int,
+    pub _cvtbuf: *mut ::core::ffi::c_char,
+    pub _new: _reent__bindgen_ty_1,
+    pub _sig_func: *mut ::core::option::Option<unsafe extern "C" fn(arg1: ::core::ffi::c_int)>,
+    pub deviceData: *mut ::core::ffi::c_void,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union _reent__bindgen_ty_1 {
+    pub _reent: _reent__bindgen_ty_1__bindgen_ty_1,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct _reent__bindgen_ty_1__bindgen_ty_1 {
+    pub _strtok_last: *mut ::core::ffi::c_char,
+    pub _asctime_buf: [::core::ffi::c_char; 26usize],
+    pub _localtime_buf: __tm,
+    pub _gamma_signgam: ::core::ffi::c_int,
+    pub _rand_next: ::core::ffi::c_ulonglong,
+    pub _r48: _rand48,
+    pub _mblen_state: _mbstate_t,
+    pub _mbtowc_state: _mbstate_t,
+    pub _wctomb_state: _mbstate_t,
+    pub _l64a_buf: [::core::ffi::c_char; 8usize],
+    pub _signal_buf: [::core::ffi::c_char; 24usize],
+    pub _getdate_err: ::core::ffi::c_int,
+    pub _mbrlen_state: _mbstate_t,
+    pub _mbrtowc_state: _mbstate_t,
+    pub _mbsrtowcs_state: _mbstate_t,
+    pub _wcrtomb_state: _mbstate_t,
+    pub _wcsrtombs_state: _mbstate_t,
+    pub _h_errno: ::core::ffi::c_int,
+}
+impl Default for _reent__bindgen_ty_1__bindgen_ty_1 {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
+impl Default for _reent__bindgen_ty_1 {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
+impl Default for _reent {
+    fn default() -> Self {
+        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 pub type BOOL = i32;
 #[repr(C)]
 pub struct std_basic_string<_CharT> {
@@ -6529,240 +6765,6 @@ pub struct VPADStatus {
     pub __unk34: [::core::ffi::c_char; 8usize],
 }
 pub type VPADSamplingCallback = ::core::option::Option<unsafe extern "C" fn(chan: VPADChan::Type)>;
-pub type wint_t = ::core::ffi::c_int;
-pub type _off_t = __int64_t;
-pub type _fpos_t = __int64_t;
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub struct _mbstate_t {
-    pub __count: ::core::ffi::c_int,
-    pub __value: _mbstate_t__bindgen_ty_1,
-}
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub union _mbstate_t__bindgen_ty_1 {
-    pub __wch: wint_t,
-    pub __wchb: [::core::ffi::c_uchar; 4usize],
-}
-impl Default for _mbstate_t__bindgen_ty_1 {
-    fn default() -> Self {
-        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
-        unsafe {
-            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
-            s.assume_init()
-        }
-    }
-}
-impl Default for _mbstate_t {
-    fn default() -> Self {
-        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
-        unsafe {
-            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
-            s.assume_init()
-        }
-    }
-}
-pub type __ULong = ::core::ffi::c_ulong;
-pub type _LOCK_RECURSIVE_T = ::core::ffi::c_int;
-pub type _flock_t = _LOCK_RECURSIVE_T;
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct __locale_t {
-    _unused: [u8; 0],
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct _Bigint {
-    pub _next: *mut _Bigint,
-    pub _k: ::core::ffi::c_int,
-    pub _maxwds: ::core::ffi::c_int,
-    pub _sign: ::core::ffi::c_int,
-    pub _wds: ::core::ffi::c_int,
-    pub _x: [__ULong; 1usize],
-}
-impl Default for _Bigint {
-    fn default() -> Self {
-        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
-        unsafe {
-            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
-            s.assume_init()
-        }
-    }
-}
-#[repr(C)]
-#[derive(Debug, Default, Copy, Clone)]
-pub struct __tm {
-    pub __tm_sec: ::core::ffi::c_int,
-    pub __tm_min: ::core::ffi::c_int,
-    pub __tm_hour: ::core::ffi::c_int,
-    pub __tm_mday: ::core::ffi::c_int,
-    pub __tm_mon: ::core::ffi::c_int,
-    pub __tm_year: ::core::ffi::c_int,
-    pub __tm_wday: ::core::ffi::c_int,
-    pub __tm_yday: ::core::ffi::c_int,
-    pub __tm_isdst: ::core::ffi::c_int,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct __sbuf {
-    pub _base: *mut ::core::ffi::c_uchar,
-    pub _size: ::core::ffi::c_int,
-}
-impl Default for __sbuf {
-    fn default() -> Self {
-        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
-        unsafe {
-            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
-            s.assume_init()
-        }
-    }
-}
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub struct __sFILE {
-    pub _p: *mut ::core::ffi::c_uchar,
-    pub _r: ::core::ffi::c_int,
-    pub _w: ::core::ffi::c_int,
-    pub _flags: ::core::ffi::c_short,
-    pub _file: ::core::ffi::c_short,
-    pub _bf: __sbuf,
-    pub _lbfsize: ::core::ffi::c_int,
-    pub _cookie: *mut ::core::ffi::c_void,
-    pub _read: ::core::option::Option<
-        unsafe extern "C" fn(
-            arg1: *mut _reent,
-            arg2: *mut ::core::ffi::c_void,
-            arg3: *mut ::core::ffi::c_char,
-            arg4: ::core::ffi::c_int,
-        ) -> ::core::ffi::c_int,
-    >,
-    pub _write: ::core::option::Option<
-        unsafe extern "C" fn(
-            arg1: *mut _reent,
-            arg2: *mut ::core::ffi::c_void,
-            arg3: *const ::core::ffi::c_char,
-            arg4: ::core::ffi::c_int,
-        ) -> ::core::ffi::c_int,
-    >,
-    pub _seek: ::core::option::Option<
-        unsafe extern "C" fn(
-            arg1: *mut _reent,
-            arg2: *mut ::core::ffi::c_void,
-            arg3: _fpos_t,
-            arg4: ::core::ffi::c_int,
-        ) -> _fpos_t,
-    >,
-    pub _close: ::core::option::Option<
-        unsafe extern "C" fn(
-            arg1: *mut _reent,
-            arg2: *mut ::core::ffi::c_void,
-        ) -> ::core::ffi::c_int,
-    >,
-    pub _ub: __sbuf,
-    pub _up: *mut ::core::ffi::c_uchar,
-    pub _ur: ::core::ffi::c_int,
-    pub _ubuf: [::core::ffi::c_uchar; 3usize],
-    pub _nbuf: [::core::ffi::c_uchar; 1usize],
-    pub _lb: __sbuf,
-    pub _blksize: ::core::ffi::c_int,
-    pub _offset: _off_t,
-    pub _data: *mut _reent,
-    pub _lock: _flock_t,
-    pub _mbstate: _mbstate_t,
-    pub _flags2: ::core::ffi::c_int,
-}
-impl Default for __sFILE {
-    fn default() -> Self {
-        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
-        unsafe {
-            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
-            s.assume_init()
-        }
-    }
-}
-pub type __FILE = __sFILE;
-#[repr(C)]
-#[derive(Debug, Default, Copy, Clone)]
-pub struct _rand48 {
-    pub _seed: [::core::ffi::c_ushort; 3usize],
-    pub _mult: [::core::ffi::c_ushort; 3usize],
-    pub _add: ::core::ffi::c_ushort,
-}
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub struct _reent {
-    pub _errno: ::core::ffi::c_int,
-    pub _stdin: *mut __FILE,
-    pub _stdout: *mut __FILE,
-    pub _stderr: *mut __FILE,
-    pub _inc: ::core::ffi::c_int,
-    pub _emergency: [::core::ffi::c_char; 25usize],
-    pub _locale: *mut __locale_t,
-    pub __cleanup: ::core::option::Option<unsafe extern "C" fn(arg1: *mut _reent)>,
-    pub _result: *mut _Bigint,
-    pub _result_k: ::core::ffi::c_int,
-    pub _p5s: *mut _Bigint,
-    pub _freelist: *mut *mut _Bigint,
-    pub _cvtlen: ::core::ffi::c_int,
-    pub _cvtbuf: *mut ::core::ffi::c_char,
-    pub _new: _reent__bindgen_ty_1,
-    pub _sig_func: *mut ::core::option::Option<unsafe extern "C" fn(arg1: ::core::ffi::c_int)>,
-    pub deviceData: *mut ::core::ffi::c_void,
-}
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub union _reent__bindgen_ty_1 {
-    pub _reent: _reent__bindgen_ty_1__bindgen_ty_1,
-}
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub struct _reent__bindgen_ty_1__bindgen_ty_1 {
-    pub _strtok_last: *mut ::core::ffi::c_char,
-    pub _asctime_buf: [::core::ffi::c_char; 26usize],
-    pub _localtime_buf: __tm,
-    pub _gamma_signgam: ::core::ffi::c_int,
-    pub _rand_next: ::core::ffi::c_ulonglong,
-    pub _r48: _rand48,
-    pub _mblen_state: _mbstate_t,
-    pub _mbtowc_state: _mbstate_t,
-    pub _wctomb_state: _mbstate_t,
-    pub _l64a_buf: [::core::ffi::c_char; 8usize],
-    pub _signal_buf: [::core::ffi::c_char; 24usize],
-    pub _getdate_err: ::core::ffi::c_int,
-    pub _mbrlen_state: _mbstate_t,
-    pub _mbrtowc_state: _mbstate_t,
-    pub _mbsrtowcs_state: _mbstate_t,
-    pub _wcrtomb_state: _mbstate_t,
-    pub _wcsrtombs_state: _mbstate_t,
-    pub _h_errno: ::core::ffi::c_int,
-}
-impl Default for _reent__bindgen_ty_1__bindgen_ty_1 {
-    fn default() -> Self {
-        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
-        unsafe {
-            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
-            s.assume_init()
-        }
-    }
-}
-impl Default for _reent__bindgen_ty_1 {
-    fn default() -> Self {
-        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
-        unsafe {
-            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
-            s.assume_init()
-        }
-    }
-}
-impl Default for _reent {
-    fn default() -> Self {
-        let mut s = ::core::mem::MaybeUninit::<Self>::uninit();
-        unsafe {
-            ::core::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
-            s.assume_init()
-        }
-    }
-}
 pub type MICHandle = ::core::ffi::c_int;
 pub mod MICError {
     pub type Type = ::core::ffi::c_int;
@@ -8024,8 +8026,6 @@ impl Default for fiodgname_arg {
         }
     }
 }
-pub type in_addr_t = __uint32_t;
-pub type in_port_t = __uint16_t;
 pub type socklen_t = u32;
 pub type sa_family_t = u16;
 #[repr(C)]
@@ -14763,6 +14763,8 @@ pub struct _bindgen_ty_2 {
     pub _address: u8,
 }
 extern "C" {
+    pub fn close(__fildes: ::core::ffi::c_int) -> ::core::ffi::c_int;
+    pub fn __errno() -> *mut ::core::ffi::c_int;
     pub fn OSInitThreadQueue(queue: *mut OSThreadQueue);
     pub fn OSInitThreadQueueEx(queue: *mut OSThreadQueue, parent: *mut ::core::ffi::c_void);
     pub fn OSInitMessageQueue(queue: *mut OSMessageQueue, messages: *mut OSMessage, size: i32);

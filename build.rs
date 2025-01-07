@@ -51,6 +51,19 @@ fn main() {
             "-Wno-return-type-c-linkage", // ig we can ignore these
         ])
         .allowlist_file(".*/wut/include/.*.h")
+        // we need some extra functions
+        .header_contents(
+            "single_symbols.h",
+            r#"
+                #pragma once
+
+                #include <unistd.h>
+                #include <errno.h>
+            "#,
+        )
+        .allowlist_function("close")
+        .allowlist_function("__errno")
+        //
         .opaque_type("MEMFrmHeap")
         .opaque_type("MEMExpHeap")
         .opaque_type("MEMUnitHeap")

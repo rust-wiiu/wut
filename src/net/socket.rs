@@ -4,16 +4,11 @@ use crate::{
     bindings as c_wut,
     net::socket_addrs::{ToSocketAddrs, ToSocketAddrsError},
 };
-use core::{ffi, fmt::Debug, net::Ipv4Addr, net::SocketAddrV4};
+use core::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
 use thiserror::Error;
 
-pub struct Socket(ffi::c_int);
-
-impl Debug for Socket {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(f, "Socket({})", self.0)
-    }
-}
+#[derive(Debug)]
+pub struct Socket(i32);
 
 #[derive(Debug, Error)]
 pub enum SocketError {
@@ -31,6 +26,40 @@ pub enum SocketError {
     ConnectionClosed,
     #[error("failed to accept incoming request")]
     CannotAccept,
+    #[error("tmp - remove later on")]
+    Errno(i32),
+}
+
+// impl TryFrom<i32> for SocketError {
+//     fn try_from(value: i32) -> Result<Self, Self::Error> {
+//         let errno = Self::errno();
+
+//         if value > 0 {
+//             return Ok(Self::Errno(value));
+//         }
+
+//         match  {
+
+//         }
+//     }
+// }
+
+impl SocketError {
+    fn errno() -> i32 {
+        unsafe { *c_wut::__errno() }
+    }
+
+    fn from_errno() -> Self {
+        match Self::errno() {
+            v => Self::Errno(v),
+        }
+    }
+}
+#[derive(Debug, Clone, Copy)]
+pub enum Shutdown {
+    Read,
+    Write,
+    Both,
 }
 
 impl Socket {
@@ -94,9 +123,11 @@ impl Socket {
         }
     }
 
-    pub fn accept(&self) -> Result<Option<(Socket, SocketAddrV4)>, SocketError> {
+    pub fn accept(&self) -> Result<(Socket, SocketAddrV4), SocketError> {
         let mut addr = c_wut::sockaddr_in::default();
-        let mut len = 16;
+        let mut len = size_of::<c_wut::sockaddr_in>() as u32;
+
+        crate::println!("errno: {}", SocketError::errno());
 
         let fd = unsafe {
             c_wut::accept(
@@ -106,32 +137,73 @@ impl Socket {
             )
         };
 
-        crate::println!("addr: {:?}, {len}", addr.sin_addr.s_addr);
-        crate::thread::sleep(core::time::Duration::from_secs(1));
+        crate::println!("errno: {}", SocketError::errno());
 
         if fd < 0 {
-            Err(SocketError::CannotAccept)
+            Err(SocketError::Errno(SocketError::errno()))
         } else if fd == 0 {
-            Ok(None)
+            Err(SocketError::CannotAccept)
         } else {
-            Ok(Some((
-                Socket(fd),
-                SocketAddrV4::new(Ipv4Addr::from_bits(addr.sin_addr.s_addr), addr.sin_port),
-            )))
+            let ip = Ipv4Addr::from(u32::from_be(addr.sin_addr.s_addr));
+            let port = u16::from_be(addr.sin_port);
+            let socket_addr = SocketAddrV4::new(ip, port);
+
+            Ok((Socket(fd), socket_addr))
+        }
+    }
+
+    pub fn read(&self, buf: &mut [u8]) -> Result<usize, SocketError> {
+        let bytes = unsafe { c_wut::recv(self.0, buf.as_mut_ptr() as *mut _, buf.len(), 0) };
+
+        if bytes < 0 {
+            Err(SocketError::from_errno())
+        } else if bytes == 0 {
+            Err(SocketError::ConnectionClosed)
+        } else {
+            Ok(bytes as usize)
+        }
+    }
+
+    pub fn write(&mut self, buf: &[u8]) -> Result<usize, SocketError> {
+        let bytes = unsafe { c_wut::send(self.0, buf.as_ptr() as *const _, buf.len(), 0) };
+
+        if bytes < 0 {
+            Err(SocketError::from_errno())
+        } else if bytes == 0 {
+            Err(SocketError::ConnectionClosed)
+        } else {
+            Ok(bytes as usize)
+        }
+    }
+
+    pub fn shutdown(&mut self, how: Shutdown) -> Result<(), SocketError> {
+        let how = match how {
+            Shutdown::Read => c_wut::SHUT_RD,
+            Shutdown::Write => c_wut::SHUT_WR,
+            Shutdown::Both => c_wut::SHUT_RDWR,
+        } as i32;
+
+        let success = unsafe { c_wut::shutdown(self.0, how) };
+        if success < 0 {
+            Err(SocketError::from_errno())
+        } else {
+            Ok(())
         }
     }
 }
 
 impl Drop for Socket {
     fn drop(&mut self) {
-        unsafe {
-            c_wut::shutdown(self.0, c_wut::SHUT_RDWR as i32);
-            close(self.0);
+        if self.0 != -1 {
+            unsafe {
+                /*
+                SHUTDOWN CAUSES THE CRASHES!
+                */
+                // let s = c_wut::shutdown(self.0, c_wut::SHUT_RDWR as i32);
+                // crate::println!("shutdown: {s}");
+                // crate::thread::sleep(crate::time::Duration::from_secs(2));
+                c_wut::close(self.0);
+            }
         }
     }
-}
-
-// I dont really like having this outside of bindgen but I dont want to "import" the entire <unistd.h> file just for this
-extern "C" {
-    fn close(sockfd: ffi::c_int) -> ffi::c_int;
 }

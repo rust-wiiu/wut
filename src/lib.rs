@@ -26,7 +26,7 @@ use core::{alloc::GlobalAlloc, ffi};
 pub mod prelude {
     pub use crate::println;
     pub use alloc::format;
-    pub use alloc::string::*;
+    pub use alloc::string::{String, ToString};
     pub use alloc::vec::*;
 }
 
@@ -56,7 +56,7 @@ fn panic_handler(info: &core::panic::PanicInfo) -> ! {
     tv.enable();
     drc.enable();
 
-    for i in (0..=5).rev() {
+    for i in (0..=10).rev() {
         // Clear the screens
         tv.fill(screen::Color::black());
         drc.fill(screen::Color::black());
@@ -77,7 +77,8 @@ fn panic_handler(info: &core::panic::PanicInfo) -> ! {
         thread::sleep(time::Duration::from_secs(1));
     }
 
-    process::force_to_menu()
+    process::reboot()
+    // process::panic_to_menu()
 }
 
 pub struct WiiUAllocator;

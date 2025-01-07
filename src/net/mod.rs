@@ -6,4 +6,4 @@ pub mod tcp;
 
 pub use core::net::*;
 pub use socket_addrs::{ToSocketAddrs, ToSocketAddrsError};
-pub use tcp::{TcpError, TcpListener, TcpStream};
+pub use tcp::{TcpListener, TcpStream};
