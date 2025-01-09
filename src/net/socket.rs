@@ -4,7 +4,7 @@ use crate::{
     bindings as c_wut,
     net::socket_addrs::{ToSocketAddrs, ToSocketAddrsError},
 };
-use core::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
+use core::net::{Ipv4Addr, SocketAddrV4};
 use thiserror::Error;
 
 #[derive(Debug)]

@@ -5,23 +5,29 @@ use flagset::FlagSet;
 
 /// Initialize important stuff.
 ///
-/// This function is required to be ran as soon as possible in `main` - Features may not work properly if this is not done.
-/// You can alternatively run [custom][crate::process::custom] for more controll.
-pub fn default() {
+/// This function is required to be ran as soon as possible in `main`. If using the `#[wut_main]` macro, you mustn't call it manually.
+pub fn init(stdout: impl Into<FlagSet<io::Stdout>>) {
     unsafe {
         c_wut::WHBProcInit();
-        io::_stdout_init(io::Stdout::Cafe.into());
+        io::_stdout_init(stdout.into());
     }
+    crate::println!("process::init");
 }
 
 /// Initialize important stuff.
 ///
-/// This function is required to be ran as soon as possible in `main` - Features may not work properly if this is not done.
-/// You can alternatively run [custom][crate::process::custom] to use defaults.
-pub fn custom(stdout: impl Into<FlagSet<io::Stdout>>) {
+/// This function is required to be ran as late as possible in `main`. If using the `#[wut_main]` macro, you mustn't call it manually.
+pub fn deinit() {
+    crate::println!("process::deinit");
     unsafe {
-        c_wut::WHBProcInit();
-        io::_stdout_init(stdout.into());
+        // screen::OSSCREEN.clear();
+        // fs::FS.clear();
+
+        io::_stdout_deinit();
+
+        if running() {
+            exit();
+        }
     }
 }
 
@@ -30,19 +36,11 @@ pub fn custom(stdout: impl Into<FlagSet<io::Stdout>>) {
 /// Should be ran in resonable intervals or OS may be unresponseable.
 /// Typically ran instead of `loop{...}`.
 pub fn running() -> bool {
-    unsafe { c_wut::WHBProcIsRunning() != 0 }
-}
-
-/// Like [exit][crate::process::exit] but forces a reboot of the console after exit.
-pub fn reboot() -> ! {
     unsafe {
-        c_wut::SYSLaunchMenu();
-        c_wut::OSForceFullRelaunch();
-    }
-    while running() {}
-    loop {
-        unsafe {
-            c_wut::_Exit(-1);
+        if c_wut::ProcUIIsRunning() != 0 {
+            c_wut::WHBProcIsRunning() != 0
+        } else {
+            false
         }
     }
 }
@@ -53,6 +51,7 @@ pub fn reboot() -> ! {
 ///
 /// Note that because this function never returns, and that it terminates the process, no destructors on the current stack or any other thread's stack will be run.
 pub fn exit() -> ! {
+    crate::println!("process::exit");
     unsafe {
         c_wut::SYSLaunchMenu();
     }
@@ -64,12 +63,10 @@ pub fn exit() -> ! {
     }
 }
 
-// old exit (but not really exit).
-// pub fn exit() {
-//     unsafe {
-//         io::_stdout_deinit();
-//         // screen::OSSCREEN.clear();
-//         // fs::FS.clear();
-//         c_wut::WHBProcShutdown();
-//     }
-// }
+/// Like [exit][crate::process::exit] but forces a reboot of the console after exit.
+pub fn reboot() -> ! {
+    unsafe {
+        c_wut::OSForceFullRelaunch();
+    }
+    exit()
+}

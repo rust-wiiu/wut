@@ -86,19 +86,19 @@ impl TcpStream {
         todo!()
     }
 
-    pub fn set_linger(&mut self, linger: Option<Duration>) -> Result<(), SocketError> {
+    pub fn set_linger(&mut self, _linger: Option<Duration>) -> Result<(), SocketError> {
         todo!()
     }
 
-    pub fn set_read_timeout(&mut self, dur: Option<Duration>) -> Result<(), SocketError> {
+    pub fn set_read_timeout(&mut self, _dur: Option<Duration>) -> Result<(), SocketError> {
         todo!()
     }
 
-    pub fn set_write_timeout(&mut self, dur: Option<Duration>) -> Result<(), SocketError> {
+    pub fn set_write_timeout(&mut self, _dur: Option<Duration>) -> Result<(), SocketError> {
         todo!()
     }
 
-    pub fn set_nonblocking(&mut self, nonblocking: bool) -> Result<(), SocketError> {
+    pub fn set_nonblocking(&mut self, _nonblocking: bool) -> Result<(), SocketError> {
         todo!()
     }
 }

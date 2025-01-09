@@ -3,6 +3,10 @@
 pub extern crate alloc;
 extern crate flagset;
 extern crate thiserror;
+#[cfg(feature = "macros")]
+pub extern crate wut_macros;
+#[cfg(feature = "macros")]
+pub use wut_macros::*;
 
 pub mod bindings;
 pub mod env;
@@ -20,7 +24,6 @@ pub mod thread;
 pub mod time;
 
 mod utils;
-
 use core::{alloc::GlobalAlloc, ffi};
 
 pub mod prelude {
@@ -30,7 +33,7 @@ pub mod prelude {
     pub use alloc::vec::*;
 }
 
-#[cfg(feature = "default_panic_handler")]
+#[cfg(feature = "panic_handler")]
 #[panic_handler]
 fn panic_handler(info: &core::panic::PanicInfo) -> ! {
     use crate::{screen, time, utils};

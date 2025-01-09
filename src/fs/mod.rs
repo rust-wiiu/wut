@@ -880,7 +880,7 @@ impl fmt::Debug for DirEntry {
 std functions
 */
 
-pub fn copy<P: AsRef<Path>, Q: AsRef<Path>>(from: P, to: Q) -> Result<u64, FilesystemError> {
+pub fn copy<P: AsRef<Path>, Q: AsRef<Path>>(_from: P, _to: Q) -> Result<u64, FilesystemError> {
     todo!()
 }
 

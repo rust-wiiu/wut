@@ -57,7 +57,7 @@ impl<T> OnceLock<T> {
     pub fn wait(&self) -> &T {
         // wait
         todo!();
-        unsafe { self.get_unchecked() }
+        // unsafe { self.get_unchecked() }
     }
 
     /// Sets the contents of this cell to `value`.
