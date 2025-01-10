@@ -1,1 +1,1 @@
-# WUPS bindings & API
+# WUT bindings & API

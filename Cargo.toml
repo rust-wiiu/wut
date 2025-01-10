@@ -1,16 +1,18 @@
 [package]
-name = "wups"
+name = "wut"
 version = "0.1.0"
 edition = "2021"
 build = "build.rs"
 
 [features]
-default = ["macros"]
+default = ["panic_handler", "macros"]
+ffi = []
+mmio = []
 panic_handler = []
-macros = []          # "dep:wups-macros"
+macros = ["dep:wut-macros"]
 
 [lib]
-name = "wups"
+name = "wut"
 crate-type = ["lib"]
 
 [build-dependencies]
@@ -21,6 +23,6 @@ dev.panic = "abort"
 release.panic = "abort"
 
 [dependencies]
-# wups-macros = { path = "../wut-macros", optional = true }
+wut-macros = { path = "../wut-macros", optional = true }
 flagset = { version = "0.4.6", default-features = false }
 thiserror = { version = "2.0.3", default-features = false }
