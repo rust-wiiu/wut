@@ -1,15 +1,15 @@
 // process.rs
 
-use crate::{bindings as c_wut, fs, io, screen};
+use crate::{bindings as c_wut, logger}; // fs, screen
 use flagset::FlagSet;
 
 /// Initialize important stuff.
 ///
 /// This function is required to be ran as soon as possible in `main`. If using the `#[wut_main]` macro, you mustn't call it manually.
-pub fn init(stdout: impl Into<FlagSet<io::Stdout>>) {
+pub fn init(stdout: impl Into<FlagSet<logger::Channel>>) {
     unsafe {
         c_wut::WHBProcInit();
-        io::_stdout_init(stdout.into());
+        logger::_stdout_init(stdout.into());
     }
     crate::println!("process::init");
 }
@@ -23,7 +23,7 @@ pub fn deinit() {
         // screen::OSSCREEN.clear();
         // fs::FS.clear();
 
-        io::_stdout_deinit();
+        logger::_stdout_deinit();
 
         if running() {
             exit();

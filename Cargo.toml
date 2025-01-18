@@ -5,7 +5,7 @@ edition = "2021"
 build = "build.rs"
 
 [features]
-default = ["panic_handler", "macros"]
+default = ["macros"]
 ffi = []
 mmio = []
 panic_handler = []

@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 // This file contains useful helper stuff
 // Only keep private stuff here
 // Having public stuff crammed into "utils" in not good design

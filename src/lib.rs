@@ -12,7 +12,7 @@ pub mod bindings;
 pub mod env;
 pub mod fs;
 pub mod gamepad;
-pub mod io;
+pub mod logger;
 mod macros;
 pub mod net;
 pub mod path;
@@ -23,14 +23,18 @@ pub mod sync;
 pub mod thread;
 pub mod time;
 
+pub use core::{
+    alloc::{GlobalAlloc, Layout},
+    ffi,
+};
 mod utils;
-use core::{alloc::GlobalAlloc, ffi};
 
 pub mod prelude {
     pub use crate::println;
     pub use alloc::format;
     pub use alloc::string::{String, ToString};
     pub use alloc::vec::*;
+    pub use core::alloc::{GlobalAlloc, Layout};
 }
 
 #[cfg(feature = "panic_handler")]
@@ -87,24 +91,24 @@ fn panic_handler(info: &core::panic::PanicInfo) -> ! {
 pub struct WiiUAllocator;
 
 unsafe impl GlobalAlloc for WiiUAllocator {
-    unsafe fn alloc(&self, layout: core::alloc::Layout) -> *mut u8 {
-        // bindings::MEMallocFromDe();
-        bindings::MEMAllocFromDefaultHeapEx.unwrap()(layout.size() as u32, layout.align() as i32)
-            as *mut u8
+    unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
+        let size = layout.size() as u32;
+        let align = layout.align() as i32;
 
-        // bindings::MEMFreeToDefaultHeap(core::ptr::null());
+        debug_assert!((align as u32).is_power_of_two());
 
-        // bindings::memalign(
-        //     layout.align() as ffi::c_ulong,
-        //     layout.size() as ffi::c_ulong,
-        // )
+        // align < 4 (under at least some circumstances) crashes the system
+        (if align < 4 {
+            bindings::MEMAllocFromDefaultHeap.unwrap()(size)
+        } else {
+            bindings::MEMAllocFromDefaultHeapEx.unwrap()(size, align)
+        }) as *mut u8
     }
 
-    unsafe fn dealloc(&self, ptr: *mut u8, _layout: core::alloc::Layout) {
-        // bindings::free(ptr.cast::<ffi::c_void>());
+    unsafe fn dealloc(&self, ptr: *mut u8, _layout: Layout) {
         bindings::MEMFreeToDefaultHeap.unwrap()(ptr as *mut ffi::c_void);
     }
 }
 
 #[global_allocator]
-static GLOBAL_ALLOCATOR: WiiUAllocator = WiiUAllocator;
+pub static GLOBAL_ALLOCATOR: WiiUAllocator = WiiUAllocator;

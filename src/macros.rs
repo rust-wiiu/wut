@@ -10,7 +10,7 @@ macro_rules! println {
         // idk why Rust complaints here, _print is unsafe
         #[allow(unused_unsafe)]
         unsafe {
-            $crate::io::_print(&s);
+            $crate::logger::_print(&s);
         }
     }};
 }
