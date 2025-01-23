@@ -17,7 +17,7 @@ pub fn wut_main(attr: TokenStream, input: TokenStream) -> TokenStream {
     for arg in args {
         if let Meta::Path(path) = arg {
             if let Some(ident) = path.get_ident() {
-                custom_args.push(quote! { wut::io::#ident });
+                custom_args.push(quote! { wut::logger::#ident });
             }
         }
     }

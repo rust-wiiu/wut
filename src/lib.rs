@@ -13,7 +13,6 @@ pub mod env;
 pub mod fs;
 pub mod gamepad;
 pub mod logger;
-mod macros;
 pub mod net;
 pub mod path;
 pub mod process;
@@ -33,6 +32,7 @@ pub mod prelude {
     pub use crate::println;
     pub use alloc::format;
     pub use alloc::string::{String, ToString};
+    pub use alloc::vec;
     pub use alloc::vec::*;
     pub use core::alloc::{GlobalAlloc, Layout};
 }
@@ -85,7 +85,6 @@ fn panic_handler(info: &core::panic::PanicInfo) -> ! {
     }
 
     process::reboot()
-    // process::panic_to_menu()
 }
 
 pub struct WiiUAllocator;
@@ -96,6 +95,7 @@ unsafe impl GlobalAlloc for WiiUAllocator {
         let align = layout.align() as i32;
 
         debug_assert!((align as u32).is_power_of_two());
+        debug_assert!(align > 0);
 
         // align < 4 (under at least some circumstances) crashes the system
         (if align < 4 {

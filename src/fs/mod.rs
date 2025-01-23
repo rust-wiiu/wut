@@ -81,9 +81,9 @@ impl TryFrom<i32> for FilesystemError {
 pub struct FsHandler<'a> {
     // not sure why Box is required, but it is - trust me
     // ig think it has something to do with copied/moved memory, which the API apperently doesnt like
-    client: Box<RefCell<c_wut::FSClient>>,
-    block: Box<RefCell<c_wut::FSCmdBlock>>,
-    error_mask: c_wut::FSErrorFlag::Type,
+    pub client: Box<RefCell<c_wut::FSClient>>,
+    pub block: Box<RefCell<c_wut::FSCmdBlock>>,
+    pub error_mask: c_wut::FSErrorFlag::Type,
     _resource: ResourceGuard<'a>,
 }
 

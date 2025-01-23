@@ -9,7 +9,7 @@ use flagset::FlagSet;
 pub fn init(stdout: impl Into<FlagSet<logger::Channel>>) {
     unsafe {
         c_wut::WHBProcInit();
-        logger::_stdout_init(stdout.into());
+        let _ = logger::init(stdout.into()).unwrap();
     }
     crate::println!("process::init");
 }
@@ -19,21 +19,19 @@ pub fn init(stdout: impl Into<FlagSet<logger::Channel>>) {
 /// This function is required to be ran as late as possible in `main`. If using the `#[wut_main]` macro, you mustn't call it manually.
 pub fn deinit() {
     crate::println!("process::deinit");
-    unsafe {
-        // screen::OSSCREEN.clear();
-        // fs::FS.clear();
+    // screen::OSSCREEN.clear();
+    // fs::FS.clear();
 
-        logger::_stdout_deinit();
+    logger::deinit();
 
-        if running() {
-            exit();
-        }
+    if running() {
+        exit();
     }
 }
 
 /// Check if the OS wants to move application out of foreground.
 ///
-/// Should be ran in resonable intervals or OS may be unresponseable.
+/// Should be ran in reasonable intervals or OS may be unresponseable.
 /// Typically ran instead of `loop{...}`.
 pub fn running() -> bool {
     unsafe {
