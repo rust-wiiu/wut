@@ -2,10 +2,12 @@
 
 use crate::bindings as c_wut;
 use alloc::{
-    ffi::{CString, IntoStringError},
-    string::String,
+    ffi::NulError,
+    string::{String, ToString},
 };
+use core::ffi::CStr;
 use flagset::{flags, FlagSet};
+use thiserror::Error;
 
 flags! {
     #[derive(Default)]
@@ -33,34 +35,41 @@ flags! {
     }
 }
 
+/// Thread
+///
+/// Note: `Thread` is not the owner of any data but a stack pointer. Dropping just drops the pointer and no underlying data.
+///
+#[derive(Debug, Copy, Clone)]
 pub struct Thread(*mut c_wut::OSThread);
 
 /// I think I should split this up as the errors don't really correlate
 /// But keep this for now
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum ThreadError {
+    #[error("")]
     AllocationFailed,
+    #[error("")]
     ThreadCreationFailed,
+    #[error("")]
     NullPointer,
-    InvalidUtf8(IntoStringError),
+    #[error("")]
+    InternalZeroByte(#[from] NulError),
+}
+
+impl From<*mut c_wut::OSThread> for Thread {
+    fn from(value: *mut c_wut::OSThread) -> Self {
+        Self(value)
+    }
 }
 
 impl Thread {
-    pub fn new(thread: *mut c_wut::OSThread) -> Self {
-        Self(thread)
-    }
-
     pub fn name(&self) -> Result<String, ThreadError> {
-        // unsafe { CString::from_raw((*self.0).name as *mut i8).into_string() }
         unsafe {
             let char_p = (*self.0).name;
             if char_p.is_null() {
                 Err(ThreadError::NullPointer)
             } else {
-                match CString::from_raw(char_p as *mut i8).into_string() {
-                    Ok(str) => Ok(str),
-                    Err(err) => Err(ThreadError::InvalidUtf8(err)),
-                }
+                Ok(CStr::from_ptr(char_p).to_string_lossy().to_string())
             }
         }
     }
@@ -91,7 +100,23 @@ impl Thread {
         todo!()
     }
 
+    pub fn cancel(&self) {
+        unsafe {
+            c_wut::OSCancelThread(self.0);
+        }
+    }
+
+    pub fn running(&self) -> bool {
+        unsafe {
+            c_wut::OSTestThreadCancel();
+        }
+        self.state().contains(ThreadState::Running)
+    }
+
     pub unsafe fn raw(&self) -> &mut c_wut::OSThread {
         &mut (*self.0)
     }
 }
+
+unsafe impl Sync for Thread {}
+unsafe impl Send for Thread {}

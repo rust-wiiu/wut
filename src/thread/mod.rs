@@ -14,6 +14,7 @@ pub enum JoinError {
     Detached,
 }
 
+#[derive(Clone)]
 pub struct JoinHandle {
     thread: Thread,
 }
@@ -50,10 +51,12 @@ impl Drop for JoinHandle {
 }
 
 pub fn current() -> Thread {
-    Thread::new(unsafe { c_wut::OSGetCurrentThread() })
+    Thread::from(unsafe { c_wut::OSGetCurrentThread() })
 }
 
+#[derive(Debug, Default)]
 pub enum CpuCore {
+    #[default]
     Core0,
     Core1,
     Core2,
@@ -70,7 +73,7 @@ impl Into<u32> for CpuCore {
 }
 
 pub fn default_thread(core: CpuCore) -> Thread {
-    Thread::new(unsafe { c_wut::OSGetDefaultThread(core.into()) })
+    Thread::from(unsafe { c_wut::OSGetDefaultThread(core.into()) })
 }
 
 pub fn num_threads() -> i32 {
@@ -98,5 +101,11 @@ where
 pub fn sleep(duration: Duration) {
     unsafe {
         c_wut::OSSleepTicks(ticks::nanos_to_ticks(duration.as_nanos() as u64) as i64);
+    }
+}
+
+pub fn cancel(cancel: bool) {
+    unsafe {
+        c_wut::OSSetThreadCancelState(cancel.into());
     }
 }

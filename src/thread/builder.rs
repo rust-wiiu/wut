@@ -6,7 +6,7 @@ use crate::{
     },
     GLOBAL_ALLOCATOR,
 };
-use alloc::{alloc::Layout, boxed::Box, ffi::CString, string::String};
+use alloc::{alloc::Layout, boxed::Box, string::String};
 use core::{alloc::GlobalAlloc, ffi};
 use flagset::FlagSet;
 
@@ -114,14 +114,19 @@ impl Builder {
         }
 
         if let Some(name) = self.name {
-            c_wut::OSSetThreadName(thread, CString::new(name).unwrap().as_c_str().as_ptr());
+            let layout = Layout::array::<u8>(name.len() + 1).unwrap();
+            let thread_name = GLOBAL_ALLOCATOR.alloc_zeroed(layout);
+
+            core::ptr::copy_nonoverlapping(name.as_ptr(), thread_name, name.len());
+
+            c_wut::OSSetThreadName(thread, thread_name as *const _);
         }
         c_wut::OSSetThreadDeallocator(thread, Some(thread_dealloc));
         c_wut::OSSetThreadRunQuantum(thread, self.quantum);
 
         c_wut::OSContinueThread(thread);
 
-        Ok(Thread::new(thread))
+        Ok(Thread::from(thread))
     }
 }
 
@@ -135,10 +140,19 @@ unsafe extern "C" fn thread_entry(_argc: ffi::c_int, argv: *mut *const ffi::c_ch
 }
 
 unsafe extern "C" fn thread_dealloc(thread: *mut c_wut::OSThread, stack: *mut ffi::c_void) {
-    let stack_size = (*thread).stackStart as usize - (*thread).stackEnd as usize;
-    let layout = Layout::from_size_align(stack_size, 16).unwrap();
+    // let stack_size = (*thread).stackStart as usize - (*thread).stackEnd as usize;
+    // let layout = Layout::from_size_align(stack_size, 16).unwrap();
+
+    // likely misuse but since I ignore layout in dealloc its should be fine
+    // I could create a CStr and get the length from there but ig not needed
+    let layout = Layout::new::<()>();
     GLOBAL_ALLOCATOR.dealloc(stack as *mut u8, layout);
 
-    let layout = Layout::new::<c_wut::OSThread>();
+    // likely misuse but since I ignore layout in dealloc its should be fine
+    let layout = Layout::new::<()>();
+    GLOBAL_ALLOCATOR.dealloc((*thread).name as *mut u8, layout);
+
+    // let layout = Layout::new::<c_wut::OSThread>();
+    let layout = Layout::new::<()>();
     GLOBAL_ALLOCATOR.dealloc(thread as *mut u8, layout);
 }

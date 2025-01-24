@@ -2,12 +2,13 @@
 
 use crate::bindings as c_wut;
 use alloc::ffi::{CString, NulError};
-use core::sync::atomic::{AtomicU8, Ordering};
+use core::sync::atomic::{AtomicU32, AtomicU8, Ordering};
 use flagset::{flags, FlagSet};
 use thiserror::Error;
 pub use Channel::{Cafe, Console, Module, Udp};
 
 pub(crate) static mut LOGGER: AtomicU8 = AtomicU8::new(0);
+static mut COUNTER: AtomicU32 = AtomicU32::new(0);
 
 flags! {
     pub enum Channel: u8 {
@@ -42,8 +43,8 @@ pub fn init(channels: impl Into<FlagSet<Channel>>) -> Result<(), LoggerError> {
     let channels: FlagSet<Channel> = channels.into();
 
     unsafe {
-        let logger = FlagSet::new_truncated(LOGGER.load(Ordering::Relaxed));
-        let new = channels ^ logger;
+        let logger = FlagSet::new_truncated(LOGGER.load(Ordering::SeqCst));
+        let new = (channels ^ logger) & channels;
 
         if new.contains(Channel::Cafe) && c_wut::WHBLogCafeInit() == 0 {
             return Err(LoggerError::CafeFailed);
@@ -62,7 +63,8 @@ pub fn init(channels: impl Into<FlagSet<Channel>>) -> Result<(), LoggerError> {
             return Err(LoggerError::UdpFailed);
         }
 
-        LOGGER.store(FlagSet::bits(channels), Ordering::Relaxed);
+        LOGGER.store(FlagSet::bits(channels), Ordering::SeqCst);
+        COUNTER.fetch_add(1, Ordering::SeqCst);
     }
 
     Ok(())
@@ -70,7 +72,11 @@ pub fn init(channels: impl Into<FlagSet<Channel>>) -> Result<(), LoggerError> {
 
 pub fn deinit() {
     unsafe {
-        let channels = FlagSet::new_truncated(LOGGER.swap(0, Ordering::Relaxed));
+        if COUNTER.fetch_sub(1, Ordering::SeqCst) > 1 {
+            return;
+        }
+
+        let channels = FlagSet::new_truncated(LOGGER.swap(0, Ordering::SeqCst));
 
         if channels.contains(Channel::Cafe) {
             c_wut::WHBLogCafeDeinit();
@@ -93,7 +99,7 @@ pub fn print(text: &str) -> Result<(), LoggerError> {
     let text = CString::new(text)?;
 
     unsafe {
-        let logger: FlagSet<Channel> = FlagSet::new_unchecked(LOGGER.load(Ordering::Relaxed));
+        let logger: FlagSet<Channel> = FlagSet::new_unchecked(LOGGER.load(Ordering::SeqCst));
 
         if logger.is_empty() {
             Err(LoggerError::Uninitialized)
