@@ -59,18 +59,18 @@ pub enum FilesystemError {
 impl TryFrom<i32> for FilesystemError {
     type Error = FilesystemError;
     fn try_from(value: i32) -> Result<Self, Self::Error> {
-        use c_wut::FSStatus::*;
+        use c_wut::FSStatus as S;
         if value > 0 {
             return Ok(Self::Unknown(value));
         }
 
         match value {
-            FS_STATUS_OK => Ok(Self::Unknown(value)),
-            FS_STATUS_END => Err(Self::AllRead),
-            FS_STATUS_NOT_FOUND => Err(Self::NotFound),
-            FS_STATUS_EXISTS => Err(Self::AlreadyExists),
-            FS_STATUS_NOT_FILE => Err(Self::NotAFile),
-            FS_STATUS_PERMISSION_ERROR => Err(Self::InvalidPermissions),
+            S::FS_STATUS_OK => Ok(Self::Unknown(value)),
+            S::FS_STATUS_END => Err(Self::AllRead),
+            S::FS_STATUS_NOT_FOUND => Err(Self::NotFound),
+            S::FS_STATUS_EXISTS => Err(Self::AlreadyExists),
+            S::FS_STATUS_NOT_FILE => Err(Self::NotAFile),
+            S::FS_STATUS_PERMISSION_ERROR => Err(Self::InvalidPermissions),
             _ => Err(Self::Unknown(value)),
         }
     }
@@ -184,42 +184,42 @@ pub struct Permissions {
 
 impl From<c_wut::FSMode::Type> for Permissions {
     fn from(value: c_wut::FSMode::Type) -> Self {
-        use c_wut::FSMode::*;
+        use c_wut::FSMode as M;
         let mut p = Permissions::default();
 
-        if (value & FS_MODE_READ_OWNER) != 0 {
+        if (value & M::FS_MODE_READ_OWNER) != 0 {
             p.owner |= Mode::Read;
         }
 
-        if (value & FS_MODE_WRITE_OWNER) != 0 {
+        if (value & M::FS_MODE_WRITE_OWNER) != 0 {
             p.owner |= Mode::Write;
         }
 
-        if (value & FS_MODE_EXEC_OWNER) != 0 {
+        if (value & M::FS_MODE_EXEC_OWNER) != 0 {
             p.owner |= Mode::Execute;
         }
 
-        if (value & FS_MODE_READ_GROUP) != 0 {
+        if (value & M::FS_MODE_READ_GROUP) != 0 {
             p.group |= Mode::Read;
         }
 
-        if (value & FS_MODE_WRITE_GROUP) != 0 {
+        if (value & M::FS_MODE_WRITE_GROUP) != 0 {
             p.group |= Mode::Write;
         }
 
-        if (value & FS_MODE_EXEC_GROUP) != 0 {
+        if (value & M::FS_MODE_EXEC_GROUP) != 0 {
             p.group |= Mode::Execute;
         }
 
-        if (value & FS_MODE_READ_OTHER) != 0 {
+        if (value & M::FS_MODE_READ_OTHER) != 0 {
             p.other |= Mode::Read;
         }
 
-        if (value & FS_MODE_WRITE_OTHER) != 0 {
+        if (value & M::FS_MODE_WRITE_OTHER) != 0 {
             p.other |= Mode::Write;
         }
 
-        if (value & FS_MODE_EXEC_OTHER) != 0 {
+        if (value & M::FS_MODE_EXEC_OTHER) != 0 {
             p.other |= Mode::Execute;
         }
 
@@ -229,43 +229,43 @@ impl From<c_wut::FSMode::Type> for Permissions {
 
 impl Into<c_wut::FSMode::Type> for Permissions {
     fn into(self) -> c_wut::FSMode::Type {
-        use c_wut::FSMode::*;
-        let mut m = Type::default();
+        use c_wut::FSMode as M;
+        let mut m = M::Type::default();
 
         if self.owner.contains(Mode::Read) {
-            m &= FS_MODE_READ_OWNER;
+            m &= M::FS_MODE_READ_OWNER;
         }
 
         if self.owner.contains(Mode::Write) {
-            m &= FS_MODE_WRITE_OWNER;
+            m &= M::FS_MODE_WRITE_OWNER;
         }
 
         if self.owner.contains(Mode::Execute) {
-            m &= FS_MODE_EXEC_OWNER;
+            m &= M::FS_MODE_EXEC_OWNER;
         }
 
         if self.group.contains(Mode::Read) {
-            m &= FS_MODE_READ_GROUP;
+            m &= M::FS_MODE_READ_GROUP;
         }
 
         if self.group.contains(Mode::Write) {
-            m &= FS_MODE_WRITE_GROUP;
+            m &= M::FS_MODE_WRITE_GROUP;
         }
 
         if self.group.contains(Mode::Execute) {
-            m &= FS_MODE_EXEC_GROUP;
+            m &= M::FS_MODE_EXEC_GROUP;
         }
 
         if self.other.contains(Mode::Read) {
-            m &= FS_MODE_READ_OTHER;
+            m &= M::FS_MODE_READ_OTHER;
         }
 
         if self.other.contains(Mode::Write) {
-            m &= FS_MODE_WRITE_OTHER;
+            m &= M::FS_MODE_WRITE_OTHER;
         }
 
         if self.other.contains(Mode::Execute) {
-            m &= FS_MODE_EXEC_OTHER;
+            m &= M::FS_MODE_EXEC_OTHER;
         }
 
         m

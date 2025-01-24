@@ -19,18 +19,18 @@ pub use position::{TextAlign, TextPosition};
 
 pub(crate) static OSSCREEN: Rrc<fn(), fn()> = Rrc::new(
     || unsafe {
-        use c_wut::ProcUICallbackType::*;
+        use c_wut::ProcUICallbackType as T;
 
         c_wut::OSScreenInit();
         let _ = _alloc_framebuffer(ptr::null_mut());
         c_wut::ProcUIRegisterCallback(
-            PROCUI_CALLBACK_ACQUIRE,
+            T::PROCUI_CALLBACK_ACQUIRE,
             Some(_alloc_framebuffer),
             ptr::null_mut(),
             100,
         );
         c_wut::ProcUIRegisterCallback(
-            PROCUI_CALLBACK_RELEASE,
+            T::PROCUI_CALLBACK_RELEASE,
             Some(_dealloc_framebuffer),
             ptr::null_mut(),
             100,
@@ -70,33 +70,32 @@ static mut FRAMEBUFFER_TV: Framebuffer = Framebuffer::new();
 static mut FRAMEBUFFER_DRC: Framebuffer = Framebuffer::new();
 
 unsafe extern "C" fn _alloc_framebuffer(_: *mut ffi::c_void) -> u32 {
-    use c_wut::MEMBaseHeapType::*;
-    use c_wut::OSScreenID::*;
+    use c_wut::{MEMBaseHeapType, OSScreenID};
 
-    let heap = c_wut::MEMGetBaseHeapHandle(MEM_BASE_HEAP_MEM1);
+    let heap = c_wut::MEMGetBaseHeapHandle(MEMBaseHeapType::MEM_BASE_HEAP_MEM1);
     let _ = c_wut::MEMRecordStateForFrmHeap(heap, FRAMEBUFFER_HEAP_TAG);
 
     if FRAMEBUFFER_TV.ptr.is_null() {
-        let size = c_wut::OSScreenGetBufferSizeEx(SCREEN_TV);
+        let size = c_wut::OSScreenGetBufferSizeEx(OSScreenID::SCREEN_TV);
         FRAMEBUFFER_TV = Framebuffer::from((c_wut::MEMAllocFromFrmHeapEx(heap, size, 0x100), size));
     }
 
     if FRAMEBUFFER_DRC.ptr.is_null() {
-        let size = c_wut::OSScreenGetBufferSizeEx(SCREEN_DRC);
+        let size = c_wut::OSScreenGetBufferSizeEx(OSScreenID::SCREEN_DRC);
         FRAMEBUFFER_DRC =
             Framebuffer::from((c_wut::MEMAllocFromFrmHeapEx(heap, size, 0x100), size));
     }
 
-    c_wut::OSScreenSetBufferEx(SCREEN_TV, FRAMEBUFFER_TV.ptr);
-    c_wut::OSScreenSetBufferEx(SCREEN_DRC, FRAMEBUFFER_DRC.ptr);
+    c_wut::OSScreenSetBufferEx(OSScreenID::SCREEN_TV, FRAMEBUFFER_TV.ptr);
+    c_wut::OSScreenSetBufferEx(OSScreenID::SCREEN_DRC, FRAMEBUFFER_DRC.ptr);
 
     0
 }
 
 unsafe extern "C" fn _dealloc_framebuffer(_: *mut ffi::c_void) -> u32 {
-    use c_wut::MEMBaseHeapType::*;
+    use c_wut::MEMBaseHeapType;
 
-    let heap = c_wut::MEMGetBaseHeapHandle(MEM_BASE_HEAP_MEM1);
+    let heap = c_wut::MEMGetBaseHeapHandle(MEMBaseHeapType::MEM_BASE_HEAP_MEM1);
     let _ = c_wut::MEMFreeByStateToFrmHeap(heap, FRAMEBUFFER_HEAP_TAG);
 
     FRAMEBUFFER_TV = Framebuffer::new();
@@ -138,9 +137,9 @@ impl DisplayType for TV {
     }
 
     fn resolution() -> (u32, u32) {
-        use c_wut::AVMTvResolution::*;
+        use c_wut::AVMTvResolution as R;
         // it is (theoretically?) possible that no resolution is found?!
-        let mut resolution = Type::default();
+        let mut resolution = R::Type::default();
 
         unsafe {
             c_wut::AVMGetTVScanMode(&mut resolution);
@@ -152,17 +151,17 @@ impl DisplayType for TV {
             }
         }
         match resolution {
-            AVM_TV_RESOLUTION_576I | AVM_TV_RESOLUTION_576P => (720, 576),
-            AVM_TV_RESOLUTION_480I | AVM_TV_RESOLUTION_480I_PAL60 | AVM_TV_RESOLUTION_480P => {
-                (720, 480)
-            }
-            AVM_TV_RESOLUTION_720P | AVM_TV_RESOLUTION_720P_3D | AVM_TV_RESOLUTION_720P_50HZ => {
-                (1280, 720)
-            }
-            AVM_TV_RESOLUTION_1080I
-            | AVM_TV_RESOLUTION_1080I_50HZ
-            | AVM_TV_RESOLUTION_1080P
-            | AVM_TV_RESOLUTION_1080P_50HZ => (1920, 1080),
+            R::AVM_TV_RESOLUTION_576I | R::AVM_TV_RESOLUTION_576P => (720, 576),
+            R::AVM_TV_RESOLUTION_480I
+            | R::AVM_TV_RESOLUTION_480I_PAL60
+            | R::AVM_TV_RESOLUTION_480P => (720, 480),
+            R::AVM_TV_RESOLUTION_720P
+            | R::AVM_TV_RESOLUTION_720P_3D
+            | R::AVM_TV_RESOLUTION_720P_50HZ => (1280, 720),
+            R::AVM_TV_RESOLUTION_1080I
+            | R::AVM_TV_RESOLUTION_1080I_50HZ
+            | R::AVM_TV_RESOLUTION_1080P
+            | R::AVM_TV_RESOLUTION_1080P_50HZ => (1920, 1080),
             0 => {
                 crate::println!("Fallback to default resolution (1280, 720)");
                 (1280, 720)
