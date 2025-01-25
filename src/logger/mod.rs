@@ -1,14 +1,21 @@
 // logger
 
-use crate::bindings as c_wut;
+use crate::{bindings as c_wut, sync::RwLock};
 use alloc::ffi::{CString, NulError};
-use core::sync::atomic::{AtomicU32, AtomicU8, Ordering};
 use flagset::{flags, FlagSet};
 use thiserror::Error;
 pub use Channel::{Cafe, Console, Module, Udp};
 
-pub(crate) static mut LOGGER: AtomicU8 = AtomicU8::new(0);
-static mut COUNTER: AtomicU32 = AtomicU32::new(0);
+#[derive(Debug)]
+struct Logger {
+    channels: FlagSet<Channel>,
+    counter: u32,
+}
+
+static LOGGER: RwLock<Logger> = RwLock::new(Logger {
+    channels: unsafe { FlagSet::new_unchecked(0) },
+    counter: 0,
+});
 
 flags! {
     pub enum Channel: u8 {
@@ -18,7 +25,7 @@ flags! {
         Console,
         /// Write to WUMS Logging Module.
         Module,
-        /// Write to UDP on port ...
+        /// Broadcast to UDP on port 4405
         Udp
     }
 }
@@ -42,10 +49,10 @@ pub enum LoggerError {
 pub fn init(channels: impl Into<FlagSet<Channel>>) -> Result<(), LoggerError> {
     let channels: FlagSet<Channel> = channels.into();
 
-    unsafe {
-        let logger = FlagSet::new_truncated(LOGGER.load(Ordering::SeqCst));
-        let new = (channels ^ logger) & channels;
+    let mut logger = LOGGER.write();
+    let new = (channels ^ logger.channels) & channels;
 
+    unsafe {
         if new.contains(Channel::Cafe) && c_wut::WHBLogCafeInit() == 0 {
             return Err(LoggerError::CafeFailed);
         }
@@ -62,56 +69,60 @@ pub fn init(channels: impl Into<FlagSet<Channel>>) -> Result<(), LoggerError> {
         if new.contains(Channel::Udp) && c_wut::WHBLogUdpInit() == 0 {
             return Err(LoggerError::UdpFailed);
         }
-
-        LOGGER.store(FlagSet::bits(channels), Ordering::SeqCst);
-        COUNTER.fetch_add(1, Ordering::SeqCst);
     }
+
+    logger.channels = channels;
+    logger.counter += 1;
 
     Ok(())
 }
 
 pub fn deinit() {
+    let mut logger = LOGGER.write();
+
+    logger.counter -= 1;
+
+    if logger.counter > 0 {
+        return;
+    }
+
     unsafe {
-        if COUNTER.fetch_sub(1, Ordering::SeqCst) > 1 {
-            return;
-        }
-
-        let channels = FlagSet::new_truncated(LOGGER.swap(0, Ordering::SeqCst));
-
-        if channels.contains(Channel::Cafe) {
+        if logger.channels.contains(Channel::Cafe) {
             c_wut::WHBLogCafeDeinit();
         }
 
-        if channels.contains(Channel::Console) {
+        if logger.channels.contains(Channel::Console) {
             c_wut::WHBLogConsoleFree();
         }
 
-        if channels.contains(Channel::Module) {
+        if logger.channels.contains(Channel::Module) {
             c_wut::WHBLogModuleDeinit();
         }
-        if channels.contains(Channel::Udp) {
+        if logger.channels.contains(Channel::Udp) {
             c_wut::WHBLogUdpDeinit();
         }
     }
+
+    logger.channels = FlagSet::new(0).unwrap();
+    logger.counter = 0;
 }
 
 pub fn print(text: &str) -> Result<(), LoggerError> {
-    let text = CString::new(text)?;
+    let logger = LOGGER.read();
 
-    unsafe {
-        let logger: FlagSet<Channel> = FlagSet::new_unchecked(LOGGER.load(Ordering::SeqCst));
+    if logger.channels.is_empty() {
+        Err(LoggerError::Uninitialized)
+    } else {
+        let text = CString::new(text)?;
 
-        if logger.is_empty() {
-            Err(LoggerError::Uninitialized)
-        } else {
+        unsafe {
             c_wut::WHBLogPrint(text.as_ptr());
 
-            if logger.contains(Channel::Console) {
+            if logger.channels.contains(Channel::Console) {
                 c_wut::WHBLogConsoleDraw();
             }
-
-            Ok(())
         }
+        Ok(())
     }
 }
 
