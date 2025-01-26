@@ -1,5 +1,6 @@
 // net
 
+pub mod errno;
 pub mod socket;
 mod socket_addrs;
 pub mod tcp;

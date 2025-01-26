@@ -63,6 +63,7 @@ fn main() {
         )
         .allowlist_function("close")
         .allowlist_function("__errno")
+        .allowlist_var("^E[A-Z0-9_]+$")
         //
         .opaque_type("MEMFrmHeap")
         .opaque_type("MEMExpHeap")

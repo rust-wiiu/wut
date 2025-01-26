@@ -2,9 +2,13 @@
 
 use crate::{
     bindings as c_wut,
-    net::socket_addrs::{ToSocketAddrs, ToSocketAddrsError},
+    net::{
+        errno,
+        socket_addrs::{ToSocketAddrs, ToSocketAddrsError},
+    },
 };
 use core::net::{Ipv4Addr, SocketAddrV4};
+// use flagset::{flags, FlagSet};
 use thiserror::Error;
 
 #[derive(Debug)]
@@ -26,41 +30,28 @@ pub enum SocketError {
     ConnectionClosed,
     #[error("failed to accept incoming request")]
     CannotAccept,
-    #[error("tmp - remove later on")]
-    Errno(i32),
+    #[error("A system-level error occurred")]
+    SystemError(#[from] errno::SystemError),
 }
-
-// impl TryFrom<i32> for SocketError {
-//     fn try_from(value: i32) -> Result<Self, Self::Error> {
-//         let errno = Self::errno();
-
-//         if value > 0 {
-//             return Ok(Self::Errno(value));
-//         }
-
-//         match  {
-
-//         }
-//     }
-// }
 
 impl SocketError {
-    fn errno() -> i32 {
-        unsafe { *c_wut::__errno() }
-    }
-
     fn from_errno() -> Self {
-        match Self::errno() {
-            v => Self::Errno(v),
-        }
+        Self::SystemError(errno::SystemError::get_last())
     }
 }
+
 #[derive(Debug, Clone, Copy)]
 pub enum Shutdown {
     Read,
     Write,
     Both,
 }
+
+// flags! {
+//     pub enum SocketOption: u32 {
+//         ReusePort = c_wut::SO_REUSEADDR
+//     }
+// }
 
 impl Socket {
     pub fn tcp() -> Result<Self, SocketError> {
@@ -72,9 +63,17 @@ impl Socket {
             );
 
             if fd <= 0 {
-                // c_wut::__errno()
-                Err(SocketError::TcpCreation)
+                Err(SocketError::from_errno())
             } else {
+                // let value: i32 = 1;
+                // c_wut::setsockopt(
+                //     fd,
+                //     c_wut::SOL_SOCKET,
+                //     c_wut::SO_REUSEADDR as i32,
+                //     &value as *const _ as *const core::ffi::c_void,
+                //     core::mem::size_of::<i32>() as u32,
+                // );
+
                 Ok(Self(fd))
             }
         }
@@ -106,8 +105,15 @@ impl Socket {
             addr.sin_addr.s_addr = address.ip().to_bits();
             addr.sin_port = address.port();
 
-            if unsafe { c_wut::bind(self.0, &addr as *const _ as *const c_wut::sockaddr, 16) } == 0
-            {
+            let status = unsafe {
+                c_wut::bind(
+                    self.0,
+                    &addr as *const _ as *const c_wut::sockaddr,
+                    core::mem::size_of::<c_wut::sockaddr_in>() as u32,
+                )
+            };
+
+            if status == 0 {
                 return Ok(address);
             }
         }
@@ -127,8 +133,6 @@ impl Socket {
         let mut addr = c_wut::sockaddr_in::default();
         let mut len = size_of::<c_wut::sockaddr_in>() as u32;
 
-        crate::println!("errno: {}", SocketError::errno());
-
         let fd = unsafe {
             c_wut::accept(
                 self.0,
@@ -137,10 +141,8 @@ impl Socket {
             )
         };
 
-        crate::println!("errno: {}", SocketError::errno());
-
         if fd < 0 {
-            Err(SocketError::Errno(SocketError::errno()))
+            Err(SocketError::from_errno())
         } else if fd == 0 {
             Err(SocketError::CannotAccept)
         } else {
@@ -194,16 +196,15 @@ impl Socket {
 
 impl Drop for Socket {
     fn drop(&mut self) {
-        if self.0 != -1 {
-            unsafe {
-                /*
-                SHUTDOWN CAUSES THE CRASHES!
-                */
-                // let s = c_wut::shutdown(self.0, c_wut::SHUT_RDWR as i32);
-                // crate::println!("shutdown: {s}");
-                // crate::thread::sleep(crate::time::Duration::from_secs(2));
-                c_wut::close(self.0);
-            }
+        unsafe {
+            /*
+            SHUTDOWN CAUSES THE CRASHES!
+            */
+            // let s = c_wut::shutdown(self.0, c_wut::SHUT_RDWR as i32);
+            // crate::println!("shutdown: {s}");
+            // crate::thread::sleep(crate::time::Duration::from_secs(2));
+            c_wut::close(self.0);
         }
+        self.0 = -1;
     }
 }
