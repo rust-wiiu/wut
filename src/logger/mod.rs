@@ -129,7 +129,7 @@ pub fn print(text: &str) -> Result<(), LoggerError> {
 #[macro_export]
 macro_rules! println {
     ($($arg:tt)*) => {{
-        // extern crate alloc;
+        extern crate alloc;
         use alloc::fmt::format;
 
         let _ = $crate::logger::print(&format(format_args!($($arg)*))).expect("println! failed");

@@ -350,7 +350,7 @@ impl Button {
     }
 }
 
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug, Clone, Copy, Default, PartialEq)]
 pub struct Joystick {
     pub x: f32,
     pub y: f32,
@@ -428,7 +428,7 @@ impl Debug for Gamepad {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct GamepadState {
     pub hold: FlagSet<Button>,
     pub trigger: FlagSet<Button>,
