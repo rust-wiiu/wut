@@ -6,7 +6,7 @@ pub use walkdir::walkdir;
 use crate::{
     bindings as c_wut,
     path::{Path, PathBuf},
-    rrc::{ResourceGuard, Rrc},
+    rrc::{Rrc, RrcGuard},
     time::DateTime,
 };
 use alloc::{
@@ -19,7 +19,7 @@ use core::{cell::RefCell, ffi, fmt, str::Utf8Error};
 use flagset::{flags, FlagSet};
 use thiserror::Error;
 
-pub(crate) static FS: Rrc<fn(), fn()> = Rrc::new(
+pub(crate) static FS: Rrc = Rrc::new(
     || unsafe {
         c_wut::FSInit();
     },
@@ -78,16 +78,16 @@ impl TryFrom<i32> for FilesystemError {
 
 // region: FsHandler
 
-pub struct FsHandler<'a> {
+pub struct FsHandler {
     // not sure why Box is required, but it is - trust me
     // ig think it has something to do with copied/moved memory, which the API apperently doesnt like
     pub client: Box<RefCell<c_wut::FSClient>>,
     pub block: Box<RefCell<c_wut::FSCmdBlock>>,
     pub error_mask: c_wut::FSErrorFlag::Type,
-    _resource: ResourceGuard<'a>,
+    _resource: RrcGuard,
 }
 
-impl<'a> FsHandler<'a> {
+impl FsHandler {
     pub fn new() -> Result<Self, FilesystemError> {
         let fs = Self {
             client: Box::new(RefCell::new(c_wut::FSClient::default())),
@@ -108,7 +108,7 @@ impl<'a> FsHandler<'a> {
     }
 }
 
-impl<'a> Drop for FsHandler<'_> {
+impl Drop for FsHandler {
     fn drop(&mut self) {
         unsafe { c_wut::FSDelClient(&mut *self.client.borrow_mut(), self.error_mask) };
     }
@@ -455,7 +455,7 @@ impl OpenOptions {
         self
     }
 
-    pub fn open<'a, P: AsRef<Path>>(&self, path: P) -> Result<File<'a>, FilesystemError> {
+    pub fn open<P: AsRef<Path>>(&self, path: P) -> Result<File, FilesystemError> {
         let fs = FsHandler::new()?;
         let str = CString::new(path.as_ref().as_str())?;
         let mode = self.file_mode()?;
@@ -521,8 +521,8 @@ pub enum SeekFrom {
     Current(i32),
 }
 
-pub struct File<'a> {
-    fs: FsHandler<'a>,
+pub struct File {
+    fs: FsHandler,
     handle: c_wut::FSFileHandle,
     path: PathBuf,
 }
@@ -566,7 +566,7 @@ impl Drop for FsBuffer {
 
 // endregion
 
-impl<'a> File<'a> {
+impl File {
     pub fn open<P: AsRef<Path>>(path: P) -> Result<Self, FilesystemError> {
         OpenOptions::new().read(true).open(path)
     }
@@ -764,7 +764,7 @@ impl<'a> File<'a> {
     }
 }
 
-impl Drop for File<'_> {
+impl Drop for File {
     fn drop(&mut self) {
         let status = unsafe {
             c_wut::FSCloseFile(
@@ -778,7 +778,7 @@ impl Drop for File<'_> {
     }
 }
 
-impl fmt::Debug for File<'_> {
+impl fmt::Debug for File {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "File({})", self.path)
     }
@@ -788,13 +788,13 @@ impl fmt::Debug for File<'_> {
 
 // region: ReadDir
 
-pub struct ReadDir<'a> {
-    fs: FsHandler<'a>,
+pub struct ReadDir {
+    fs: FsHandler,
     handle: c_wut::FSDirectoryHandle,
     path: PathBuf,
 }
 
-impl Iterator for ReadDir<'_> {
+impl Iterator for ReadDir {
     type Item = Result<DirEntry, FilesystemError>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -824,7 +824,7 @@ impl Iterator for ReadDir<'_> {
     }
 }
 
-impl Drop for ReadDir<'_> {
+impl Drop for ReadDir {
     fn drop(&mut self) {
         let status = unsafe {
             c_wut::FSCloseDir(
@@ -946,7 +946,7 @@ pub fn read<P: AsRef<Path>>(path: P) -> Result<Vec<u8>, FilesystemError> {
     Ok(content)
 }
 
-pub fn read_dir<'a, P: AsRef<Path>>(path: P) -> Result<ReadDir<'a>, FilesystemError> {
+pub fn read_dir<'a, P: AsRef<Path>>(path: P) -> Result<ReadDir, FilesystemError> {
     let str = CString::new(path.as_ref().as_str())?;
 
     let fs = FsHandler::new()?;

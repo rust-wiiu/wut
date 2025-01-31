@@ -9,7 +9,7 @@ mod position;
 
 use crate::{
     bindings as c_wut,
-    rrc::{ResourceGuard, Rrc},
+    rrc::{Rrc, RrcGuard},
 };
 use alloc::{ffi::CString, string::String};
 pub use color::{Color, ColorParseError};
@@ -17,7 +17,7 @@ use core::{ffi, marker::PhantomData, ptr};
 use position::Position;
 pub use position::{TextAlign, TextPosition};
 
-pub(crate) static OSSCREEN: Rrc<fn(), fn()> = Rrc::new(
+pub(crate) static OSSCREEN: Rrc = Rrc::new(
     || unsafe {
         use c_wut::ProcUICallbackType as T;
 
@@ -219,12 +219,12 @@ impl DisplayType for DRC {
     }
 }
 
-pub struct Screen<'a, Display: DisplayType> {
+pub struct Screen<Display: DisplayType> {
     display: PhantomData<Display>,
-    _resource: ResourceGuard<'a>,
+    _resource: RrcGuard,
 }
 
-impl<Display: DisplayType> Screen<'_, Display> {
+impl<Display: DisplayType> Screen<Display> {
     pub fn width(&self) -> u32 {
         Display::width()
     }
@@ -302,14 +302,14 @@ impl<Display: DisplayType> Screen<'_, Display> {
     }
 }
 
-pub fn tv<'a>() -> Screen<'a, TV> {
+pub fn tv() -> Screen<TV> {
     Screen {
         display: PhantomData,
         _resource: OSSCREEN.acquire(),
     }
 }
 
-pub fn drc<'a>() -> Screen<'a, DRC> {
+pub fn drc() -> Screen<DRC> {
     Screen {
         display: PhantomData,
         _resource: OSSCREEN.acquire(),

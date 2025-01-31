@@ -22,10 +22,6 @@ pub mod sync;
 pub mod thread;
 pub mod time;
 
-pub use core::{
-    alloc::{GlobalAlloc, Layout},
-    ffi,
-};
 mod utils;
 
 pub mod prelude {
@@ -35,6 +31,7 @@ pub mod prelude {
     pub use alloc::vec;
     pub use alloc::vec::*;
     pub use core::alloc::{GlobalAlloc, Layout};
+    pub use core::prelude::rust_2021::*;
 }
 
 #[cfg(feature = "panic_handler")]
@@ -89,8 +86,8 @@ fn panic_handler(info: &core::panic::PanicInfo) -> ! {
 
 pub struct WiiUAllocator;
 
-unsafe impl GlobalAlloc for WiiUAllocator {
-    unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
+unsafe impl alloc::alloc::GlobalAlloc for WiiUAllocator {
+    unsafe fn alloc(&self, layout: alloc::alloc::Layout) -> *mut u8 {
         let size = layout.size() as u32;
         let align = layout.align() as i32;
 
@@ -105,8 +102,8 @@ unsafe impl GlobalAlloc for WiiUAllocator {
         }) as *mut u8
     }
 
-    unsafe fn dealloc(&self, ptr: *mut u8, _layout: Layout) {
-        bindings::MEMFreeToDefaultHeap.unwrap()(ptr as *mut ffi::c_void);
+    unsafe fn dealloc(&self, ptr: *mut u8, _layout: alloc::alloc::Layout) {
+        bindings::MEMFreeToDefaultHeap.unwrap()(ptr as *mut core::ffi::c_void);
     }
 }
 

@@ -1,17 +1,17 @@
 //! Resource Reference Counter (RRC)
 //!
-//! Resources are typically FFI functionalties or libraries which require manual (de)initialization.
+//! Resources are typically FFI functionalities, symbols or libraries which require manual (de)initialization.
 //!
 //! # Examples
 //!
 //! ```
-//! static LIBRARY: Rrc<fn(), fn()> = Rrc::new(
+//! static LIBRARY: Rrc = Rrc::new(
 //!     || { LibraryInit(); },
 //!     || { LibraryDeinit(); }
 //! )
 //!
 //! struct LibStruct {
-//!     _resource: ResourceGuard<'a>
+//!     _resource: RrcGuard
 //! };
 //!
 //! impl LibStruct {
@@ -21,56 +21,43 @@
 //! }
 //! ```
 
-use core::sync::atomic::{AtomicI32, Ordering};
+use core::{
+    panic::{RefUnwindSafe, UnwindSafe},
+    sync::atomic::{AtomicU32, Ordering},
+};
 
-pub struct Rrc<F: Fn() + Sync, G: Fn() + Sync> {
-    ref_count: AtomicI32,
+pub type Rrc = ResourceRefCounter<fn(), fn()>;
+pub type RrcGuard = ResourceGuard<fn(), fn()>;
+
+pub struct ResourceRefCounter<F: 'static + Fn() + Sync, G: 'static + Fn() + Sync> {
+    ref_count: AtomicU32,
     init_fn: F,
     deinit_fn: G,
 }
 
-pub trait RrcGuarded: Sync {
-    fn release(&self);
-}
-
-impl<F: Fn() + Sync, G: Fn() + Sync> Rrc<F, G> {
+impl<F: 'static + Fn() + Sync, G: 'static + Fn() + Sync> ResourceRefCounter<F, G> {
+    #[inline]
     pub const fn new(init_fn: F, deinit_fn: G) -> Self {
         Self {
-            ref_count: AtomicI32::new(0),
+            ref_count: AtomicU32::new(0),
             init_fn,
             deinit_fn,
         }
     }
 
     /// Call `init_fn` if first time acquire
-    pub fn acquire(&self) -> ResourceGuard {
-        unsafe {
-            self.increase();
+    #[inline]
+    #[must_use]
+    pub fn acquire(&'static self) -> ResourceGuard<F, G> {
+        if self.ref_count.fetch_add(1, Ordering::SeqCst) == 0 {
+            (self.init_fn)()
         }
         ResourceGuard { rrc: self }
     }
 
-    /// Initialize the resource if reference count increased to 1.
-    pub unsafe fn increase(&self) {
-        // if core::cfg!(debug_assertions) {
-        if self.ref_count.load(Ordering::SeqCst) < 0 {
-            panic!("Cannot release a non-existing resource!");
-        }
-        // }
-
-        if self.ref_count.fetch_add(1, Ordering::SeqCst) == 0 {
-            (self.init_fn)()
-        }
-    }
-
     /// Deinitialize the resource if reference count decreased to 0.
-    pub unsafe fn decrease(&self) {
-        // if core::cfg!(debug_assertions) {
-        if self.ref_count.load(Ordering::SeqCst) <= 0 {
-            panic!("Cannot release a non-existing resource!");
-        }
-        // }
-
+    #[inline]
+    fn release(&self) {
         if self.ref_count.fetch_sub(1, Ordering::SeqCst) == 1 {
             (self.deinit_fn)()
         }
@@ -78,29 +65,37 @@ impl<F: Fn() + Sync, G: Fn() + Sync> Rrc<F, G> {
 
     /// Deinitialize the resource and reset the reference count to 0.
     ///
-    /// Only use this function if you are sure that no one will acquire the resource anymore    
-    pub unsafe fn clear(&self) {
+    /// Only use this function if you are sure that no one will acquire the resource anymore   
+    #[inline]
+    pub fn clear(&self) {
         self.ref_count.store(0, Ordering::SeqCst);
         (self.deinit_fn)()
     }
 }
 
-impl<F: Fn() + Sync, G: Fn() + Sync> RrcGuarded for Rrc<F, G> {
-    fn release(&self) {
-        unsafe {
-            self.decrease();
-        }
-    }
+unsafe impl<F: Fn() + Sync, G: Fn() + Sync> Sync for ResourceRefCounter<F, G> {}
+impl<F: Fn() + Sync + UnwindSafe, G: Fn() + Sync + UnwindSafe> RefUnwindSafe
+    for ResourceRefCounter<F, G>
+{
+}
+impl<F: Fn() + Sync + UnwindSafe, G: Fn() + Sync + UnwindSafe> UnwindSafe
+    for ResourceRefCounter<F, G>
+{
 }
 
-unsafe impl<F: Fn() + Sync, G: Fn() + Sync> Sync for Rrc<F, G> {}
-
-pub struct ResourceGuard<'a> {
-    rrc: &'a dyn RrcGuarded,
+pub struct ResourceGuard<F: 'static + Fn() + Sync, G: 'static + Fn() + Sync> {
+    rrc: &'static ResourceRefCounter<F, G>,
 }
 
-impl Drop for ResourceGuard<'_> {
+impl<F: 'static + Fn() + Sync, G: 'static + Fn() + Sync> Drop for ResourceGuard<F, G> {
     fn drop(&mut self) {
         self.rrc.release();
     }
 }
+
+unsafe impl<F: Fn() + Sync, G: Fn() + Sync> Sync for ResourceGuard<F, G> {}
+impl<F: Fn() + Sync + UnwindSafe, G: Fn() + Sync + UnwindSafe> RefUnwindSafe
+    for ResourceGuard<F, G>
+{
+}
+impl<F: Fn() + Sync + UnwindSafe, G: Fn() + Sync + UnwindSafe> UnwindSafe for ResourceGuard<F, G> {}

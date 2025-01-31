@@ -5,14 +5,14 @@
 
 use crate::{
     bindings as c_wut,
-    rrc::{ResourceGuard, Rrc},
+    rrc::{Rrc, RrcGuard},
 };
 use alloc::vec;
 use core::{fmt::Debug, panic};
 use flagset::{flags, FlagSet};
 use thiserror::Error;
 
-pub(crate) static KPAD: Rrc<fn(), fn()> = Rrc::new(
+pub(crate) static KPAD: Rrc = Rrc::new(
     || unsafe {
         c_wut::KPADInit();
     },
@@ -21,7 +21,7 @@ pub(crate) static KPAD: Rrc<fn(), fn()> = Rrc::new(
     },
 );
 
-pub(crate) static VPAD: Rrc<fn(), fn()> = Rrc::new(
+pub(crate) static VPAD: Rrc = Rrc::new(
     || unsafe {
         c_wut::VPADInit();
     },
@@ -109,7 +109,7 @@ impl Button {
 
     fn from_kpad(buttons: u32) -> FlagSet<Button> {
         use c_wut::{
-            WPADButton as Wpad, WPADClassicButton as Classic, WPADNunchukButton as Nunchuck,
+            WPADButton as Wpad, WPADClassicButton as Classic, WPADNunchukButton as Nunchuk,
             WPADProButton as Pro,
         };
         let button_mappings = [
@@ -127,22 +127,22 @@ impl Button {
             (Wpad::WPAD_BUTTON_2, Button::Two),
             (Wpad::WPAD_BUTTON_Z, Button::Z),
             (Wpad::WPAD_BUTTON_C, Button::C),
-            // Nunchuck
+            // Nunchuk
             (
-                Nunchuck::WPAD_NUNCHUK_STICK_EMULATION_LEFT,
+                Nunchuk::WPAD_NUNCHUK_STICK_EMULATION_LEFT,
                 Button::LStickLeft,
             ),
             (
-                Nunchuck::WPAD_NUNCHUK_STICK_EMULATION_RIGHT,
+                Nunchuk::WPAD_NUNCHUK_STICK_EMULATION_RIGHT,
                 Button::LStickRight,
             ),
-            (Nunchuck::WPAD_NUNCHUK_STICK_EMULATION_UP, Button::LStickUp),
+            (Nunchuk::WPAD_NUNCHUK_STICK_EMULATION_UP, Button::LStickUp),
             (
-                Nunchuck::WPAD_NUNCHUK_STICK_EMULATION_DOWN,
+                Nunchuk::WPAD_NUNCHUK_STICK_EMULATION_DOWN,
                 Button::LStickDown,
             ),
-            (Nunchuck::WPAD_NUNCHUK_BUTTON_Z, Button::Z),
-            (Nunchuck::WPAD_NUNCHUK_BUTTON_C, Button::C),
+            (Nunchuk::WPAD_NUNCHUK_BUTTON_Z, Button::Z),
+            (Nunchuk::WPAD_NUNCHUK_BUTTON_C, Button::C),
             // Classic controller
             (Classic::WPAD_CLASSIC_BUTTON_UP, Button::Up),
             (Classic::WPAD_CLASSIC_BUTTON_DOWN, Button::Down),
@@ -223,7 +223,7 @@ impl Button {
             })
     }
 
-    fn from_nunchuck(buttons: u32) -> FlagSet<Button> {
+    fn from_nunchuk(buttons: u32) -> FlagSet<Button> {
         use c_wut::WPADNunchukButton as Nunchuk;
         let button_mappings = [
             (
@@ -419,7 +419,7 @@ impl Into<u32> for Port {
 
 pub struct Gamepad {
     pub port: Port,
-    _resource: ResourceGuard<'static>,
+    _resource: RrcGuard,
 }
 
 impl Debug for Gamepad {
@@ -435,6 +435,69 @@ pub struct GamepadState {
     pub release: FlagSet<Button>,
     pub left_stick: Option<Joystick>,
     pub right_stick: Option<Joystick>,
+}
+
+impl GamepadState {
+    pub const fn empty() -> Self {
+        Self {
+            hold: unsafe { FlagSet::new_unchecked(0) },
+            trigger: unsafe { FlagSet::new_unchecked(0) },
+            release: unsafe { FlagSet::new_unchecked(0) },
+            left_stick: None,
+            right_stick: None,
+        }
+    }
+}
+
+impl From<c_wut::VPADStatus> for GamepadState {
+    fn from(value: c_wut::VPADStatus) -> Self {
+        GamepadState {
+            hold: Button::from_vpad(value.hold),
+            trigger: Button::from_vpad(value.trigger),
+            release: Button::from_vpad(value.release),
+            left_stick: Some(value.leftStick.into()),
+            right_stick: Some(value.rightStick.into()),
+        }
+    }
+}
+
+impl From<c_wut::KPADStatus> for GamepadState {
+    fn from(value: c_wut::KPADStatus) -> Self {
+        use c_wut::WPADExtensionType as Ext;
+
+        let mut s = GamepadState {
+            hold: Button::from_kpad(value.hold),
+            trigger: Button::from_kpad(value.trigger),
+            release: Button::from_kpad(value.release),
+            left_stick: None,
+            right_stick: None,
+        };
+
+        match value.extensionType as u32 {
+            Ext::WPAD_EXT_NUNCHUK => unsafe {
+                s.hold |= Button::from_nunchuk(value.__bindgen_anon_1.nunchuk.hold);
+                s.trigger |= Button::from_nunchuk(value.__bindgen_anon_1.nunchuk.trigger);
+                s.release |= Button::from_nunchuk(value.__bindgen_anon_1.nunchuk.release);
+                s.left_stick = Some(value.__bindgen_anon_1.nunchuk.stick.into())
+            },
+            Ext::WPAD_EXT_CLASSIC => unsafe {
+                s.hold |= Button::from_classic(value.__bindgen_anon_1.classic.hold);
+                s.trigger |= Button::from_classic(value.__bindgen_anon_1.classic.trigger);
+                s.release |= Button::from_classic(value.__bindgen_anon_1.classic.release);
+                s.left_stick = Some(value.__bindgen_anon_1.classic.leftStick.into());
+                s.right_stick = Some(value.__bindgen_anon_1.classic.rightStick.into());
+            },
+            Ext::WPAD_EXT_PRO_CONTROLLER => unsafe {
+                s.hold |= Button::from_pro(value.__bindgen_anon_1.pro.hold);
+                s.trigger |= Button::from_pro(value.__bindgen_anon_1.pro.trigger);
+                s.release |= Button::from_pro(value.__bindgen_anon_1.pro.release);
+                s.left_stick = Some(value.__bindgen_anon_1.pro.leftStick.into());
+                s.right_stick = Some(value.__bindgen_anon_1.pro.rightStick.into());
+            },
+            _ => (),
+        }
+        s
+    }
 }
 
 #[derive(Debug, Error)]
@@ -495,17 +558,11 @@ impl Gamepad {
                 {
                     Err(GamepadError::from(error))
                 } else {
-                    Ok(GamepadState {
-                        hold: Button::from_vpad(status.hold),
-                        trigger: Button::from_vpad(status.trigger),
-                        release: Button::from_vpad(status.release),
-                        left_stick: Some(status.leftStick.into()),
-                        right_stick: Some(status.rightStick.into()),
-                    })
+                    Ok(GamepadState::from(status))
                 }
             }
             _ => {
-                use c_wut::{KPADError as E, WPADExtensionType as Ext};
+                use c_wut::KPADError as E;
 
                 let mut status = c_wut::KPADStatus::default();
                 let mut error = E::KPAD_ERROR_OK;
@@ -515,43 +572,7 @@ impl Gamepad {
                 {
                     Err(GamepadError::from(error))
                 } else {
-                    let mut s = GamepadState {
-                        hold: Button::from_kpad(status.hold),
-                        trigger: Button::from_kpad(status.trigger),
-                        release: Button::from_kpad(status.release),
-                        left_stick: None,
-                        right_stick: None,
-                    };
-
-                    match status.extensionType as u32 {
-                        Ext::WPAD_EXT_NUNCHUK => unsafe {
-                            s.hold |= Button::from_nunchuck(status.__bindgen_anon_1.nunchuk.hold);
-                            s.trigger |=
-                                Button::from_nunchuck(status.__bindgen_anon_1.nunchuk.trigger);
-                            s.release |=
-                                Button::from_nunchuck(status.__bindgen_anon_1.nunchuk.release);
-                            s.left_stick = Some(status.__bindgen_anon_1.nunchuk.stick.into())
-                        },
-                        Ext::WPAD_EXT_CLASSIC => unsafe {
-                            s.hold |= Button::from_classic(status.__bindgen_anon_1.classic.hold);
-                            s.trigger |=
-                                Button::from_classic(status.__bindgen_anon_1.classic.trigger);
-                            s.release |=
-                                Button::from_classic(status.__bindgen_anon_1.classic.release);
-                            s.left_stick = Some(status.__bindgen_anon_1.classic.leftStick.into());
-                            s.right_stick = Some(status.__bindgen_anon_1.classic.rightStick.into());
-                        },
-                        Ext::WPAD_EXT_PRO_CONTROLLER => unsafe {
-                            s.hold |= Button::from_pro(status.__bindgen_anon_1.pro.hold);
-                            s.trigger |= Button::from_pro(status.__bindgen_anon_1.pro.trigger);
-                            s.release |= Button::from_pro(status.__bindgen_anon_1.pro.release);
-                            s.left_stick = Some(status.__bindgen_anon_1.pro.leftStick.into());
-                            s.right_stick = Some(status.__bindgen_anon_1.pro.rightStick.into());
-                        },
-                        _ => (),
-                    }
-
-                    Ok(s)
+                    Ok(GamepadState::from(status))
                 }
             }
         }
