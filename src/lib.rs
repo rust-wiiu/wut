@@ -10,6 +10,7 @@ pub use wut_macros::*;
 
 pub mod bindings;
 pub mod env;
+pub mod font;
 pub mod fs;
 pub mod gamepad;
 pub mod logger;

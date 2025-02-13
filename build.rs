@@ -22,6 +22,7 @@ fn main() {
     println!("{link_lib}=g");
     println!("{link_lib}=gcc");
     println!("{link_lib}=sysbase");
+    println!("{link_lib}=stdc++");
 
     /*
      * These bindings will create many errors since the target cpu is a 32bit system and the host (the compilation PC) is likely a 64bit system.
