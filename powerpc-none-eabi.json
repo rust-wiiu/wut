@@ -1,6 +1,6 @@
 {
     "arch": "powerpc",
-    "os": "unknown",
+    "os": "cafe",
     "vendor": "nintendo",
     "cpu": "750",
     "data-layout": "E-m:e-p:32:32-Fn32-i64:64-n32",
@@ -9,7 +9,7 @@
     "exe-suffix": ".elf",
     "executables": true,
     "has-rpath": true,
-    "llvm-target": "powerpc-unknown-eabi",
+    "llvm-target": "powerpc-none-eabi",
     "linker-flavor": "gcc",
     "linker-is-gnu": true,
     "pre-link-args": {
