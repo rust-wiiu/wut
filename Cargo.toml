@@ -27,3 +27,4 @@ release.panic = "abort"
 wut-macros = { path = "./macros", optional = true }
 flagset = { version = "0.4.6", default-features = false }
 thiserror = { version = "2.0.3", default-features = false }
+math = { path = "./math", version = "*" }

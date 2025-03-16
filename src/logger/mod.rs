@@ -77,6 +77,26 @@ pub fn init(channels: impl Into<FlagSet<Channel>>) -> Result<(), LoggerError> {
     Ok(())
 }
 
+#[inline]
+pub fn cafe() -> Result<(), LoggerError> {
+    init(Cafe)
+}
+
+#[inline]
+pub fn console() -> Result<(), LoggerError> {
+    init(Console)
+}
+
+#[inline]
+pub fn module() -> Result<(), LoggerError> {
+    init(Module)
+}
+
+#[inline]
+pub fn udp() -> Result<(), LoggerError> {
+    init(Udp)
+}
+
 pub fn deinit() {
     let mut logger = LOGGER.write();
 

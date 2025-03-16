@@ -2,6 +2,7 @@
 
 pub extern crate alloc;
 extern crate flagset;
+pub extern crate math;
 extern crate thiserror;
 #[cfg(feature = "macros")]
 pub extern crate wut_macros;
@@ -23,6 +24,7 @@ pub mod screen;
 pub mod sync;
 pub mod thread;
 pub mod time;
+pub mod title;
 
 mod utils;
 
@@ -34,6 +36,7 @@ pub mod prelude {
     pub use alloc::vec::*;
     pub use core::alloc::{GlobalAlloc, Layout};
     pub use core::prelude::rust_2021::*;
+    pub use math::FloatingMathExt;
 }
 
 #[cfg(feature = "panic_handler")]

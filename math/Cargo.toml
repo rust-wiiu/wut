@@ -1,0 +1,17 @@
+[package]
+name = "math"
+version = "0.1.0"
+edition = "2021"
+build = "build.rs"
+links = "m"
+
+[lib]
+name = "math"
+crate-type = ["lib"]
+
+[build-dependencies]
+bindgen = "0.71.1"
+
+[profile]
+dev.panic = "abort"
+release.panic = "abort"
