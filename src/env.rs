@@ -1,16 +1,16 @@
 use crate::{
     fs,
     path::{Path, PathBuf},
-    sync::OnceLock,
+    sync::{LazyLock, RwLock},
 };
-static mut CWD: OnceLock<PathBuf> = OnceLock::new();
+
+static CWD: LazyLock<RwLock<PathBuf>> = LazyLock::new(|| RwLock::new(PathBuf::from("/")));
 
 /// Returns the current working directory as a [`PathBuf`].
 ///
 /// Will always be the root directory (`/`) in the beginning.
-#[allow(static_mut_refs)]
 pub fn current_dir() -> Result<PathBuf, fs::FilesystemError> {
-    Ok(unsafe { CWD.get_or_init(|| PathBuf::from("/")) }.clone())
+    Ok(CWD.read().clone())
 }
 
 /// Changes the current working directory to the specified path.
@@ -22,12 +22,8 @@ pub fn current_dir() -> Result<PathBuf, fs::FilesystemError> {
 ///
 /// * Directory does not exist.
 /// * Insufficient permissions to access the directory.
-#[allow(static_mut_refs)]
 pub fn set_current_dir<P: AsRef<Path>>(path: P) -> Result<(), fs::FilesystemError> {
     fs::exists(path.as_ref())?;
-
-    let a = unsafe { CWD.get_mut_or_init(|| PathBuf::from("/")) };
-    *a = path.as_ref().to_path_buf();
-
+    *CWD.write() = path.as_ref().to_path_buf();
     Ok(())
 }
