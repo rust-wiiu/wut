@@ -8,19 +8,19 @@ use bindings as C;
 
 pub trait FloatingMathExt {
     /// Computes the arccosine of a number. Return value is in radians in the range [0, pi] or NaN if the number is outside the range [-1, 1].
-    fn acos(x: Self) -> Self;
+    fn acos(self) -> Self;
 
     /// Inverse hyperbolic cosine function.
-    fn acosh(x: Self) -> Self;
+    fn acosh(self) -> Self;
 
     /// Computes the arcsine of a number. Return value is in radians in the range [-pi/2, pi/2] or NaN if the number is outside the range [-1, 1].
-    fn asin(x: Self) -> Self;
+    fn asin(self) -> Self;
 
     /// Inverse hyperbolic sine function.
-    fn asinh(x: Self) -> Self;
+    fn asinh(self) -> Self;
 
     /// Computes the arctangent of a number. Return value is in radians in the range [-pi/2, pi/2];
-    fn atan(x: Self) -> Self;
+    fn atan(self) -> Self;
 
     /// Computes the four quadrant arctangent of `self` (`y`) and `other` (`x`) in radians.
     ///
@@ -28,44 +28,44 @@ pub trait FloatingMathExt {
     /// * `x >= 0`: `arctan(y/x)` -> `[-pi/2, pi/2]`
     /// * `y >= 0`: `arctan(y/x) + pi` -> `(pi/2, pi]`
     /// * `y < 0`: `arctan(y/x) - pi` -> `(-pi, -pi/2)`
-    fn atan2(x: Self, y: Self) -> Self;
+    fn atan2(self, other: Self) -> Self;
 
     /// Inverse hyperbolic tangent function.
-    fn atanh(x: Self) -> Self;
+    fn atanh(self) -> Self;
 
     /// Returns the cube root of a number.
-    fn cbrt(x: Self) -> Self;
+    fn cbrt(self) -> Self;
 
     /// Returns the smallest integer greater than or equal to self.
     ///
     /// This function always returns the precise result.
-    fn ceil(x: Self) -> Self;
+    fn ceil(self) -> Self;
 
     /// Computes the cosine of a number (in radians).
-    fn cos(x: Self) -> Self;
+    fn cos(self) -> Self;
 
     /// Hyperbolic cosine function.
-    fn cosh(x: Self) -> Self;
+    fn cosh(self) -> Self;
 
     /// Returns `e^(self)`, (the exponential function).
-    fn exp(x: Self) -> Self;
+    fn exp(self) -> Self;
 
     /// Returns `2^(self)`.
-    fn exp2(x: Self) -> Self;
+    fn exp2(self) -> Self;
 
     /// Returns `e^(self) - 1` in a way that is accurate even if the number is close to zero.
-    fn exp_m1(x: Self) -> Self; // expm1
+    fn exp_m1(self) -> Self; // expm1
 
     /// The positive difference of two numbers.
     ///
     /// * If `self <= other`: `0.0`
     /// * Else: `self - other`
-    fn abs_sub(x: Self, y: Self) -> Self;
+    fn abs_sub(self, other: Self) -> Self;
 
     /// Returns the largest integer less than or equal to self.
     ///
     /// This function always returns the precise result.
-    fn floor(x: Self) -> Self;
+    fn floor(self) -> Self;
 
     /// Fused multiply-add. Computes `(self * a) + b` with only one rounding
     /// error, yielding a more accurate result than an unfused multiply-add.
@@ -75,305 +75,305 @@ pub trait FloatingMathExt {
     /// # Precision
     ///
     /// The result of this operation is guaranteed to be the rounded infinite-precision result. It is specified by IEEE 754 as `fusedMultiplyAdd` and guaranteed not to change.
-    fn mul_add(x: Self, y: Self, z: Self) -> Self; // fma
+    fn mul_add(self, a: Self, b: Self) -> Self; // fma
 
     /// Computes the floating-point remainder of `x / y`.
     ///
     /// The return value is `x - n * y`, where `n` is the integer quotient of `x / y` rounded toward zero.
-    fn fmod(x: Self, y: Self) -> Self;
+    fn fmod(self, y: Self) -> Self;
 
     /// Compute the distance between the origin and a point (`x`, `y`) on the Euclidean plane. Equivalently, compute the length of the hypotenuse of a right-angle triangle with other sides having length `x.abs()` and `y.abs()`.
-    fn hypot(x: Self, y: Self) -> Self;
+    fn hypot(self, other: Self) -> Self;
 
     /// Returns the logarithm of the number with respect to an arbitrary base.
     ///
     /// The result might not be correctly rounded owing to implementation details; self.log2() can produce more accurate results for base 2, and self.log10() can produce more accurate results for base 10.
-    fn log(x: Self) -> Self;
+    fn log(self) -> Self;
 
     /// Returns the base 10 logarithm of the number.
-    fn log10(x: Self) -> Self;
+    fn log10(self) -> Self;
 
     /// Returns the base 2 logarithm of the number.
-    fn log2(x: Self) -> Self;
+    fn log2(self) -> Self;
 
     // Raises a number to a floating point power.
-    fn powf(x: Self, n: Self) -> Self; // pow
+    fn powf(self, n: Self) -> Self; // pow
 
     /// Computes the sine of a number (in radians).
-    fn sin(x: Self) -> Self;
+    fn sin(self) -> Self;
 
     /// Hyperbolic sine function.
-    fn sinh(x: Self) -> Self;
+    fn sinh(self) -> Self;
 
     /// Returns the square root of a number.
     ///
     /// Returns `NaN` if self is a negative number other than `-0.0`.
-    fn sqrt(x: Self) -> Self;
+    fn sqrt(self) -> Self;
 
     /// Computes the tangent of a number (in radians).
-    fn tan(x: Self) -> Self;
+    fn tan(self) -> Self;
 
     /// Hyperbolic tangent function.
-    fn tanh(x: Self) -> Self;
+    fn tanh(self) -> Self;
 
     /// Gamma function.
-    fn gamma(x: Self) -> Self; // tgamma
+    fn gamma(self) -> Self; // tgamma
 
     /// Convert radians to degree.
-    fn to_degrees(x: Self) -> Self;
+    fn to_degrees(self) -> Self;
 
     /// Convert degree to radians.
-    fn to_radians(x: Self) -> Self;
+    fn to_radians(self) -> Self;
 }
 
 impl FloatingMathExt for f32 {
-    fn acos(x: Self) -> Self {
-        unsafe { C::acosf(x) }
+    fn acos(self) -> Self {
+        unsafe { C::acosf(self) }
     }
 
-    fn acosh(x: Self) -> Self {
-        unsafe { C::acoshf(x) }
+    fn acosh(self) -> Self {
+        unsafe { C::acoshf(self) }
     }
 
-    fn asin(x: Self) -> Self {
-        unsafe { C::asinf(x) }
+    fn asin(self) -> Self {
+        unsafe { C::asinf(self) }
     }
 
-    fn asinh(x: Self) -> Self {
-        unsafe { C::asinhf(x) }
+    fn asinh(self) -> Self {
+        unsafe { C::asinhf(self) }
     }
 
-    fn atan(x: Self) -> Self {
-        unsafe { C::atanf(x) }
+    fn atan(self) -> Self {
+        unsafe { C::atanf(self) }
     }
 
-    fn atan2(x: Self, y: Self) -> Self {
-        unsafe { C::atan2f(x, y) }
+    fn atan2(self, other: Self) -> Self {
+        unsafe { C::atan2f(self, other) }
     }
 
-    fn atanh(x: Self) -> Self {
-        unsafe { C::atanhf(x) }
+    fn atanh(self) -> Self {
+        unsafe { C::atanhf(self) }
     }
 
-    fn cbrt(x: Self) -> Self {
-        unsafe { C::cbrtf(x) }
+    fn cbrt(self) -> Self {
+        unsafe { C::cbrtf(self) }
     }
 
-    fn ceil(x: Self) -> Self {
-        unsafe { C::ceilf(x) }
+    fn ceil(self) -> Self {
+        unsafe { C::ceilf(self) }
     }
 
-    fn cos(x: Self) -> Self {
-        unsafe { C::cosf(x) }
+    fn cos(self) -> Self {
+        unsafe { C::cosf(self) }
     }
 
-    fn cosh(x: Self) -> Self {
-        unsafe { C::coshf(x) }
+    fn cosh(self) -> Self {
+        unsafe { C::coshf(self) }
     }
 
-    fn exp(x: Self) -> Self {
-        unsafe { C::expf(x) }
+    fn exp(self) -> Self {
+        unsafe { C::expf(self) }
     }
 
-    fn exp2(x: Self) -> Self {
-        unsafe { C::exp2f(x) }
+    fn exp2(self) -> Self {
+        unsafe { C::exp2f(self) }
     }
 
-    fn exp_m1(x: Self) -> Self {
-        unsafe { C::expm1f(x) }
+    fn exp_m1(self) -> Self {
+        unsafe { C::expm1f(self) }
     }
 
-    fn abs_sub(x: Self, y: Self) -> Self {
-        unsafe { C::fdimf(x, y) }
+    fn abs_sub(self, other: Self) -> Self {
+        unsafe { C::fdimf(self, other) }
     }
 
-    fn floor(x: Self) -> Self {
-        unsafe { C::floorf(x) }
+    fn floor(self) -> Self {
+        unsafe { C::floorf(self) }
     }
 
-    fn mul_add(x: Self, y: Self, z: Self) -> Self {
-        unsafe { C::fmaf(x, y, z) }
+    fn mul_add(self, a: Self, b: Self) -> Self {
+        unsafe { C::fmaf(self, a, b) }
     }
 
-    fn fmod(x: Self, y: Self) -> Self {
-        unsafe { C::fmodf(x, y) }
+    fn fmod(self, other: Self) -> Self {
+        unsafe { C::fmodf(self, other) }
     }
 
-    fn hypot(x: Self, y: Self) -> Self {
-        unsafe { C::hypotf(x, y) }
+    fn hypot(self, other: Self) -> Self {
+        unsafe { C::hypotf(self, other) }
     }
 
-    fn log(x: Self) -> Self {
-        unsafe { C::logf(x) }
+    fn log(self) -> Self {
+        unsafe { C::logf(self) }
     }
 
-    fn log10(x: Self) -> Self {
-        unsafe { C::log10f(x) }
+    fn log10(self) -> Self {
+        unsafe { C::log10f(self) }
     }
 
-    fn log2(x: Self) -> Self {
-        unsafe { C::log2f(x) }
+    fn log2(self) -> Self {
+        unsafe { C::log2f(self) }
     }
 
-    fn powf(x: Self, n: Self) -> Self {
-        unsafe { C::powf(x, n) }
+    fn powf(self, n: Self) -> Self {
+        unsafe { C::powf(self, n) }
     }
 
-    fn sin(x: Self) -> Self {
-        unsafe { C::sinf(x) }
+    fn sin(self) -> Self {
+        unsafe { C::sinf(self) }
     }
 
-    fn sinh(x: Self) -> Self {
-        unsafe { C::sinhf(x) }
+    fn sinh(self) -> Self {
+        unsafe { C::sinhf(self) }
     }
 
-    fn sqrt(x: Self) -> Self {
-        unsafe { C::sqrtf(x) }
+    fn sqrt(self) -> Self {
+        unsafe { C::sqrtf(self) }
     }
 
-    fn tan(x: Self) -> Self {
-        unsafe { C::tanf(x) }
+    fn tan(self) -> Self {
+        unsafe { C::tanf(self) }
     }
 
-    fn tanh(x: Self) -> Self {
-        unsafe { C::tanhf(x) }
+    fn tanh(self) -> Self {
+        unsafe { C::tanhf(self) }
     }
 
-    fn gamma(x: Self) -> Self {
-        unsafe { C::tgammaf(x) }
+    fn gamma(self) -> Self {
+        unsafe { C::tgammaf(self) }
     }
 
-    fn to_degrees(x: Self) -> Self {
-        x * 180.0 / f32::consts::PI
+    fn to_degrees(self) -> Self {
+        self * 180.0 / f32::consts::PI
     }
 
-    fn to_radians(x: Self) -> Self {
-        x * f32::consts::PI / 180.0
+    fn to_radians(self) -> Self {
+        self * f32::consts::PI / 180.0
     }
 }
 
 impl FloatingMathExt for f64 {
-    fn acos(x: Self) -> Self {
-        unsafe { C::acos(x) }
+    fn acos(self) -> Self {
+        unsafe { C::acos(self) }
     }
 
-    fn acosh(x: Self) -> Self {
-        unsafe { C::acosh(x) }
+    fn acosh(self) -> Self {
+        unsafe { C::acosh(self) }
     }
 
-    fn asin(x: Self) -> Self {
-        unsafe { C::asin(x) }
+    fn asin(self) -> Self {
+        unsafe { C::asin(self) }
     }
 
-    fn asinh(x: Self) -> Self {
-        unsafe { C::asinh(x) }
+    fn asinh(self) -> Self {
+        unsafe { C::asinh(self) }
     }
 
-    fn atan(x: Self) -> Self {
-        unsafe { C::atan(x) }
+    fn atan(self) -> Self {
+        unsafe { C::atan(self) }
     }
 
-    fn atan2(x: Self, y: Self) -> Self {
-        unsafe { C::atan2(x, y) }
+    fn atan2(self, other: Self) -> Self {
+        unsafe { C::atan2(self, other) }
     }
 
-    fn atanh(x: Self) -> Self {
-        unsafe { C::atanh(x) }
+    fn atanh(self) -> Self {
+        unsafe { C::atanh(self) }
     }
 
-    fn cbrt(x: Self) -> Self {
-        unsafe { C::cbrt(x) }
+    fn cbrt(self) -> Self {
+        unsafe { C::cbrt(self) }
     }
 
-    fn ceil(x: Self) -> Self {
-        unsafe { C::ceil(x) }
+    fn ceil(self) -> Self {
+        unsafe { C::ceil(self) }
     }
 
-    fn cos(x: Self) -> Self {
-        unsafe { C::cos(x) }
+    fn cos(self) -> Self {
+        unsafe { C::cos(self) }
     }
 
-    fn cosh(x: Self) -> Self {
-        unsafe { C::cosh(x) }
+    fn cosh(self) -> Self {
+        unsafe { C::cosh(self) }
     }
 
-    fn exp(x: Self) -> Self {
-        unsafe { C::exp(x) }
+    fn exp(self) -> Self {
+        unsafe { C::exp(self) }
     }
 
-    fn exp2(x: Self) -> Self {
-        unsafe { C::exp2(x) }
+    fn exp2(self) -> Self {
+        unsafe { C::exp2(self) }
     }
 
-    fn exp_m1(x: Self) -> Self {
-        unsafe { C::expm1(x) }
+    fn exp_m1(self) -> Self {
+        unsafe { C::expm1(self) }
     }
 
-    fn abs_sub(x: Self, y: Self) -> Self {
-        unsafe { C::fdim(x, y) }
+    fn abs_sub(self, other: Self) -> Self {
+        unsafe { C::fdim(self, other) }
     }
 
-    fn floor(x: Self) -> Self {
-        unsafe { C::floor(x) }
+    fn floor(self) -> Self {
+        unsafe { C::floor(self) }
     }
 
-    fn mul_add(x: Self, y: Self, z: Self) -> Self {
-        unsafe { C::fma(x, y, z) }
+    fn mul_add(self, a: Self, b: Self) -> Self {
+        unsafe { C::fma(self, a, b) }
     }
 
-    fn fmod(x: Self, y: Self) -> Self {
-        unsafe { C::fmod(x, y) }
+    fn fmod(self, y: Self) -> Self {
+        unsafe { C::fmod(self, y) }
     }
 
-    fn hypot(x: Self, y: Self) -> Self {
-        unsafe { C::hypot(x, y) }
+    fn hypot(self, other: Self) -> Self {
+        unsafe { C::hypot(self, other) }
     }
 
-    fn log(x: Self) -> Self {
-        unsafe { C::log(x) }
+    fn log(self) -> Self {
+        unsafe { C::log(self) }
     }
 
-    fn log10(x: Self) -> Self {
-        unsafe { C::log10(x) }
+    fn log10(self) -> Self {
+        unsafe { C::log10(self) }
     }
 
-    fn log2(x: Self) -> Self {
-        unsafe { C::log2(x) }
+    fn log2(self) -> Self {
+        unsafe { C::log2(self) }
     }
 
-    fn powf(x: Self, n: Self) -> Self {
-        unsafe { C::pow(x, n) }
+    fn powf(self, n: Self) -> Self {
+        unsafe { C::pow(self, n) }
     }
 
-    fn sin(x: Self) -> Self {
-        unsafe { C::sin(x) }
+    fn sin(self) -> Self {
+        unsafe { C::sin(self) }
     }
 
-    fn sinh(x: Self) -> Self {
-        unsafe { C::sinh(x) }
+    fn sinh(self) -> Self {
+        unsafe { C::sinh(self) }
     }
 
-    fn sqrt(x: Self) -> Self {
-        unsafe { C::sqrt(x) }
+    fn sqrt(self) -> Self {
+        unsafe { C::sqrt(self) }
     }
 
-    fn tan(x: Self) -> Self {
-        unsafe { C::tan(x) }
+    fn tan(self) -> Self {
+        unsafe { C::tan(self) }
     }
 
-    fn tanh(x: Self) -> Self {
-        unsafe { C::tanh(x) }
+    fn tanh(self) -> Self {
+        unsafe { C::tanh(self) }
     }
 
-    fn gamma(x: Self) -> Self {
-        unsafe { C::tgamma(x) }
+    fn gamma(self) -> Self {
+        unsafe { C::tgamma(self) }
     }
 
-    fn to_degrees(x: Self) -> Self {
-        x * 180.0 / f64::consts::PI
+    fn to_degrees(self) -> Self {
+        self * 180.0 / f64::consts::PI
     }
 
-    fn to_radians(x: Self) -> Self {
-        x * f64::consts::PI / 180.0
+    fn to_radians(self) -> Self {
+        self * f64::consts::PI / 180.0
     }
 }
