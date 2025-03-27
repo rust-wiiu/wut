@@ -12,8 +12,10 @@ fn main() {
     let dkp = env::var("DEVKITPRO").expect("Please provided DEVKITPRO via env variables");
     let ppc = env::var("DEVKITPPC").expect("Please provided DEVKITPPC via env variables");
 
+    let abi = "14.2.0"; // TODO: extract automatically (with some sanity checks)
+
     println!("{link_search_path}={ppc}/powerpc-eabi/lib",);
-    println!("{link_search_path}={ppc}/lib/gcc/powerpc-eabi/13.1.0");
+    println!("{link_search_path}={ppc}/lib/gcc/powerpc-eabi/{abi}");
     println!("{link_search_path}={dkp}/wut/lib/");
 
     println!("{link_lib}=wut");
@@ -47,8 +49,8 @@ fn main() {
             "-mfloat-abi=hard",
             &format!("-I{dkp}/wut/include"),
             &format!("-I{ppc}/powerpc-eabi/include"),
-            &format!("-I{ppc}/powerpc-eabi/include/c++/13.1.0"),
-            &format!("-I{ppc}/powerpc-eabi/include/c++/13.1.0/powerpc-eabi"),
+            &format!("-I{ppc}/powerpc-eabi/include/c++/{abi}"),
+            &format!("-I{ppc}/powerpc-eabi/include/c++/{abi}/powerpc-eabi"),
             "-Wno-return-type-c-linkage", // ig we can ignore these
         ])
         .allowlist_file(".*/wut/include/.*.h")
