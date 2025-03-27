@@ -1,19 +1,25 @@
 #![no_std]
 
 pub extern crate alloc;
-extern crate flagset;
+pub extern crate flagset;
 pub extern crate math;
 extern crate thiserror;
+
 #[cfg(feature = "macros")]
 pub extern crate wut_macros;
 #[cfg(feature = "macros")]
 pub use wut_macros::*;
 
 pub mod bindings;
+#[cfg(feature = "collections")]
+pub mod collections;
+pub mod dynamic_loading;
 pub mod env;
 pub mod font;
+pub mod foreground;
 pub mod fs;
 pub mod gamepad;
+pub mod gx2;
 pub mod logger;
 pub mod net;
 pub mod path;

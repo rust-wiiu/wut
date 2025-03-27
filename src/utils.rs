@@ -4,7 +4,7 @@
 // Only keep private stuff here
 // Having public stuff crammed into "utils" in not good design
 
-use alloc::string::String;
+use alloc::{string::String, vec::Vec};
 
 pub(crate) fn text_wrap<T: AsRef<str>>(text: T, width: usize) -> String {
     let text = text.as_ref();
@@ -28,4 +28,20 @@ pub(crate) fn text_wrap<T: AsRef<str>>(text: T, width: usize) -> String {
     }
 
     result
+}
+
+pub(crate) fn into_utf16(s: &str) -> Vec<u16> {
+    let mut v: Vec<u16> = s.encode_utf16().collect();
+    v.push(0);
+    v
+}
+
+pub(crate) fn from_utf16(ptr: *const u16) -> String {
+    let len = (0..)
+        .take_while(|&i| unsafe { *ptr.offset(i) } != 0)
+        .count()
+        .min(256);
+    let v = unsafe { core::slice::from_raw_parts(ptr, len) };
+
+    String::from_utf16_lossy(v)
 }

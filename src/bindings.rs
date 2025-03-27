@@ -759,9 +759,9 @@ impl<_CharT> Default for std_basic_string<_CharT> {
 }
 pub type std_integral_constant_value_type<_Tp> = _Tp;
 pub type std_integral_constant_type = u8;
+pub type std___bool_constant = u8;
 pub type std_true_type = u8;
 pub type std_false_type = u8;
-pub type std___bool_constant = u8;
 pub type std___enable_if_t = u8;
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone)]

@@ -141,6 +141,9 @@ pub fn print(text: &str) -> Result<(), LoggerError> {
             if logger.channels.contains(Channel::Console) {
                 c_wut::WHBLogConsoleDraw();
             }
+            if logger.channels.contains(Channel::Cafe) {
+                c_wut::OSReport(text.as_ptr());
+            }
         }
         Ok(())
     }

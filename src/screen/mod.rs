@@ -4,15 +4,14 @@
 //!
 //! There is only one framebuffer per screen to write to so multiple instances of Screen<...> will write to the same framebuffer.
 
-mod color;
 mod position;
 
+pub use crate::gx2::color::Color;
 use crate::{
     bindings as c_wut,
     rrc::{Rrc, RrcGuard},
 };
 use alloc::{ffi::CString, string::String};
-pub use color::{Color, ColorParseError};
 use core::{ffi, marker::PhantomData, ptr};
 use position::Position;
 pub use position::{TextAlign, TextPosition};
