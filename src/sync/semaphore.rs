@@ -1,49 +1,42 @@
-use crate::{bindings as c_wut, GLOBAL_ALLOCATOR};
-use core::{
-    alloc::{GlobalAlloc, Layout},
-    cell::UnsafeCell,
-};
+use crate::bindings as c_wut;
+use core::cell::UnsafeCell;
 
-pub struct Semaphore(*mut c_wut::OSSemaphore);
+pub struct Semaphore(UnsafeCell<c_wut::OSSemaphore>);
 
 impl Semaphore {
     pub fn new(initial: i32) -> Self {
-        let layout = Layout::new::<c_wut::OSSemaphore>();
-        let semaphore = unsafe { GLOBAL_ALLOCATOR.alloc_zeroed(layout) } as *mut c_wut::OSSemaphore;
-
-        crate::println!("{:?}", unsafe { *semaphore }.tag);
+        let mut semaphore = c_wut::OSSemaphore::default();
 
         unsafe {
-            c_wut::OSInitSemaphore(semaphore, initial);
+            c_wut::OSInitSemaphore(&mut semaphore, initial);
         }
 
-        crate::println!("{:?}", unsafe { *semaphore }.tag);
-
-        Self(semaphore)
+        Self(UnsafeCell::new(semaphore))
     }
 
-    pub fn test(&self) -> i32 {
-        unsafe { *self.0 }.count
+    #[inline]
+    fn inner(&self) -> &mut c_wut::OSSemaphore {
+        unsafe { &mut *self.0.get() }
     }
 
     #[inline]
     pub fn count(&self) -> i32 {
-        unsafe { c_wut::OSGetSemaphoreCount(self.0) }
+        unsafe { c_wut::OSGetSemaphoreCount(self.inner()) }
     }
 
     #[inline]
     pub fn signal(&self) -> i32 {
-        unsafe { c_wut::OSSignalSemaphore(self.0) }
+        unsafe { c_wut::OSSignalSemaphore(self.inner()) }
     }
 
     #[inline]
     pub fn wait(&self) -> i32 {
-        unsafe { c_wut::OSWaitSemaphore(self.0) }
+        unsafe { c_wut::OSWaitSemaphore(self.inner()) }
     }
 
     #[inline]
     pub fn try_wait(&self) -> i32 {
-        unsafe { c_wut::OSTryWaitSemaphore(self.0) }
+        unsafe { c_wut::OSTryWaitSemaphore(self.inner()) }
     }
 }
 

@@ -1,11 +1,10 @@
 // use super::State;
 use core::{
-    cell::{Cell, UnsafeCell},
+    cell::UnsafeCell,
     fmt,
     fmt::Debug,
     mem::ManuallyDrop,
     ops::Deref,
-    panic::{RefUnwindSafe, UnwindSafe},
     sync::atomic::{AtomicU8, Ordering},
 };
 
