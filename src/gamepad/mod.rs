@@ -574,7 +574,8 @@ impl Joystick {
     /// A floating point value representing the distance from the center.
     #[inline]
     pub fn abs(&self) -> f32 {
-        f32::hypot(self.x, self.y)
+        // f32::hypot(self.x, self.y)
+        self.x.hypot(self.y)
     }
 
     /// Calculates the angle on the perimeter. `0` represents the joystick being held straight up.
@@ -587,8 +588,8 @@ impl Joystick {
         if self.x == 0.0 && self.y == 0.0 {
             None
         } else {
-            let r = f32::atan2(self.y, -self.x);
-            let mut d = f32::to_degrees(r);
+            let r = self.y.atan2(-self.x);
+            let mut d = r.to_degrees();
             if d < 0.0 {
                 d += 360.0
             }
@@ -731,6 +732,20 @@ impl GamepadState {
             leftStick: self.left_stick.unwrap_or_default().into(),
             rightStick: self.right_stick.unwrap_or_default().into(),
             ..Default::default()
+        }
+    }
+}
+
+impl core::ops::BitOrAssign for GamepadState {
+    fn bitor_assign(&mut self, rhs: Self) {
+        self.hold |= rhs.hold;
+        self.trigger |= rhs.trigger;
+        self.release |= rhs.release;
+        if let Some(stick) = rhs.left_stick {
+            self.left_stick = stick.into();
+        }
+        if let Some(stick) = rhs.right_stick {
+            self.right_stick = stick.into();
         }
     }
 }
