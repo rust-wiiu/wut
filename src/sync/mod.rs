@@ -1,6 +1,7 @@
 mod event;
 mod lazy_lock;
 pub mod mpmc;
+pub mod mpsc;
 mod mutex;
 mod once_lock;
 mod rwlock;

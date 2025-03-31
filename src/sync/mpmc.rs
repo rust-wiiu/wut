@@ -26,7 +26,7 @@ pub fn channel<T>() -> (Sender<T>, Receiver<T>) {
 #[derive(Clone)]
 pub struct Sender<T> {
     queue: Arc<c_wut::OSMessageQueue>,
-    messages: Arc<[c_wut::OSMessage; QUEUE_LENGTH]>,
+    _messages: Arc<[c_wut::OSMessage; QUEUE_LENGTH]>,
     _marker: PhantomData<T>,
 }
 
@@ -37,7 +37,7 @@ impl<T> Sender<T> {
     ) -> Self {
         Self {
             queue: Arc::clone(queue),
-            messages: Arc::clone(messages),
+            _messages: Arc::clone(messages),
             _marker: PhantomData,
         }
     }
@@ -73,7 +73,7 @@ unsafe impl<T: Send> Send for Sender<T> {}
 #[derive(Clone)]
 pub struct Receiver<T> {
     queue: Arc<c_wut::OSMessageQueue>,
-    messages: Arc<[c_wut::OSMessage; QUEUE_LENGTH]>,
+    _messages: Arc<[c_wut::OSMessage; QUEUE_LENGTH]>,
     _marker: PhantomData<T>,
 }
 
@@ -84,7 +84,7 @@ impl<T> Receiver<T> {
     ) -> Self {
         Self {
             queue: Arc::clone(queue),
-            messages: Arc::clone(messages),
+            _messages: Arc::clone(messages),
             _marker: PhantomData,
         }
     }
