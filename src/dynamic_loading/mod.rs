@@ -5,10 +5,22 @@
 //! Inspired by the [libloading](https://docs.rs/libloading/latest/libloading/) crate.
 //!
 //! A list of system RPLs can be found [here](https://wut.devkitpro.org/modules.html). Note that these need not to be loaded manually as they are available via WUT.
+//!
+//! # Usage:
+//!
+//! ```
+//! use dynamic_loading::Module;
+//!
+//! let m = Module::new("coreinit.rpl").unwrap();
+//!
+//! let s = m.function::<unsafe fn() -> u64>("OSGetTitleID").unwrap();
+//!
+//! assert_eq!(unsafe { s() }, unsafe { wut::bindings::OSGetTitleID() })
+//! ```
 
 use crate::bindings as c_wut;
 use alloc::{boxed::Box, ffi::CString, string::String, vec::Vec};
-use core::{ffi, marker::PhantomData, ops::Deref};
+use core::{ffi, fmt::Debug, marker::PhantomData, ops::Deref};
 use thiserror::Error;
 
 pub mod allocators;
@@ -195,8 +207,8 @@ unsafe impl<'lib, T: Sync> Sync for Symbol<'lib, T> {}
 /// Gets the number of currently loaded RPLs.
 ///
 /// Always returns 0 on release versions of CafeOS. Requires OSGetSecurityLevel() > 0 (?).
-pub fn loaded_rpls() -> i32 {
-    unsafe { c_wut::OSDynLoad_GetNumberOfRPLs() }
+pub fn loaded_rpls() -> usize {
+    unsafe { c_wut::OSDynLoad_GetNumberOfRPLs() as usize }
 }
 
 pub struct RplInfo(c_wut::OSDynLoad_NotifyData);
@@ -265,6 +277,12 @@ impl RplInfo {
     }
 }
 
+impl Debug for RplInfo {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "RplInfo({})", self.name())
+    }
+}
+
 pub fn rpls_info(index: u32, count: usize) -> Vec<RplInfo> {
     let mut info = Vec::with_capacity(count);
 
@@ -275,16 +293,16 @@ pub fn rpls_info(index: u32, count: usize) -> Vec<RplInfo> {
 
 pub struct RplCallback<F>
 where
-    F: 'static + Fn() + Send,
+    F: 'static + Fn(Module, NotifyReason, RplInfo) + Send,
 {
     f: F,
 }
 
-impl<F: 'static + Fn() + Send> RplCallback<F> {
+impl<F: 'static + Fn(Module, NotifyReason, RplInfo) + Send> RplCallback<F> {
     pub fn new(f: F) -> Result<Self, DynamicLoadingError> {
         let cb = Self { f };
 
-        let f: Box<Box<&dyn Fn()>> = Box::new(Box::new(&cb.f));
+        let f: Box<Box<&dyn Fn(Module, NotifyReason, RplInfo)>> = Box::new(Box::new(&cb.f));
 
         let status = unsafe {
             c_wut::OSDynLoad_AddNotifyCallback(Some(Self::_notify), Box::into_raw(f) as *mut _)
@@ -300,18 +318,41 @@ impl<F: 'static + Fn() + Send> RplCallback<F> {
         notify_reason: c_wut::OSDynLoad_NotifyReason::Type,
         infos: *mut c_wut::OSDynLoad_NotifyData,
     ) {
-        let closure = unsafe { Box::from_raw(user_context as *mut Box<&dyn Fn()>) };
-        closure();
+        let closure = unsafe {
+            Box::from_raw(user_context as *mut Box<&dyn Fn(Module, NotifyReason, RplInfo)>)
+        };
+
+        let module = unsafe { Module::from_raw(module) }.unwrap();
+        let reason = NotifyReason::from(notify_reason);
+        let info = RplInfo(unsafe { *infos });
+
+        closure(module, reason, info);
     }
 }
 
-impl<F: 'static + Fn() + Send> Drop for RplCallback<F> {
+impl<F: 'static + Fn(Module, NotifyReason, RplInfo) + Send> Drop for RplCallback<F> {
     fn drop(&mut self) {
-        let f: Box<Box<&dyn Fn()>> = Box::new(Box::new(&self.f));
+        let f: Box<Box<&dyn Fn(Module, NotifyReason, RplInfo)>> = Box::new(Box::new(&self.f));
 
         let status = unsafe {
             c_wut::OSDynLoad_DelNotifyCallback(Some(Self::_notify), Box::into_raw(f) as *mut _)
         };
         let _ = DynamicLoadingError::try_from(status).unwrap();
+    }
+}
+
+pub enum NotifyReason {
+    Loaded,
+    Unloaded,
+}
+
+impl From<c_wut::OSDynLoad_NotifyReason::Type> for NotifyReason {
+    fn from(value: c_wut::OSDynLoad_NotifyReason::Type) -> Self {
+        use c_wut::OSDynLoad_NotifyReason as T;
+        match value {
+            T::OS_DYNLOAD_NOTIFY_LOADED => Self::Loaded,
+            T::OS_DYNLOAD_NOTIFY_UNLOADED => Self::Unloaded,
+            _ => unreachable!(),
+        }
     }
 }
