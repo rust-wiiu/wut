@@ -142,7 +142,7 @@ pub fn print(text: &str) -> Result<(), LoggerError> {
                 c_wut::WHBLogConsoleDraw();
             }
             if logger.channels.contains(Channel::Cafe) {
-                c_wut::OSReport(text.as_ptr());
+                c_wut::OSReportInfo(text.as_ptr());
             }
         }
         Ok(())
