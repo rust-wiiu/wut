@@ -574,7 +574,6 @@ impl Joystick {
     /// A floating point value representing the distance from the center.
     #[inline]
     pub fn abs(&self) -> f32 {
-        // f32::hypot(self.x, self.y)
         self.x.hypot(self.y)
     }
 
