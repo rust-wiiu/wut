@@ -1,6 +1,6 @@
 use super::{
     color::Color,
-    render_context::{Context, TvOrDrc},
+    context::{Context, TvOrDrc},
 };
 use crate::bindings as c_wut;
 

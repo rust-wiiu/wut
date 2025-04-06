@@ -5,9 +5,7 @@ pub extern crate flagset;
 pub extern crate math;
 extern crate thiserror;
 
-#[cfg(feature = "macros")]
 pub extern crate wut_macros;
-#[cfg(feature = "macros")]
 pub use wut_macros::*;
 
 pub mod bindings;

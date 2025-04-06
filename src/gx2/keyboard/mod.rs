@@ -336,19 +336,13 @@ impl<'a> Drop for KeyboardRenderer<'a> {
 }
 
 impl<'a> Renderable for KeyboardRenderer<'a> {
-    fn render_tv(
-        &self,
-        _context: &crate::gx2::render_context::Context<crate::gx2::render_context::Tv>,
-    ) {
+    fn render_tv(&self, _context: &crate::gx2::context::Context<crate::gx2::context::Tv>) {
         unsafe {
             c_wut::nn_swkbd_DrawTV();
         }
     }
 
-    fn render_drc(
-        &self,
-        _context: &crate::gx2::render_context::Context<crate::gx2::render_context::Drc>,
-    ) {
+    fn render_drc(&self, _context: &crate::gx2::context::Context<crate::gx2::context::Drc>) {
         unsafe {
             c_wut::nn_swkbd_DrawDRC();
         }

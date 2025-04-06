@@ -6,9 +6,8 @@ build = "build.rs"
 links = "wut"
 
 [features]
-default = ["macros"]
+default = []
 panic_handler = []
-macros = ["dep:wut-macros"]
 collections = ["dep:hashbrown"]
 
 [lib]
@@ -23,7 +22,7 @@ dev.panic = "abort"
 release.panic = "abort"
 
 [dependencies]
-wut-macros = { path = "./macros", optional = true }
+wut-macros = { path = "./macros" }
 math = { path = "./math", version = "*" }
 flagset = { version = "0.4.6", default-features = false }
 thiserror = { version = "2.0.3", default-features = false }

@@ -298,13 +298,13 @@ impl<'a> Drop for ErrorViewRenderer<'a> {
 }
 
 impl<'a> Renderable for ErrorViewRenderer<'a> {
-    fn render_drc(&self, _context: &super::render_context::Context<super::render_context::Drc>) {
+    fn render_drc(&self, _context: &super::context::Context<super::context::Drc>) {
         unsafe {
             c_wut::nn_erreula_DrawDRC();
         }
     }
 
-    fn render_tv(&self, _context: &super::render_context::Context<super::render_context::Tv>) {
+    fn render_tv(&self, _context: &super::context::Context<super::context::Tv>) {
         unsafe {
             c_wut::nn_erreula_DrawTV();
         }

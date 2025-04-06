@@ -124,6 +124,9 @@ pub trait FloatingMathExt {
 
     /// Convert degree to radians.
     fn to_radians(self) -> Self;
+
+    /// Round down if `x < 0.5` else up.
+    fn round(self) -> Self;
 }
 
 impl FloatingMathExt for f32 {
@@ -250,6 +253,10 @@ impl FloatingMathExt for f32 {
     fn to_radians(self) -> Self {
         self * f32::consts::PI / 180.0
     }
+
+    fn round(self) -> Self {
+        (self + 0.51).floor()
+    }
 }
 
 impl FloatingMathExt for f64 {
@@ -375,5 +382,9 @@ impl FloatingMathExt for f64 {
 
     fn to_radians(self) -> Self {
         self * f64::consts::PI / 180.0
+    }
+
+    fn round(self) -> Self {
+        (self + 0.51).floor()
     }
 }
