@@ -44,7 +44,10 @@ fn main() {
         .clang_args(vec![
             "--target=powerpc-none-eabi",
             &format!("--sysroot={ppc}/powerpc-eabi"),
+            &format!("-isystem{ppc}/powerpc-eabi/include"),
+            &format!("-cxx-isystem{ppc}/powerpc-eabi/include"),
             "-xc++",
+            "-std=c++17",
             "-m32",
             "-mfloat-abi=hard",
             &format!("-I{dkp}/wut/include"),
