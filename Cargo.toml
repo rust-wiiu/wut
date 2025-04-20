@@ -2,26 +2,20 @@
 name = "wut"
 version = "0.1.0"
 edition = "2021"
-build = "build.rs"
-links = "wut"
+
 
 [features]
-default = []
-panic_handler = []
+default = ["panic_handler"]
+panic_handler = ["sys/panic_handler"]
 collections = ["dep:hashbrown"]
 
 [lib]
 name = "wut"
 crate-type = ["lib"]
 
-[build-dependencies]
-bindgen = "0.70.1"
-
-[profile]
-dev.panic = "abort"
-release.panic = "abort"
 
 [dependencies]
+sys = { path = "./sys", version = "*" }
 wut-macros = { path = "./macros" }
 math = { path = "./math", version = "*" }
 flagset = { version = "0.4.6", default-features = false }

@@ -1,6 +1,6 @@
 // logger
 
-use crate::{bindings as c_wut, sync::RwLock};
+use crate::{bindings as c_wut, sync::{ConstMutex, LazyLock, Mutex, MutexError}};
 use alloc::ffi::{CString, NulError};
 use flagset::{flags, FlagSet};
 use thiserror::Error;
@@ -12,10 +12,7 @@ struct Logger {
     counter: u32,
 }
 
-static LOGGER: RwLock<Logger> = RwLock::new(Logger {
-    channels: unsafe { FlagSet::new_unchecked(0) },
-    counter: 0,
-});
+static LOGGER: ConstMutex<Logger> = LazyLock::new(|| Mutex::new(Logger { channels: FlagSet::new_truncated(0), counter: 0 }));
 
 flags! {
     pub enum Channel: u8 {
@@ -44,12 +41,15 @@ pub enum LoggerError {
     UdpFailed,
     #[error("Provided string cannot contain internal 0-bytes")]
     ContainsZeroBytes(#[from] NulError),
+    #[error("Underlying mutex returned error")]
+    MutexError(#[from] MutexError),
 }
 
 pub fn init(channels: impl Into<FlagSet<Channel>>) -> Result<(), LoggerError> {
     let channels: FlagSet<Channel> = channels.into();
 
-    let mut logger = LOGGER.write();
+    let mut logger = LOGGER.lock()?;
+
     let new = (channels ^ logger.channels) & channels;
 
     unsafe {
@@ -98,7 +98,7 @@ pub fn udp() -> Result<(), LoggerError> {
 }
 
 pub fn deinit() {
-    let mut logger = LOGGER.write();
+    let mut logger = LOGGER.lock().unwrap();
 
     logger.counter -= 1;
 
@@ -128,12 +128,20 @@ pub fn deinit() {
 }
 
 pub fn print(text: &str) -> Result<(), LoggerError> {
-    let logger = LOGGER.read();
+    let logger = LOGGER.lock()?;
 
     if logger.channels.is_empty() {
+        unsafe {
+            c_wut::OSReport(c"print unint\n".as_ptr())
+        };
+
         Err(LoggerError::Uninitialized)
     } else {
         let text = CString::new(text)?;
+
+        unsafe {
+            c_wut::OSReport(c"print ok\n".as_ptr())
+        };
 
         unsafe {
             c_wut::WHBLogPrint(text.as_ptr());
@@ -142,7 +150,7 @@ pub fn print(text: &str) -> Result<(), LoggerError> {
                 c_wut::WHBLogConsoleDraw();
             }
             if logger.channels.contains(Channel::Cafe) {
-                c_wut::OSReportInfo(text.as_ptr());
+                c_wut::OSReport(text.as_ptr());
             }
         }
         Ok(())
@@ -155,6 +163,6 @@ macro_rules! println {
         extern crate alloc;
         use alloc::fmt::format;
 
-        let _ = $crate::logger::print(&format(format_args!($($arg)*))).expect("println! failed");
+        let _ = $crate::logger::print(&format(format_args!($($arg)*))).unwrap();
     }};
 }

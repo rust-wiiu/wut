@@ -2,11 +2,12 @@
 //! Module level documentation
 //!
 
-use crate::bindings as c_wut;
+use crate::{bindings as c_wut, sync::LazyLock};
 use core::{
     cell::UnsafeCell,
     ops::{Deref, DerefMut},
 };
+use thiserror::Error;
 
 /// CafeOS Mutex
 ///
@@ -20,9 +21,11 @@ pub struct MutexGuard<'a, T> {
     mutex: &'a Mutex<T>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum MutexError {
+    #[error("Thread locking mutex has paniced")]
     Poisoned,
+    #[error("Try waiting for thread failed")]
     AlreadyLocked,
 }
 
@@ -31,6 +34,8 @@ unsafe impl<T: Send> Sync for Mutex<T> {}
 
 impl<T> Mutex<T> {
     /// Create a new mutex
+    /// 
+    /// As mutexes must be registerd by the OS, they cannot be created with a `const` function. As a workaround use [ConstMutex][super::ConstMutex].
     pub fn new(inner: T) -> Self {
         let mut mutex = c_wut::OSMutex::default();
         unsafe {

@@ -6,7 +6,7 @@ pub extern crate math;
 extern crate thiserror;
 
 pub extern crate wut_macros;
-pub use wut_macros::*;
+pub use wut_macros::{main, ShaderAttributes};
 
 pub extern crate sys;
 

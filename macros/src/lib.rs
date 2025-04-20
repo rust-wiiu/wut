@@ -3,7 +3,7 @@ use quote::{quote, ToTokens};
 use syn::{parse_macro_input, punctuated::Punctuated, ItemFn, Meta, Token};
 
 #[proc_macro_attribute]
-pub fn wut_main(attr: TokenStream, input: TokenStream) -> TokenStream {
+pub fn main(attr: TokenStream, input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as ItemFn);
     let args = parse_macro_input!(attr with Punctuated::<Meta, Token![,]>::parse_terminated)
         .into_iter()
@@ -34,7 +34,28 @@ pub fn wut_main(attr: TokenStream, input: TokenStream) -> TokenStream {
     TokenStream::from(expanded)
 }
 
-/// Docs
+/// Automatically implements the `Attributes` trait for a struct.
+/// 
+/// The struct should only contain named fields of type `wut::gx2::shader::Attribute` and can optionally contain the following (Rust) attributes:
+/// * #\[name = `&str`\]: sets the name of the attribute in the shader. Defaults to field name.
+/// * #\[index = `u32`\]: sets the internal attribute index. Defaults to 0 for the first field and increaes with *every* field from the last value.
+/// * #\[offset = `u32`\]: sets the internal attribute offset. Defaults to 0.
+/// 
+/// # Example
+/// 
+/// ```
+/// #[derive(ShaderAttributes)]
+/// struct MyShader {
+///     #[name = "aPosition"]
+///     // #[index = 0]
+///     // #[offset = 3]
+///     a_position: wut::gx2::shader::Attribute<Float4>,
+///     #[name = "aColour"]
+///     // #[index = 1]
+///     // #[offset = 0]
+///     a_color: wut::gx2::shader::Attribute<Float4>,
+/// }
+/// ```
 #[proc_macro_derive(ShaderAttributes, attributes(name, index, offset))]
 pub fn gx2_attributes(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as syn::DeriveInput);
@@ -116,3 +137,59 @@ pub fn gx2_attributes(input: TokenStream) -> TokenStream {
 
     output.into()
 }
+
+// #[proc_macro]
+// pub fn glsl(input: TokenStream) -> TokenStream {
+
+//     let str = input.to_string();
+
+//     let output = quote! {
+//         #str
+//     };
+//     output.into()
+// }
+
+// #[proc_macro]
+// pub fn assemble(input: TokenStream) -> TokenStream {
+
+//     let input = parse_macro_input!(input as ShaderCode);
+
+//     let vertex = input.vertex;
+
+//     let output = quote! {
+//         ""
+//     };
+//     output.into()
+// }
+
+// struct ShaderCode {
+//     vertex: String,
+//     fragment: String
+// }
+
+
+// impl syn::parse::Parse for ShaderCode {
+//     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
+//         // Parse vertex field
+//         input.parse::<syn::Ident>()?; // Parse "vertex"
+//         input.parse::<syn::Token![:]>()?; // Parse ":"
+        
+//         let vertex_content = input.parse::<syn::Block>()?;
+//         // let vertex = vertex_content.stmts.
+        
+//         // Parse comma
+//         input.parse::<syn::Token![,]>()?;
+        
+//         // Parse fragment field
+//         input.parse::<syn::Ident>()?; // Parse "fragment"
+//         input.parse::<syn::Token![:]>()?; // Parse ":"
+        
+//         // Get fragment shader code
+//         let fragment_context = input.parse::<syn::Block>()?;
+        
+//         Ok(ShaderCode {
+//             vertex: vertex_content.to_string(),
+//             fragment: fragment_context.to_string(),
+//         })
+//     }
+// }

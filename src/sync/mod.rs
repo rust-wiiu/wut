@@ -11,5 +11,7 @@ pub use event::{AutoEvent, ManualEvent};
 pub use lazy_lock::LazyLock;
 pub use mutex::{Mutex, MutexError};
 pub use once_lock::OnceLock;
-pub use rwlock::RwLock;
+// pub use rwlock::RwLock;
 pub use semaphore::Semaphore;
+
+pub type ConstMutex<T> = LazyLock<Mutex<T>>;

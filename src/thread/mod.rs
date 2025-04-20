@@ -104,8 +104,16 @@ pub fn sleep(duration: Duration) {
     }
 }
 
+/// If the state is `true` then the thread will be suspended or cancelled,
 pub fn cancel(cancel: bool) {
     unsafe {
         c_wut::OSSetThreadCancelState(cancel.into());
+    }
+}
+
+/// Yield execution to waiting threads with same priority. This will never switch to a thread with a lower priority than the current thread.
+pub fn yield_now() {
+    unsafe {
+        c_wut::OSYieldThread();
     }
 }

@@ -34,14 +34,10 @@ pub fn deinit() {
 /// Check if the OS wants to move application out of foreground.
 ///
 /// Should be ran in reasonable intervals or OS may be unresponseable.
-/// Typically ran instead of `loop{...}`.
+/// Typically ran with `while process:running() {...}`.
 pub fn running() -> bool {
     unsafe {
-        if c_wut::ProcUIIsRunning() != 0 {
-            c_wut::WHBProcIsRunning() != 0
-        } else {
-            false
-        }
+        c_wut::ProcUIIsRunning() != 0 && c_wut::WHBProcIsRunning() != 0
     }
 }
 

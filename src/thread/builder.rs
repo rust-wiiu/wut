@@ -4,8 +4,8 @@ use crate::{
         thread::{Thread, ThreadAttribute, ThreadError},
         JoinHandle,
     },
-    GLOBAL_ALLOCATOR,
 };
+use sys::GLOBAL_ALLOCATOR;
 use alloc::{alloc::Layout, boxed::Box, string::String};
 use core::{alloc::GlobalAlloc, ffi};
 use flagset::FlagSet;

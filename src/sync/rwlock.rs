@@ -1,9 +1,10 @@
+/*
 use core::cell::UnsafeCell;
-use core::sync::atomic::{AtomicUsize, Ordering};
+use core::sync::atomic::{AtomicUsize, AtomicBool, Ordering};
 
 pub struct RwLock<T> {
     readers: AtomicUsize,
-    writer: AtomicUsize,
+    writer: AtomicBool,
     data: UnsafeCell<T>,
 }
 
@@ -15,51 +16,39 @@ impl<T> RwLock<T> {
     pub const fn new(data: T) -> Self {
         RwLock {
             readers: AtomicUsize::new(0),
-            writer: AtomicUsize::new(0),
+            writer: AtomicBool::new(false),
             data: UnsafeCell::new(data),
         }
     }
 
     /// Acquires a read lock.
     pub fn read(&self) -> RwLockReadGuard<T> {
-        loop {
-            // Wait until there's no writer
-            while self.writer.load(Ordering::Acquire) > 0 {}
-
-            // Increment the reader count
-            self.readers.fetch_add(1, Ordering::Acquire);
-
-            // Double-check if a writer was added while we incremented readers
-            if self.writer.load(Ordering::Acquire) == 0 {
-                break;
-            }
-
-            // If there’s a writer, decrement readers and retry
-            self.readers.fetch_sub(1, Ordering::Release);
+        while self.writer.load(Ordering::SeqCst) {
+            // Busy-wait while a writer holds the lock
+            // core::hint::spin_loop();
         }
+        self.readers.fetch_add(1, Ordering::SeqCst);
 
         RwLockReadGuard { lock: self }
     }
 
     /// Acquires a write lock.
     pub fn write(&self) -> RwLockWriteGuard<T> {
-        // Wait until there's no writer
-        while self.writer.fetch_add(1, Ordering::Acquire) > 0 {
-            self.writer.fetch_sub(1, Ordering::Release);
+        while self.readers.load(Ordering::SeqCst) > 0 || self.writer.load(Ordering::SeqCst) {
+            // Busy-wait while readers exist or a writer holds the lock
+            // core::hint::spin_loop();
         }
-
-        // Wait until there are no readers
-        while self.readers.load(Ordering::Acquire) > 0 {}
+        self.writer.store(true, Ordering::SeqCst);
 
         RwLockWriteGuard { lock: self }
     }
 
     fn release_read(&self) {
-        self.readers.fetch_sub(1, Ordering::Release);
+        self.readers.fetch_sub(1, Ordering::SeqCst);
     }
 
     fn release_write(&self) {
-        self.writer.fetch_sub(1, Ordering::Release);
+        self.writer.store(false, Ordering::SeqCst);
     }
 }
 
@@ -106,3 +95,4 @@ impl<T> core::ops::DerefMut for RwLockWriteGuard<'_, T> {
         unsafe { &mut *self.lock.data.get() }
     }
 }
+*/

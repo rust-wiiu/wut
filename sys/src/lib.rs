@@ -7,7 +7,7 @@ pub mod bindings;
 #[cfg(feature = "panic_handler")]
 #[panic_handler]
 fn panic_handler(info: &core::panic::PanicInfo) -> ! {
-    use alloc::format;
+    use alloc::{format, alloc::GlobalAlloc};
 
     let (file, line, column, msg) = if let Some(location) = info.location() {
         (location.file(), location.line(), location.column(), info.message())
