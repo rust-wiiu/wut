@@ -1,4 +1,6 @@
 //! Filesystem
+//! 
+//! This module contains basic methods to manipulate the contents of the local filesystem.
 
 mod walkdir;
 pub use walkdir::walkdir;
@@ -78,6 +80,7 @@ impl TryFrom<i32> for FilesystemError {
 
 // region: FsHandler
 
+/// Handler for accessing filesystem
 pub struct FsHandler {
     // not sure why Box is required, but it is - trust me
     // ig think it has something to do with copied/moved memory, which the API apperently doesnt like

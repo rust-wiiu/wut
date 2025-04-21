@@ -1,3 +1,7 @@
+//! Env
+//! 
+//! Emulate the behaviour of a process’s environment.
+
 use crate::{
     fs,
     path::{Path, PathBuf},
@@ -5,6 +9,17 @@ use crate::{
 };
 
 static CWD: LazyLock<Mutex<PathBuf>> = LazyLock::new(|| Mutex::new(PathBuf::from("/")));
+
+pub mod consts {
+    pub const ARCH: &str = "powerpc32";
+    pub const DLL_EXTENSION: &str = "rpl";
+    pub const DLL_PREFIX: &str = "";
+    pub const DLL_SUFFIX: &str = ".rpl";
+    pub const EXE_EXTENSION: &str = "rpx";
+    pub const EXE_SUFFIX: &str = ".rpx";
+    pub const FAMILY: &str = "unix";
+    pub const OS: &str = "cafeos";
+}
 
 /// Returns the current working directory as a [`PathBuf`].
 ///

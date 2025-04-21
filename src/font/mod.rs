@@ -1,6 +1,11 @@
-//! Special Icons available on the system font
+//! Font
+//! 
+//! Special Icons available on the system font.
 //!
-//! Buttons, Logos, ...
+//! Examples:
+//! * Buttons
+//! * Spinners
+//! * Logos
 
 pub mod icons {
     pub const BTN_A: char = '\u{E000}';
