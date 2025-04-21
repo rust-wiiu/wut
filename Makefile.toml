@@ -5,12 +5,10 @@ RUSTFLAGS = { value = "", condition.env_not_set = ["RUSTFLAGS"] }
 
 [tasks.build-elf]
 private = true
+toolchain = "nightly-2025-02-06"
 env = { "RUSTFLAGS" = "-Clinker=${DEVKITPPC}/bin/powerpc-eabi-gcc -Clink-arg=-specs=${DEVKITPRO}/wut/share/wut.specs ${RUSTFLAGS}", OUT_FILE = "${TARGET_DIR}/${CARGO_MAKE_PROJECT_NAME}.elf" }
-command = "rustup"
+command = "cargo"
 args = [
-    "run",
-    "nightly",
-    "cargo",
     "build",
     "-Z",
     "build-std=core,alloc",
