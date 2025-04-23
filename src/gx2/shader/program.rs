@@ -1,4 +1,4 @@
-use crate::path::Path;
+use crate::{path::Path, fs};
 use alloc::{borrow::Cow, vec::Vec};
 
 /// A shader program.
@@ -36,8 +36,9 @@ impl<'a> Program<'a> {
 
     /// Creates a new shader program from a file.
     #[inline]
-    pub fn load(path: &Path) -> Self {
-        todo!()
+    pub fn load(path: &Path) -> Result<Self, fs::FilesystemError> {
+        let data = fs::read(path)?;
+        Ok(Self::new(data))
     }
 
     /// Returns length of shader code in bytes.
