@@ -110,6 +110,12 @@ impl Module {
         Ok(Self(raw))
     }
 
+
+    /// Find a symbol name exported by a module.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if symbol does not exist.
     fn get<'lib, T>(
         &self,
         name: &str,
@@ -178,6 +184,15 @@ pub struct Symbol<'lib, T: 'lib> {
 }
 
 impl<'lib, T> Symbol<'lib, T> {
+    /// Create a new symbol from an arbitrary pointer.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if pointer is null.
+    /// 
+    /// # Safety
+    /// 
+    /// Pointer is assumed to point to a valid function.
     fn new(pointer: *const ffi::c_void) -> Result<Self, DynamicLoadingError> {
         if pointer.is_null() {
             Err(DynamicLoadingError::SymbolNullPointer)
@@ -203,6 +218,7 @@ impl<T> Deref for Symbol<'_, T> {
 }
 unsafe impl<'lib, T: Send> Send for Symbol<'lib, T> {}
 unsafe impl<'lib, T: Sync> Sync for Symbol<'lib, T> {}
+
 
 /// Gets the number of currently loaded RPLs.
 ///

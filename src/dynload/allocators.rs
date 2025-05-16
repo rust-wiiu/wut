@@ -1,4 +1,6 @@
 //! Dynamic loading allocators
+//! 
+//! Allows for overwriting of dynload allocators. Unless you know exactly what you are doing, never touch these functions.
 
 use crate::bindings as c_wut;
 
