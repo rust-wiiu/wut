@@ -1,3 +1,7 @@
+//! GX2
+//! 
+//! GX2 is the graphics API of the Wii U similar to OpenGL.
+
 pub mod color;
 mod dialog_utils;
 pub mod error_view;
@@ -23,15 +27,6 @@ pub(crate) static GFX: Rrc = Rrc::new(
         c_wut::WHBGfxShutdown();
     },
 );
-
-// pub(crate) static GX2: Rrc = Rrc::new(
-//     || unsafe {
-//         c_wut::GX2Init(attributes);
-//     },
-//     || unsafe {
-//         c_wut::WHBGfxShutdown();
-//     },
-// );
 
 pub trait Renderable {
     fn render_tv(&self, _context: &context::Context<context::Tv>);
