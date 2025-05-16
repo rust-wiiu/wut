@@ -1,5 +1,5 @@
 //! Filesystem
-//! 
+//!
 //! This module contains basic methods to manipulate the contents of the local filesystem.
 
 mod walkdir;
@@ -942,6 +942,19 @@ pub fn metadata<P: AsRef<Path>>(path: P) -> Result<Metadata, FilesystemError> {
     Ok(Metadata::from(stat))
 }
 
+/// Reads the entire contents of a file into a bytes vector.
+///
+/// This is a convenience function for using [`File::open`] and [`File::read_to_end`] with fewer imports and without an intermediate variable.
+///
+/// # Examples
+///
+/// ```no_run
+/// use wut::fs;
+///
+/// fn foo() -> Result<(), fs::FilesystemError> {
+///     let content: Vec<u8> = fs::read("file.jpg")?;
+/// }
+/// ```
 pub fn read<P: AsRef<Path>>(path: P) -> Result<Vec<u8>, FilesystemError> {
     let mut file = File::open(path)?;
     let mut content = Vec::new();
