@@ -14,7 +14,7 @@ pub use sys::bindings as bindings;
 
 #[cfg(feature = "collections")]
 pub mod collections;
-pub mod dynamic_loading;
+pub mod dynload;
 pub mod env;
 pub mod font;
 pub mod foreground;
