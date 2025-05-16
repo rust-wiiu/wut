@@ -18,9 +18,9 @@ crate-type = ["lib"]
 
 
 [dependencies]
-sys = { path = "./sys", version = "*" }
-wut-macros = { path = "./macros" }
-math = { path = "./math", version = "*" }
+sys = { path = "./sys", version = "0.1.0" }
+wut-macros = { path = "./macros", version = "0.1.0" }
+math = { path = "./math", version = "0.1.0" }
 flagset = { version = "0.4.6", default-features = false }
 thiserror = { version = "2.0.3", default-features = false }
 hashbrown = { version = "0.15.2", optional = true }
