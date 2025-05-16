@@ -18,7 +18,7 @@ use crate::{
     rrc::{Rrc, RrcGuard},
 };
 use alloc::vec;
-use core::{fmt::Debug, panic, u16};
+use core::{fmt::Debug, u16};
 use flagset::{flags, FlagSet};
 use thiserror::Error;
 
@@ -670,6 +670,26 @@ impl Port {
         ];
         P.iter()
     }
+
+    #[inline]
+    pub fn from_vpad(_value: c_wut::VPADChan::Type) -> Self {
+        return Self::DRC;
+    }
+
+    #[inline]
+    pub fn from_wpad(value: c_wut::WPADChan::Type) -> Self {
+        use c_wut::WPADChan as C;
+        match value {
+            C::WPAD_CHAN_0 => Self::Port0,
+            C::WPAD_CHAN_1 => Self::Port1,
+            C::WPAD_CHAN_2 => Self::Port2,
+            C::WPAD_CHAN_3 => Self::Port3,
+            C::WPAD_CHAN_4 => Self::Port4,
+            C::WPAD_CHAN_5 => Self::Port5,
+            C::WPAD_CHAN_6 => Self::Port6,
+            _ => unreachable!(),
+        }
+    }
 }
 
 impl Into<u32> for Port {
@@ -702,7 +722,7 @@ impl Debug for Gamepad {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
-pub struct GamepadState {
+pub struct State {
     pub hold: FlagSet<Button>,
     pub trigger: FlagSet<Button>,
     pub release: FlagSet<Button>,
@@ -710,7 +730,7 @@ pub struct GamepadState {
     pub right_stick: Option<Joystick>,
 }
 
-impl GamepadState {
+impl State {
     pub const fn new() -> Self {
         Self {
             hold: unsafe { FlagSet::new_unchecked(0) },
@@ -733,9 +753,14 @@ impl GamepadState {
             ..Default::default()
         }
     }
+
+    // #[inline]
+    // pub fn into_kpad(self) -> c_wut::KPADStatus {
+    //     todo!()
+    // }
 }
 
-impl core::ops::BitOrAssign for GamepadState {
+impl core::ops::BitOrAssign for State {
     fn bitor_assign(&mut self, rhs: Self) {
         self.hold |= rhs.hold;
         self.trigger |= rhs.trigger;
@@ -749,11 +774,11 @@ impl core::ops::BitOrAssign for GamepadState {
     }
 }
 
-impl core::ops::BitOrAssign<GamepadState> for c_wut::VPADStatus {
-    /// Combine [GamepadState] and [VPADStatus] constructively.
+impl core::ops::BitOrAssign<State> for c_wut::VPADStatus {
+    /// Combine [State] with [VPADStatus][c_wut::VPADStatus] constructively.
     ///
     /// Buttons are combined; Joysticks are overwritten if they have values. All other fields of controller input are unchanged (gyro, touch, etc.).
-    fn bitor_assign(&mut self, rhs: GamepadState) {
+    fn bitor_assign(&mut self, rhs: State) {
         self.hold |= Button::into_vpad(rhs.hold);
         self.trigger |= Button::into_vpad(rhs.trigger);
         self.release |= Button::into_vpad(rhs.release);
@@ -766,11 +791,11 @@ impl core::ops::BitOrAssign<GamepadState> for c_wut::VPADStatus {
     }
 }
 
-impl core::ops::BitAndAssign<GamepadState> for c_wut::VPADStatus {
-    /// Combine [GamepadState] and [VPADStatus] destructively.
+impl core::ops::BitAndAssign<State> for c_wut::VPADStatus {
+    /// Combine [State] with [VPADStatus][c_wut::VPADStatus] destructively.
     ///
     /// Buttons are overwritten; Joysticks are overwritten or set to default values. All other fields of controller input are unchanged (gyro, touch, etc.).
-    fn bitand_assign(&mut self, rhs: GamepadState) {
+    fn bitand_assign(&mut self, rhs: State) {
         self.hold = Button::into_vpad(rhs.hold);
         self.trigger = Button::into_vpad(rhs.trigger);
         self.release = Button::into_vpad(rhs.release);
@@ -779,9 +804,92 @@ impl core::ops::BitAndAssign<GamepadState> for c_wut::VPADStatus {
     }
 }
 
-impl From<c_wut::VPADStatus> for GamepadState {
+impl core::ops::BitOrAssign<State> for c_wut::KPADStatus {
+    /// Combine [State] with [KPADStatus][c_wut::KPADStatus] constructively.
+    ///
+    /// Buttons are combined; Joysticks are overwritten if they have values. All other fields of controller input are unchanged (gyro, touch, etc.).
+    fn bitor_assign(&mut self, rhs: State) {
+        self.hold |= Button::into_kpad(rhs.hold);
+        self.trigger |= Button::into_kpad(rhs.trigger);
+        self.release |= Button::into_kpad(rhs.release);
+
+        use c_wut::WPADExtensionType as Ext;
+        match self.extensionType as Ext::Type {
+            Ext::WPAD_EXT_NUNCHUK => unsafe {
+                self.__bindgen_anon_1.nunchuk.hold |= Button::into_nunchuk(rhs.hold);
+                self.__bindgen_anon_1.nunchuk.trigger |= Button::into_nunchuk(rhs.trigger);
+                self.__bindgen_anon_1.nunchuk.release |= Button::into_nunchuk(rhs.release);
+                if let Some(stick) = rhs.left_stick {
+                    self.__bindgen_anon_1.nunchuk.stick = stick.into();
+                }
+            },
+            Ext::WPAD_EXT_CLASSIC => unsafe {
+                self.__bindgen_anon_1.classic.hold |= Button::into_classic(rhs.hold);
+                self.__bindgen_anon_1.classic.trigger |= Button::into_classic(rhs.trigger);
+                self.__bindgen_anon_1.classic.release |= Button::into_classic(rhs.release);
+                if let Some(stick) = rhs.left_stick {
+                    self.__bindgen_anon_1.classic.leftStick = stick.into();
+                }
+                if let Some(stick) = rhs.right_stick {
+                    self.__bindgen_anon_1.classic.rightStick = stick.into();
+                }
+            },
+            Ext::WPAD_EXT_PRO_CONTROLLER => unsafe {
+                self.__bindgen_anon_1.pro.hold |= Button::into_pro(rhs.hold);
+                self.__bindgen_anon_1.pro.trigger |= Button::into_pro(rhs.trigger);
+                self.__bindgen_anon_1.pro.release |= Button::into_pro(rhs.release);
+                if let Some(stick) = rhs.left_stick {
+                    self.__bindgen_anon_1.pro.leftStick = stick.into();
+                }
+                if let Some(stick) = rhs.right_stick {
+                    self.__bindgen_anon_1.pro.rightStick = stick.into();
+                }
+            },
+            _ => (),
+        }
+    }
+}
+
+impl core::ops::BitAndAssign<State> for c_wut::KPADStatus {
+    /// Combine [State] with [KPADStatus][c_wut::KPADStatus] destructively.
+    ///
+    /// Buttons are overwritten; Joysticks are overwritten or set to default values. All other fields of controller input are unchanged (gyro, touch, etc.).
+    fn bitand_assign(&mut self, rhs: State) {
+        self.hold = Button::into_kpad(rhs.hold);
+        self.trigger = Button::into_kpad(rhs.trigger);
+        self.release = Button::into_kpad(rhs.release);
+
+        use c_wut::WPADExtensionType as Ext;
+        match self.extensionType as Ext::Type {
+            Ext::WPAD_EXT_NUNCHUK => {
+                self.__bindgen_anon_1.nunchuk.hold = Button::into_nunchuk(rhs.hold);
+                self.__bindgen_anon_1.nunchuk.trigger = Button::into_nunchuk(rhs.trigger);
+                self.__bindgen_anon_1.nunchuk.release = Button::into_nunchuk(rhs.release);
+                self.__bindgen_anon_1.nunchuk.stick = rhs.left_stick.unwrap_or_default().into();
+            }
+            Ext::WPAD_EXT_CLASSIC => {
+                self.__bindgen_anon_1.classic.hold = Button::into_classic(rhs.hold);
+                self.__bindgen_anon_1.classic.trigger = Button::into_classic(rhs.trigger);
+                self.__bindgen_anon_1.classic.release = Button::into_classic(rhs.release);
+                self.__bindgen_anon_1.classic.leftStick = rhs.left_stick.unwrap_or_default().into();
+                self.__bindgen_anon_1.classic.rightStick =
+                    rhs.right_stick.unwrap_or_default().into();
+            }
+            Ext::WPAD_EXT_PRO_CONTROLLER => {
+                self.__bindgen_anon_1.pro.hold = Button::into_pro(rhs.hold);
+                self.__bindgen_anon_1.pro.trigger = Button::into_pro(rhs.trigger);
+                self.__bindgen_anon_1.pro.release = Button::into_pro(rhs.release);
+                self.__bindgen_anon_1.pro.leftStick = rhs.left_stick.unwrap_or_default().into();
+                self.__bindgen_anon_1.pro.rightStick = rhs.right_stick.unwrap_or_default().into();
+            }
+            _ => (),
+        }
+    }
+}
+
+impl From<c_wut::VPADStatus> for State {
     fn from(value: c_wut::VPADStatus) -> Self {
-        GamepadState {
+        State {
             hold: Button::from_vpad(value.hold),
             trigger: Button::from_vpad(value.trigger),
             release: Button::from_vpad(value.release),
@@ -791,11 +899,11 @@ impl From<c_wut::VPADStatus> for GamepadState {
     }
 }
 
-impl From<c_wut::KPADStatus> for GamepadState {
+impl From<c_wut::KPADStatus> for State {
     fn from(value: c_wut::KPADStatus) -> Self {
         use c_wut::WPADExtensionType as Ext;
 
-        let mut s = GamepadState {
+        let mut s = State {
             hold: Button::from_kpad(value.hold),
             trigger: Button::from_kpad(value.trigger),
             release: Button::from_kpad(value.release),
@@ -803,7 +911,7 @@ impl From<c_wut::KPADStatus> for GamepadState {
             right_stick: None,
         };
 
-        match value.extensionType as u32 {
+        match value.extensionType as Ext::Type {
             Ext::WPAD_EXT_NUNCHUK => unsafe {
                 s.hold |= Button::from_nunchuk(value.__bindgen_anon_1.nunchuk.hold);
                 s.trigger |= Button::from_nunchuk(value.__bindgen_anon_1.nunchuk.trigger);
@@ -842,21 +950,42 @@ pub enum GamepadError {
     Uninitialized,
 }
 
-impl From<i32> for GamepadError {
+// impl From<i32> for GamepadError {
+//     #[allow(unreachable_patterns)] // to make it really clear what is matched.
+//     fn from(value: i32) -> Self {
+//         use c_wut::KPADError as KPAD;
+//         use c_wut::VPADReadError as VPAD;
+//         match value {
+//             VPAD::VPAD_READ_NO_SAMPLES | KPAD::KPAD_ERROR_NO_SAMPLES => Self::NoSamples,
+//             VPAD::VPAD_READ_INVALID_CONTROLLER | KPAD::KPAD_ERROR_INVALID_CONTROLLER => {
+//                 Self::InvalidController
+//             }
+//             VPAD::VPAD_READ_BUSY | KPAD::KPAD_ERROR_BUSY => Self::Busy,
+//             VPAD::VPAD_READ_UNINITIALIZED
+//             | KPAD::KPAD_ERROR_WPAD_UNINIT
+//             | KPAD::KPAD_ERROR_UNINITIALIZED => Self::Uninitialized,
+//             _ => panic!("Unknown error code: {}", value),
+//         }
+//     }
+// }
+
+impl TryFrom<i32> for GamepadError {
+    type Error = Self;
     #[allow(unreachable_patterns)] // to make it really clear what is matched.
-    fn from(value: i32) -> Self {
+    fn try_from(value: i32) -> Result<Self, Self::Error> {
         use c_wut::KPADError as KPAD;
         use c_wut::VPADReadError as VPAD;
         match value {
-            VPAD::VPAD_READ_NO_SAMPLES | KPAD::KPAD_ERROR_NO_SAMPLES => Self::NoSamples,
+            VPAD::VPAD_READ_SUCCESS | KPAD::KPAD_ERROR_OK => Ok(Self::Busy),
+            VPAD::VPAD_READ_NO_SAMPLES | KPAD::KPAD_ERROR_NO_SAMPLES => Err(Self::NoSamples),
             VPAD::VPAD_READ_INVALID_CONTROLLER | KPAD::KPAD_ERROR_INVALID_CONTROLLER => {
-                Self::InvalidController
+                Err(Self::InvalidController)
             }
-            VPAD::VPAD_READ_BUSY | KPAD::KPAD_ERROR_BUSY => Self::Busy,
+            VPAD::VPAD_READ_BUSY | KPAD::KPAD_ERROR_BUSY => Err(Self::Busy),
             VPAD::VPAD_READ_UNINITIALIZED
             | KPAD::KPAD_ERROR_WPAD_UNINIT
-            | KPAD::KPAD_ERROR_UNINITIALIZED => Self::Uninitialized,
-            _ => panic!("Unknown error code: {}", value),
+            | KPAD::KPAD_ERROR_UNINITIALIZED => Err(Self::Uninitialized),
+            _ => Err(Self::Uninitialized),
         }
     }
 }
@@ -875,7 +1004,7 @@ impl Gamepad {
         }
     }
 
-    pub fn poll(&self) -> Result<GamepadState, GamepadError> {
+    pub fn poll(&self) -> Result<State, GamepadError> {
         match self.port {
             Port::DRC => {
                 use c_wut::VPADReadError as E;
@@ -886,9 +1015,9 @@ impl Gamepad {
                 if unsafe { c_wut::VPADRead(self.port.into(), &mut status, 1, &mut error) } == 0
                     && error != E::VPAD_READ_SUCCESS
                 {
-                    Err(GamepadError::from(error))
+                    Err(GamepadError::try_from(error)?)
                 } else {
-                    Ok(GamepadState::from(status))
+                    Ok(State::from(status))
                 }
             }
             _ => {
@@ -900,9 +1029,9 @@ impl Gamepad {
                 if unsafe { c_wut::KPADReadEx(self.port.into(), &mut status, 1, &mut error) } == 0
                     && error != E::KPAD_ERROR_OK
                 {
-                    Err(GamepadError::from(error))
+                    Err(GamepadError::try_from(error)?)
                 } else {
-                    Ok(GamepadState::from(status))
+                    Ok(State::from(status))
                 }
             }
         }
