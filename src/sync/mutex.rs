@@ -2,7 +2,7 @@
 //! Module level documentation
 //!
 
-use crate::{bindings as c_wut, sync::LazyLock};
+use crate::bindings as c_wut;
 use core::{
     cell::UnsafeCell,
     ops::{Deref, DerefMut},
