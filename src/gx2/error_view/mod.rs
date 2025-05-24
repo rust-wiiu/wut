@@ -1,6 +1,6 @@
 //! Error View
 //!
-//! Render a error message on the screen. Must be used with a Gx2 [RenderContext][crate::gx2::render_context::RenderContext].
+//! Render a error message on the screen. Must be used with a Gx2 [RenderContext][super::RenderContext].
 //!
 //! # Usage:
 //!

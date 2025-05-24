@@ -1,6 +1,6 @@
 //! On-screen Keyboard
 //!
-//! Render a digital keyboard on the screen. Must be used with a Gx2 [RenderContext][crate::gx2::render_context::RenderContext].
+//! Render a digital keyboard on the screen. Must be used with a Gx2 [RenderContext][super::RenderContext].
 //!
 //! # Usage:
 //!

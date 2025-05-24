@@ -50,7 +50,7 @@ pub fn current_dir() -> Result<PathBuf, fs::FilesystemError> {
 ///
 /// # Errors
 ///
-/// Returns an [`FilesystemError`] if the path is invalid.
+/// Returns an [`FilesystemError`][fs::FilesystemError] if the path is invalid.
 /// Possible cases:
 ///
 /// * Directory does not exist.

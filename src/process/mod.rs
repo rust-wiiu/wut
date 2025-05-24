@@ -59,7 +59,7 @@ pub fn exit() -> ! {
     }
 }
 
-/// Like [exit][crate::process::exit] but forces a reboot of the console after exit.
+/// Like [exit] but forces a reboot of the console after exit.
 pub fn reboot() -> ! {
     unsafe {
         c_wut::OSForceFullRelaunch();

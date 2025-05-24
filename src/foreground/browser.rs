@@ -28,7 +28,7 @@ pub fn browser(url: Option<&str>) {
 
 /// Opens a single tab in the Wii U Browser.
 ///
-/// Unlike opening a full [browser][browser], this displays web content without the browser's native controls, similar to an webview within an application.
+/// Unlike opening a full [browser], this displays web content without the browser's native controls, similar to an webview within an application.
 pub fn single_tab(url: &str) {
     let url = alloc::ffi::CString::new(url).unwrap();
 

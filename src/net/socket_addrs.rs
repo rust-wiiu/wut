@@ -1,7 +1,6 @@
-// socket_addrs
-
-//! Basically copied from https://doc.rust-lang.org/src/std/net/socket_addr.rs.html
-//! Conversion from common representations to address
+//! A trait for objects which can be converted or resolved to one or more [`SocketAddr`] values.
+//!
+//! Conversion from common representations to addresses.
 
 use alloc::{string::String, vec};
 use core::{iter, net::*, option, slice};

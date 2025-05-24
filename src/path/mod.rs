@@ -6,11 +6,11 @@
 //! directly on strings independently from the local platform's path syntax.
 //!
 //! Paths can be parsed into [`Component`]s by iterating over the structure
-//! returned by the [`components`] method on [`Path`]. [`Component`]s roughly
+//! returned by the [`components`][Path::components] method on [`Path`]. [`Component`]s roughly
 //! correspond to the substrings between path separators (`/`). You can
-//! reconstruct an equivalent path from components with the [`push`] method on
+//! reconstruct an equivalent path from components with the [`push`][PathBuf::push] method on
 //! [`PathBuf`]; note that the paths may differ syntactically by the
-//! normalization described in the documentation for the [`components`] method.
+//! normalization described in the documentation for the [`components`][Path::components] method.
 //!
 //! ## Simple usage
 //!
@@ -1042,7 +1042,7 @@ impl PathBuf {
 
     /// Makes the path absolute without accessing the filesystem.
     ///
-    /// More info: [absolute][crate::path::absolute]
+    /// More info: [absolute]
     pub fn absolute(&self) -> Result<PathBuf, fs::FilesystemError> {
         absolute(self)
     }
@@ -1835,7 +1835,7 @@ impl Path {
 
     /// Makes the path absolute without accessing the filesystem.
     ///
-    /// More info: [absolute][crate::path::absolute]
+    /// More info: [absolute]
     pub fn absolute(&self) -> Result<PathBuf, fs::FilesystemError> {
         absolute(self)
     }
@@ -1876,11 +1876,11 @@ impl Path {
 ///
 /// If the path is relative, the current directory is used as the base directory.
 /// All intermediate components will be resolved according to platform-specific
-/// rules, but unlike [`canonicalize`][crate::fs::canonicalize], this does not
+/// rules, but unlike `canonicalize`, this does not
 /// resolve symlinks and may succeed even if the path does not exist.
 ///
 /// If the `path` is empty or getting the
-/// [current directory][crate::env::current_dir] fails, then an error will be
+/// [current_dir][env::current_dir] fails, then an error will be
 /// returned.
 pub fn absolute<P: AsRef<Path>>(path: P) -> Result<PathBuf, fs::FilesystemError> {
     let path = path.as_ref().to_path_buf();

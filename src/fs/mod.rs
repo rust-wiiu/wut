@@ -374,7 +374,7 @@ impl From<c_wut::FSStat> for Metadata {
 ///
 /// This builder exposes the ability to configure how a [`File`] is opened and what operations are permitted on the open file. The [`File::open`] and [`File::create`] methods are aliases for commonly used options using this builder.
 ///
-/// Generally speaking, when using `OpenOptions`, you'll first call [`OpenOptions::new`], then chain calls to methods to set each option, then call [`OpenOptions::open`], passing the path of the file you're trying to open. This will give you a [`io::Result`] with a [`File`] inside that you can further operate on.
+/// Generally speaking, when using `OpenOptions`, you'll first call [`OpenOptions::new`], then chain calls to methods to set each option, then call [`OpenOptions::open`], passing the path of the file you're trying to open. This will give you a [`Result`] with a [`File`] inside that you can further operate on.
 ///
 /// ## Valid combination
 /// - read

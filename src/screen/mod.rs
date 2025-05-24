@@ -4,7 +4,7 @@
 //!
 //! #Note
 //!
-//! Each screen has only one framebuffer. This means any [Screen][Screen] instances will share and write to the same framebuffer for their respective display.
+//! Each screen has only one framebuffer. This means any [Screen] instances will share and write to the same framebuffer for their respective display.
 
 mod position;
 

@@ -9,7 +9,7 @@ use core::{
 
 /// A synchronization primitive which can nominally be written to only once.
 ///
-/// This type is a thread-safe [`OnceCell`], and can be used in statics.
+/// This type is a thread-safe [`OnceCell`][core::cell::OnceCell], and can be used in statics.
 pub struct OnceLock<T> {
     is_init: AtomicBool,
     value: UnsafeCell<MaybeUninit<T>>,
