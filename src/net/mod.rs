@@ -1,4 +1,6 @@
-// net
+//! Networking primitives for TCP/UDP communication.
+//!
+//! This module provides networking functionality for the Transmission Control and User Datagram Protocols, as well as types for IP and socket addresses.
 
 pub mod errno;
 pub mod socket;

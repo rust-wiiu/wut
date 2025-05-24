@@ -1,16 +1,6 @@
-//! Simple gamepad support
+//! Basic unified gamepad interface
 //!
-//! Purposefully kept simple and not supporting all features of the controllers.
-//! If finer controll and access to controller specific features is required, use the more complex "..." (which I maybe add later)
-//!
-//! # Terminology
-//! * VPAD: Input library for Wii U Gamepad / Display Remote Controller (DRC)
-//! * KPAD: High level API over WPAD
-//! * WPAD: Input library for Wiimote (with possible extensions)
-//!     * Nunchuk
-//!     * Classic Controller
-//!     * Wii U Pro Controller (internally handeled as if it were a Wiimote with extension)
-//!     * and more (but not yet implemented)
+//! This module simplifies gamepad input on the Wii U, offering a unified interface for various controller types. It focuses exclusively on **buttons and joysticks**, providing a common subset of input methods across different gamepads. This module does not offer full support for every controller's unique features.
 
 use crate::{
     bindings as c_wut,

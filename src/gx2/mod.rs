@@ -1,5 +1,5 @@
-//! GX2
-//! 
+//! Interface to graphics API
+//!
 //! GX2 is the graphics API of the Wii U similar to OpenGL.
 
 pub mod color;

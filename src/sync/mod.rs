@@ -1,3 +1,5 @@
+//! Useful synchronization primitives.
+
 mod event;
 mod lazy_lock;
 pub mod mpmc;

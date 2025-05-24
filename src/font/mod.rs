@@ -1,11 +1,21 @@
-//! Font
-//! 
-//! Special Icons available on the system font.
+//! Special Unicode symbols of the system font.
 //!
-//! Examples:
-//! * Buttons
-//! * Spinners
-//! * Logos
+//! This module provides a collection of constants representing special Unicode
+//! symbols available in the system font, such as controller buttons, spinners,
+//! navigation icons, and platform-specific symbols. These can be used to display consistent UI elements.
+//!
+//! # Categories
+//!
+//! - **Controller Buttons:** Standard and platform-specific button icons (A, B, X, Y, L, R, D-Pad, etc.)
+//! - **Spinners:** Animated spinner frames for loading indicators.
+//! - **Navigation & Actions:** Icons for navigation (back, home), close, help, and other UI actions.
+//! - **Hands:** Various hand gestures (point, fist, open) for pointer or gesture-based interfaces.
+//! - **Platform Logos & Features:** Wii, Wii U, 3DS, and related hardware icons (Gamepad, Wiimote, Circlepad, Playcoin, etc.)
+//! - **Arrows:** Directional arrows for navigation or indication.
+//!
+//! # Note
+//!
+//! The actual appearance of these symbols depends on the system font and may not render correctly on all platforms.
 
 pub mod icons {
     pub const BTN_A: char = '\u{E000}';

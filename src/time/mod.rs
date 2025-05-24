@@ -1,4 +1,4 @@
-// time
+//! Temporal quantification.
 
 pub use core::time::*;
 

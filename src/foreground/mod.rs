@@ -1,6 +1,18 @@
-//! Wii U Foreground Overlays
+//! Switch to system overlays.
 //!
-//! Overlays are application which can be opened while another main application is running. They pause the main application and return focus once closed.
+//! Provides functions to open various Wii U system overlays (foreground applications) such as the Home Menu, Browser, Controller Sync, eManual, etc.
+//!
+//! Overlays are applications that can be opened while another main application is running. They pause the main application and return focus once closed.
+//!
+//! # Examples
+//!
+//! ```rust
+//! // Open the Home Menu overlay
+//! wut::foreground::home_menu();
+//!
+//! // Open the Controller Sync overlay
+//! wut::foreground::controller_sync();
+//! ```
 
 use crate::bindings as c_wut;
 

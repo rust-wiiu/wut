@@ -1,21 +1,23 @@
-//! Dynamic module loading
+//! Runtime loading of dynamic libraries (RPLs)
 //!
-//! Dynamically load RPL files during runtime. This is the equivalent of DLL or SO files on Linux or Windows.
+//! This module provides functionality for **loading dynamic/shared libraries (RPL files)** at runtime. RPLs are the Wii U equivalent of `.dll` files on Windows or `.so` files on Linux. They're used to share code and static data between applications.
 //!
 //! Inspired by the [libloading](https://docs.rs/libloading/latest/libloading/) crate.
 //!
-//! A list of system RPLs can be found [here](https://wut.devkitpro.org/modules.html). Note that these need not to be loaded manually as they are available via WUT.
+//! # Note
 //!
-//! # Usage:
+//! System RPLs are listed [here](https://wut.devkitpro.org/modules.html). These are typically available via WUT and **don't need to be loaded manually**.
+//!
+//! # Example:
 //!
 //! ```
-//! use dynamic_loading::Module;
+//! use dynload::Module;
 //!
 //! let m = Module::new("coreinit.rpl").unwrap();
 //!
 //! let s = m.function::<unsafe fn() -> u64>("OSGetTitleID").unwrap();
 //!
-//! assert_eq!(unsafe { s() }, unsafe { wut::bindings::OSGetTitleID() })
+//! assert_eq!(unsafe { s() }, wut::title::current_title());
 //! ```
 
 use crate::bindings as c_wut;
@@ -110,7 +112,6 @@ impl Module {
         Ok(Self(raw))
     }
 
-
     /// Find a symbol name exported by a module.
     ///
     /// # Errors
@@ -189,9 +190,9 @@ impl<'lib, T> Symbol<'lib, T> {
     /// # Errors
     ///
     /// This function will return an error if pointer is null.
-    /// 
+    ///
     /// # Safety
-    /// 
+    ///
     /// Pointer is assumed to point to a valid function.
     fn new(pointer: *const ffi::c_void) -> Result<Self, DynamicLoadingError> {
         if pointer.is_null() {
@@ -218,7 +219,6 @@ impl<T> Deref for Symbol<'_, T> {
 }
 unsafe impl<'lib, T: Send> Send for Symbol<'lib, T> {}
 unsafe impl<'lib, T: Sync> Sync for Symbol<'lib, T> {}
-
 
 /// Gets the number of currently loaded RPLs.
 ///

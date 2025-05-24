@@ -2,6 +2,23 @@ use proc_macro::TokenStream;
 use quote::{quote, ToTokens};
 use syn::{parse_macro_input, punctuated::Punctuated, ItemFn, Meta, Token};
 
+/// Marks a function as the entry point for a WUPS application.
+/// 
+/// Optionally, a list of attribute values of available logger channels can be used to set up logging.
+/// 
+/// As the Wii U needs custom code to run before, in, and after main this macro hides this implementation from the user.
+/// 
+/// # Example
+/// 
+/// ```rust
+/// #![no_std]
+/// #![no_main]
+/// 
+/// use wut;
+/// 
+/// #[wut::main(Udp)]
+/// fn main() { }
+/// ```
 #[proc_macro_attribute]
 pub fn main(attr: TokenStream, input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as ItemFn);
@@ -17,7 +34,7 @@ pub fn main(attr: TokenStream, input: TokenStream) -> TokenStream {
     for arg in args {
         if let Meta::Path(path) = arg {
             if let Some(ident) = path.get_ident() {
-                custom_args.push(quote! { wut::logger::#ident });
+                custom_args.push(quote! { ::wut::logger::#ident });
             }
         }
     }
@@ -25,16 +42,16 @@ pub fn main(attr: TokenStream, input: TokenStream) -> TokenStream {
     let expanded = quote! {
         #[no_mangle]
         pub extern "C" fn #func_name() {
-            wut::process::init(#(#custom_args)|*);
+            ::wut::process::init(#(#custom_args)|*);
             #block
-            wut::process::deinit();
+            ::wut::process::deinit();
         }
     };
 
     TokenStream::from(expanded)
 }
 
-/// Automatically implements the `Attributes` trait for a struct.
+/// Automatically implements the gx2 `Attributes` trait for a struct.
 /// 
 /// The struct should only contain named fields of type `wut::gx2::shader::Attribute` and can optionally contain the following (Rust) attributes:
 /// * #\[name = `&str`\]: sets the name of the attribute in the shader. Defaults to field name.

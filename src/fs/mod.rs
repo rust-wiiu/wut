@@ -1,4 +1,4 @@
-//! Filesystem
+//! Filesystem manipulation operations.
 //!
 //! This module contains basic methods to manipulate the contents of the local filesystem.
 

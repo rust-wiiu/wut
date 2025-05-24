@@ -1,8 +1,10 @@
-//! Simple graphics library
+//! Simplified graphics library
 //!
-//! [...]  is much more straightforward than GX2, which makes it appealing for situations that do not require complex graphics. It can draw text and pixels (one at a time!) to both the Gamepad and TV.
+//! This module offers a more straightforward alternative to GX2, making it ideal for applications that don't require complex graphics. It can draw text and individual pixels sequentially to both the GamePad and TV.
 //!
-//! There is only one framebuffer per screen to write to so multiple instances of Screen<...> will write to the same framebuffer.
+//! #Note
+//!
+//! Each screen has only one framebuffer. This means any [Screen][Screen] instances will share and write to the same framebuffer for their respective display.
 
 mod position;
 

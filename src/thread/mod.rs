@@ -1,3 +1,7 @@
+//! OS native threads.
+//!
+//! This module provides access to CafeOS threads.
+
 pub mod builder;
 pub mod thread;
 pub mod ticks;

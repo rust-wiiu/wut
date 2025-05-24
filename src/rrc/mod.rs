@@ -1,8 +1,8 @@
 //! Resource Reference Counter (RRC)
 //!
-//! Resources are typically FFI functionalities, symbols or libraries which require manual (de)initialization.
+//! This module allows for simple managment of system resources, typically FFI symbols or libraries requiring manual initialization and deinitialization. It ensures automatic initialization and prevents premature deinitialization by tying resource lifetimes to a reference counter.
 //!
-//! # Examples
+//! # Example
 //!
 //! ```
 //! static LIBRARY: Rrc = Rrc::new(

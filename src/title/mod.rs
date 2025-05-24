@@ -1,3 +1,5 @@
+//! Information about foreground application.
+
 use crate::bindings as c_wut;
 
 /// Get the title ID of the current foreground application.

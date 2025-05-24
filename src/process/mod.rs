@@ -1,11 +1,13 @@
-// process.rs
+//! A module for working with processes.
+//!
+//! This module provides functions to initialize and deinitialize the application process, check if the process should continue running or exit, and reboot the system.
 
 use crate::{bindings as c_wut, logger}; // fs, screen
 use flagset::FlagSet;
 
-/// Initialize important stuff.
+/// Initialize application process.
 ///
-/// This function is required to be ran as soon as possible in `main`. If using the `#[wut_main]` macro, you mustn't call it manually.
+/// This function is required to be ran as soon as possible in `main`. If using the `#[wut::main]` macro, you mustn't call it manually.
 pub fn init(stdout: impl Into<FlagSet<logger::Channel>>) {
     unsafe {
         c_wut::WHBProcInit();
@@ -14,7 +16,7 @@ pub fn init(stdout: impl Into<FlagSet<logger::Channel>>) {
     }
 }
 
-/// Initialize important stuff.
+/// Deinitialize application process.
 ///
 /// This function is required to be ran as late as possible in `main`. If using the `#[wut_main]` macro, you mustn't call it manually.
 pub fn deinit() {
@@ -36,9 +38,7 @@ pub fn deinit() {
 /// Should be ran in reasonable intervals or OS may be unresponseable.
 /// Typically ran with `while process:running() {...}`.
 pub fn running() -> bool {
-    unsafe {
-        c_wut::ProcUIIsRunning() != 0 && c_wut::WHBProcIsRunning() != 0
-    }
+    unsafe { c_wut::ProcUIIsRunning() != 0 && c_wut::WHBProcIsRunning() != 0 }
 }
 
 /// Terminates the process in an abnormal fashion.

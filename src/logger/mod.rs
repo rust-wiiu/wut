@@ -1,6 +1,11 @@
-// logger
+//! Logging interface over various channels.
+//!
+//! This module provides a unified logging interface for the Wii U, allowing for logging to multiple channels such as the Cafe logging system, console output, WUMS logging module, and UDP broadcasting.
 
-use crate::{bindings as c_wut, sync::{ConstMutex, LazyLock, Mutex, MutexError}};
+use crate::{
+    bindings as c_wut,
+    sync::{ConstMutex, LazyLock, Mutex, MutexError},
+};
 use alloc::ffi::{CString, NulError};
 use flagset::{flags, FlagSet};
 use thiserror::Error;
@@ -12,9 +17,15 @@ struct Logger {
     counter: u32,
 }
 
-static LOGGER: ConstMutex<Logger> = LazyLock::new(|| Mutex::new(Logger { channels: FlagSet::new_truncated(0), counter: 0 }));
+static LOGGER: ConstMutex<Logger> = LazyLock::new(|| {
+    Mutex::new(Logger {
+        channels: FlagSet::new_truncated(0),
+        counter: 0,
+    })
+});
 
 flags! {
+    /// Logging channels for the Wii U.
     pub enum Channel: u8 {
         /// Default Wii U logging system
         Cafe,
@@ -27,6 +38,7 @@ flags! {
     }
 }
 
+/// Errors that can occur during logging operations.
 #[derive(Debug, Error)]
 pub enum LoggerError {
     #[error("No logging channel is initialized")]
@@ -45,6 +57,15 @@ pub enum LoggerError {
     MutexError(#[from] MutexError),
 }
 
+/// Initialize the logger with specified channels.
+///
+/// # Arguments
+///
+/// `channels` - A set of [channels][Channel] to initialize the logger for.
+///
+/// # Errors
+///
+/// Returns an error if the logger is already initialized for a channel, or if any of the initialization functions fail.
 pub fn init(channels: impl Into<FlagSet<Channel>>) -> Result<(), LoggerError> {
     let channels: FlagSet<Channel> = channels.into();
 
@@ -77,26 +98,31 @@ pub fn init(channels: impl Into<FlagSet<Channel>>) -> Result<(), LoggerError> {
     Ok(())
 }
 
+/// Initialize the logger for Cafe logging system.
 #[inline]
 pub fn cafe() -> Result<(), LoggerError> {
     init(Cafe)
 }
 
+/// Initialize the logger for console (on screen) output.
 #[inline]
 pub fn console() -> Result<(), LoggerError> {
     init(Console)
 }
 
+/// Initialize the logger for WUMS logging module.
 #[inline]
 pub fn module() -> Result<(), LoggerError> {
     init(Module)
 }
 
+/// Initialize the logger for UDP broadcasting on port 4405.
 #[inline]
 pub fn udp() -> Result<(), LoggerError> {
     init(Udp)
 }
 
+/// Deinitialize the logger.
 pub fn deinit() {
     let mut logger = LOGGER.lock().unwrap();
 
@@ -127,22 +153,18 @@ pub fn deinit() {
     logger.counter = 0;
 }
 
+/// Print content to the logger.
+///
+/// # Errors
+///
+/// Returns an error if the logger is not initialized or if the provided string contains internal null bytes.
 pub fn print(text: &str) -> Result<(), LoggerError> {
     let logger = LOGGER.lock()?;
 
     if logger.channels.is_empty() {
-        unsafe {
-            c_wut::OSReport(c"print unint\n".as_ptr())
-        };
-
         Err(LoggerError::Uninitialized)
     } else {
         let text = CString::new(text)?;
-
-        unsafe {
-            c_wut::OSReport(c"print ok\n".as_ptr())
-        };
-
         unsafe {
             c_wut::WHBLogPrint(text.as_ptr());
 
@@ -157,6 +179,13 @@ pub fn print(text: &str) -> Result<(), LoggerError> {
     }
 }
 
+/// Prints to the logger output
+///
+/// # Panics
+///
+/// Panics if no logger is current initialized or if logger is currently locked elsewhere.
+///
+/// Writing to the logger can cause an error, which will lead this macro to panic.
 #[macro_export]
 macro_rules! println {
     ($($arg:tt)*) => {{
