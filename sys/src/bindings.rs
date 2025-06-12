@@ -169,11 +169,11 @@ impl<T> __IncompleteArrayField<T> {
     }
     #[inline]
     pub unsafe fn as_slice(&self, len: usize) -> &[T] {
-        ::core::slice::from_raw_parts(self.as_ptr(), len)
+        unsafe { ::core::slice::from_raw_parts(self.as_ptr(), len) }
     }
     #[inline]
     pub unsafe fn as_mut_slice(&mut self, len: usize) -> &mut [T] {
-        ::core::slice::from_raw_parts_mut(self.as_mut_ptr(), len)
+        unsafe { ::core::slice::from_raw_parts_mut(self.as_mut_ptr(), len) }
     }
 }
 impl<T> ::core::fmt::Debug for __IncompleteArrayField<T> {
@@ -190,11 +190,11 @@ impl<T> __BindgenUnionField<T> {
     }
     #[inline]
     pub unsafe fn as_ref(&self) -> &T {
-        ::core::mem::transmute(self)
+        unsafe { ::core::mem::transmute(self) }
     }
     #[inline]
     pub unsafe fn as_mut(&mut self) -> &mut T {
-        ::core::mem::transmute(self)
+        unsafe { ::core::mem::transmute(self) }
     }
 }
 impl<T> ::core::default::Default for __BindgenUnionField<T> {
@@ -5783,7 +5783,7 @@ pub struct nn_spm_VolumeId {
 impl nn_spm_VolumeId {
     #[inline]
     pub unsafe fn Compare(&self, other: *const nn_spm_VolumeId) -> i32 {
-        nn_spm_VolumeId_Compare(self, other)
+        unsafe { nn_spm_VolumeId_Compare(self, other) }
     }
 }
 #[repr(C)]
@@ -5894,33 +5894,33 @@ pub struct nn_dlp_Cafe_Server {
 impl nn_dlp_Cafe_Server {
     #[inline]
     pub unsafe fn AcceptClient(nodeId: u16) -> nn_Result {
-        nn_dlp_Cafe_Server_AcceptClient(nodeId)
+        unsafe { nn_dlp_Cafe_Server_AcceptClient(nodeId) }
     }
     #[inline]
     pub unsafe fn CloseSessions() -> nn_Result {
-        nn_dlp_Cafe_Server_CloseSessions()
+        unsafe { nn_dlp_Cafe_Server_CloseSessions() }
     }
     #[inline]
     pub unsafe fn DisconnectClient(nodeId: u16) -> nn_Result {
-        nn_dlp_Cafe_Server_DisconnectClient(nodeId)
+        unsafe { nn_dlp_Cafe_Server_DisconnectClient(nodeId) }
     }
     #[inline]
     pub unsafe fn Finalize() -> nn_Result {
-        nn_dlp_Cafe_Server_Finalize()
+        unsafe { nn_dlp_Cafe_Server_Finalize() }
     }
     #[inline]
     pub unsafe fn GetClientInfo(
         clientInfo: *mut nn_uds_Cafe_NodeInformation,
         nodeId: u16,
     ) -> nn_Result {
-        nn_dlp_Cafe_Server_GetClientInfo(clientInfo, nodeId)
+        unsafe { nn_dlp_Cafe_Server_GetClientInfo(clientInfo, nodeId) }
     }
     #[inline]
     pub unsafe fn GetClientState(
         state: *mut nn_dlp_Cafe_ClientState::Type,
         nodeId: u16,
     ) -> nn_Result {
-        nn_dlp_Cafe_Server_GetClientState(state, nodeId)
+        unsafe { nn_dlp_Cafe_Server_GetClientState(state, nodeId) }
     }
     #[inline]
     pub unsafe fn GetClientState1(
@@ -5929,7 +5929,7 @@ impl nn_dlp_Cafe_Server {
         unitsReceived: *mut u32,
         nodeId: u16,
     ) -> nn_Result {
-        nn_dlp_Cafe_Server_GetClientState1(state, unitsTotal, unitsReceived, nodeId)
+        unsafe { nn_dlp_Cafe_Server_GetClientState1(state, unitsTotal, unitsReceived, nodeId) }
     }
     #[inline]
     pub unsafe fn GetConnectingClients(
@@ -5937,11 +5937,13 @@ impl nn_dlp_Cafe_Server {
         connectingClients: *mut u16,
         length: u16,
     ) -> nn_Result {
-        nn_dlp_Cafe_Server_GetConnectingClients(receivedLength, connectingClients, length)
+        unsafe {
+            nn_dlp_Cafe_Server_GetConnectingClients(receivedLength, connectingClients, length)
+        }
     }
     #[inline]
     pub unsafe fn GetState(state: *mut nn_dlp_Cafe_ServerState::Type) -> nn_Result {
-        nn_dlp_Cafe_Server_GetState(state)
+        unsafe { nn_dlp_Cafe_Server_GetState(state) }
     }
     #[inline]
     pub unsafe fn Initialize(
@@ -5950,7 +5952,7 @@ impl nn_dlp_Cafe_Server {
         childIndex: u8,
         userName: *mut nn_cfg_CTR_UserName,
     ) -> nn_Result {
-        nn_dlp_Cafe_Server_Initialize(maxClientNum, uniqueId, childIndex, userName)
+        unsafe { nn_dlp_Cafe_Server_Initialize(maxClientNum, uniqueId, childIndex, userName) }
     }
     #[inline]
     pub unsafe fn Initialize1(
@@ -5960,23 +5962,31 @@ impl nn_dlp_Cafe_Server {
         childIndex: u8,
         userName: *mut nn_cfg_CTR_UserName,
     ) -> nn_Result {
-        nn_dlp_Cafe_Server_Initialize1(dupNoticeNeed, maxClientNum, uniqueId, childIndex, userName)
+        unsafe {
+            nn_dlp_Cafe_Server_Initialize1(
+                dupNoticeNeed,
+                maxClientNum,
+                uniqueId,
+                childIndex,
+                userName,
+            )
+        }
     }
     #[inline]
     pub unsafe fn OpenSessions(isManualAccept: bool, channel: u8) -> nn_Result {
-        nn_dlp_Cafe_Server_OpenSessions(isManualAccept, channel)
+        unsafe { nn_dlp_Cafe_Server_OpenSessions(isManualAccept, channel) }
     }
     #[inline]
     pub unsafe fn PollStateChange(flags: u8) -> nn_Result {
-        nn_dlp_Cafe_Server_PollStateChange(flags)
+        unsafe { nn_dlp_Cafe_Server_PollStateChange(flags) }
     }
     #[inline]
     pub unsafe fn RebootAllClients(passPhrase: *const ::core::ffi::c_char) -> nn_Result {
-        nn_dlp_Cafe_Server_RebootAllClients(passPhrase)
+        unsafe { nn_dlp_Cafe_Server_RebootAllClients(passPhrase) }
     }
     #[inline]
     pub unsafe fn StartDistribution() -> nn_Result {
-        nn_dlp_Cafe_Server_StartDistribution()
+        unsafe { nn_dlp_Cafe_Server_StartDistribution() }
     }
 }
 #[repr(C)]
@@ -5987,7 +5997,7 @@ pub struct nn_dlp_Cafe_ServerPrivate {
 impl nn_dlp_Cafe_ServerPrivate {
     #[inline]
     pub unsafe fn GetInternalState(state: *mut nn_dlp_Cafe_ServerState::Type) -> nn_Result {
-        nn_dlp_Cafe_ServerPrivate_GetInternalState(state)
+        unsafe { nn_dlp_Cafe_ServerPrivate_GetInternalState(state) }
     }
     #[inline]
     pub unsafe fn Initialize(
@@ -5998,14 +6008,16 @@ impl nn_dlp_Cafe_ServerPrivate {
         blockBufferNum: u32,
         userName: *mut nn_cfg_CTR_UserName,
     ) -> nn_Result {
-        nn_dlp_Cafe_ServerPrivate_Initialize(
-            maxClientNum,
-            uniqueId,
-            childIndex,
-            blockBufferSize,
-            blockBufferNum,
-            userName,
-        )
+        unsafe {
+            nn_dlp_Cafe_ServerPrivate_Initialize(
+                maxClientNum,
+                uniqueId,
+                childIndex,
+                blockBufferSize,
+                blockBufferNum,
+                userName,
+            )
+        }
     }
     #[inline]
     pub unsafe fn Initialize1(
@@ -6017,15 +6029,17 @@ impl nn_dlp_Cafe_ServerPrivate {
         blockBufferNum: u32,
         userName: *mut nn_cfg_CTR_UserName,
     ) -> nn_Result {
-        nn_dlp_Cafe_ServerPrivate_Initialize1(
-            dupNoticeNeed,
-            maxClientNum,
-            uniqueId,
-            childIndex,
-            blockBufferSize,
-            blockBufferNum,
-            userName,
-        )
+        unsafe {
+            nn_dlp_Cafe_ServerPrivate_Initialize1(
+                dupNoticeNeed,
+                maxClientNum,
+                uniqueId,
+                childIndex,
+                blockBufferSize,
+                blockBufferNum,
+                userName,
+            )
+        }
     }
 }
 pub mod nn_pdm_PlayDiaryFlags {
@@ -6356,7 +6370,7 @@ impl nn_idb_IDBReader {
         titleId: u64,
         iconData: *mut nn_idb_IconDataRaw,
     ) -> nn_Result {
-        nn_idb_IDBReader_LoadIconDataFromIdb(self, titleId, iconData)
+        unsafe { nn_idb_IDBReader_LoadIconDataFromIdb(self, titleId, iconData) }
     }
     #[inline]
     pub unsafe fn SearchFromDataBase(
@@ -6364,7 +6378,7 @@ impl nn_idb_IDBReader {
         key: *mut nn_idb_IconDataKey,
         outIndex: *mut u32,
     ) -> bool {
-        nn_idb_IDBReader_SearchFromDataBase(self, key, outIndex)
+        unsafe { nn_idb_IDBReader_SearchFromDataBase(self, key, outIndex) }
     }
     #[inline]
     pub unsafe fn LoadIconDataFromDatabase(
@@ -6372,7 +6386,7 @@ impl nn_idb_IDBReader {
         index: u32,
         iconData: *mut nn_idb_IconDataRaw,
     ) -> bool {
-        nn_idb_IDBReader_LoadIconDataFromDatabase(self, index, iconData)
+        unsafe { nn_idb_IDBReader_LoadIconDataFromDatabase(self, index, iconData) }
     }
     #[inline]
     pub unsafe fn LoadIconData(
@@ -6381,23 +6395,23 @@ impl nn_idb_IDBReader {
         u1: u32,
         iconData: *mut nn_idb_IconDataRaw,
     ) -> bool {
-        nn_idb_IDBReader_LoadIconData(self, titleId, u1, iconData)
+        unsafe { nn_idb_IDBReader_LoadIconData(self, titleId, u1, iconData) }
     }
     #[inline]
     pub unsafe fn Initialize(&mut self, path: *const std_string) -> bool {
-        nn_idb_IDBReader_Initialize(self, path)
+        unsafe { nn_idb_IDBReader_Initialize(self, path) }
     }
     #[inline]
     pub unsafe fn Initialize1(&mut self) -> bool {
-        nn_idb_IDBReader_Initialize1(self)
+        unsafe { nn_idb_IDBReader_Initialize1(self) }
     }
     #[inline]
     pub unsafe fn Finalize(&mut self) {
-        nn_idb_IDBReader_Finalize(self)
+        unsafe { nn_idb_IDBReader_Finalize(self) }
     }
     #[inline]
     pub unsafe fn destruct(&mut self) {
-        nn_idb_IDBReader_IDBReader_destructor(self)
+        unsafe { nn_idb_IDBReader_IDBReader_destructor(self) }
     }
 }
 pub mod WPADChan {

@@ -40,7 +40,7 @@ pub fn main(attr: TokenStream, input: TokenStream) -> TokenStream {
     }
 
     let expanded = quote! {
-        #[no_mangle]
+        #[unsafe(no_mangle)]
         pub extern "C" fn #func_name() {
             ::wut::process::init(#(#custom_args)|*);
             #block

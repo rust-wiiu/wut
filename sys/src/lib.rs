@@ -21,8 +21,9 @@ fn panic_handler(info: &core::panic::PanicInfo) -> ! {
         ("<unknown>", 0, 0, info.message())
     };
 
-    let file = alloc::ffi::CString::new(format!("File: {file} - {line}:{column}")).unwrap();
-    let msg = alloc::ffi::CString::new(format!("Reason: {}", msg.as_str().unwrap_or(""))).unwrap();
+    let file = ::alloc::ffi::CString::new(format!("File: {file} - {line}:{column}")).unwrap();
+    let msg =
+        ::alloc::ffi::CString::new(format!("Reason: {}", msg.as_str().unwrap_or(""))).unwrap();
 
     unsafe {
         OSScreenInit();
@@ -70,10 +71,6 @@ fn panic_handler(info: &core::panic::PanicInfo) -> ! {
 
     // reboot
     unsafe {
-        use bindings::{
-            OSForceFullRelaunch, ProcUIIsRunning, SYSLaunchMenu, WHBProcIsRunning, _Exit,
-        };
-
         OSForceFullRelaunch();
         SYSLaunchMenu();
         while ProcUIIsRunning() != 0 && WHBProcIsRunning() != 0 {}
@@ -93,15 +90,19 @@ unsafe impl alloc::alloc::GlobalAlloc for WiiUAllocator {
         debug_assert!(align > 0);
 
         // align < 4 (under at least some circumstances) crashes the system
-        (if align < 4 {
-            bindings::MEMAllocFromDefaultHeap.unwrap()(size)
-        } else {
-            bindings::MEMAllocFromDefaultHeapEx.unwrap()(size, align)
-        }) as *mut u8
+        unsafe {
+            (if align < 4 {
+                MEMAllocFromDefaultHeap.unwrap()(size)
+            } else {
+                MEMAllocFromDefaultHeapEx.unwrap()(size, align)
+            }) as *mut u8
+        }
     }
 
     unsafe fn dealloc(&self, ptr: *mut u8, _layout: alloc::alloc::Layout) {
-        bindings::MEMFreeToDefaultHeap.unwrap()(ptr as *mut core::ffi::c_void);
+        unsafe {
+            MEMFreeToDefaultHeap.unwrap()(ptr as *mut ::core::ffi::c_void);
+        }
     }
 }
 

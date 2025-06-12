@@ -60,6 +60,7 @@ fn main() {
         .layout_tests(false)
         .derive_default(true)
         .merge_extern_blocks(true)
+        .wrap_unsafe_ops(true)
         .clang_args(vec![
             "--target=powerpc-none-eabi",
             &format!("--sysroot={ppc}/powerpc-eabi"),
