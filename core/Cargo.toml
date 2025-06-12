@@ -1,0 +1,14 @@
+[package]
+name = "wut-core"
+version = "0.1.0"
+edition = "2024"
+
+[features]
+collections = ["dep:hashbrown"]
+
+[dependencies]
+flagset = { version = "0.4.6", default-features = false }
+thiserror = { version = "2.0.3", default-features = false }
+hashbrown = { version = "0.15.2", optional = true }
+wut-sys = { path = "../sys", version = "0.1.0" }
+wut-math = { path = "../math", version = "0.1.0" }

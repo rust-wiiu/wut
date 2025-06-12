@@ -1,16 +1,12 @@
 [package]
-name = "sys"
+name = "wut-sys"
 version = "0.1.0"
 edition = "2021"
 build = "build.rs"
 links = "wut"
 
-[profile]
-dev.panic = "abort"
-release.panic = "abort"
-
 [build-dependencies]
-bindgen = "0.71.1"
+bindgen = "0.72.0"
 semver = "1.0.26"
 
 [features]

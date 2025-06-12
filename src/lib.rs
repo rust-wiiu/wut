@@ -12,49 +12,22 @@
 
 #![no_std]
 
-pub extern crate alloc;
-pub extern crate flagset;
-pub extern crate math;
-extern crate thiserror;
+extern crate alloc;
 
-pub extern crate wut_macros;
-pub use wut_macros::{main, ShaderAttributes};
-
-pub extern crate sys;
-
-pub use sys::bindings;
-
-#[cfg(feature = "collections")]
-pub mod collections;
-pub mod dynload;
-pub mod env;
-pub mod font;
-pub mod foreground;
-pub mod fs;
-pub mod gamepad;
-pub mod gx2;
-pub mod logger;
-pub mod net;
-pub mod path;
-pub mod process;
-pub mod ptr;
-pub mod rrc;
-pub mod screen;
-pub mod sync;
-pub mod thread;
-pub mod time;
-pub mod title;
-
-mod utils;
+pub use wut_core::*;
+pub use wut_macros as macros;
+pub use wut_math::*;
+pub use wut_sys as sys;
 
 /// The `wut` prelude
 pub mod prelude {
-    pub use crate::println;
     pub use alloc::format;
     pub use alloc::string::{String, ToString};
     pub use alloc::vec;
     pub use alloc::vec::*;
     pub use core::alloc::{GlobalAlloc, Layout};
-    pub use core::prelude::rust_2021::*;
-    pub use math::FloatingMathExt;
+    pub use core::prelude::rust_2024::*;
+    pub use wut_core::println;
+    pub use wut_macros::main;
+    pub use wut_math::FloatingMathExt;
 }

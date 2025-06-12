@@ -19,9 +19,9 @@ checksum = "683d7910e743518b0e34f1186f92494becacb047c7b6bf616c96772180fef923"
 
 [[package]]
 name = "bindgen"
-version = "0.71.1"
+version = "0.72.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5f58bf3d7db68cfbac37cfc485a8d711e87e064c3d0fe0435b92f7a407f9d6b3"
+checksum = "4f72209734318d0b619a5e0f5129918b848c416e122a3c4ce054e03cb87b726f"
 dependencies = [
  "bitflags",
  "cexpr",
@@ -142,14 +142,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "13dc2df351e3202783a1fe0d44375f7295ffb4049267b0f3018346dc122a1d94"
 
 [[package]]
-name = "math"
-version = "0.1.0"
-dependencies = [
- "bindgen",
- "semver",
-]
-
-[[package]]
 name = "memchr"
 version = "2.7.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -258,14 +250,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sys"
-version = "0.1.0"
-dependencies = [
- "bindgen",
- "semver",
-]
-
-[[package]]
 name = "thiserror"
 version = "2.0.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -359,12 +343,21 @@ checksum = "271414315aff87387382ec3d271b52d7ae78726f5d44ac98b4f4030c91880486"
 name = "wut"
 version = "0.3.1"
 dependencies = [
+ "wut-core",
+ "wut-macros",
+ "wut-math",
+ "wut-sys",
+]
+
+[[package]]
+name = "wut-core"
+version = "0.1.0"
+dependencies = [
  "flagset",
  "hashbrown",
- "math",
- "sys",
  "thiserror",
- "wut-macros",
+ "wut-math",
+ "wut-sys",
 ]
 
 [[package]]
@@ -374,4 +367,20 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "wut-math"
+version = "0.1.0"
+dependencies = [
+ "bindgen",
+ "semver",
+]
+
+[[package]]
+name = "wut-sys"
+version = "0.1.0"
+dependencies = [
+ "bindgen",
+ "semver",
 ]

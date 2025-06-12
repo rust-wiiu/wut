@@ -2,7 +2,7 @@
 name = "wut"
 description = "Wii U Toolchain for Rust"
 version = "0.3.1"
-edition = "2021"
+edition = "2024"
 license-file = "LICENSE"
 repository = "https://github.com/rust-wiiu/wut"
 publish = false
@@ -10,18 +10,19 @@ publish = false
 
 [features]
 default = ["panic_handler"]
-panic_handler = ["sys/panic_handler"]
-collections = ["dep:hashbrown"]
+panic_handler = ["wut-sys/panic_handler"]
+collections = ["wut-core/collections"]
 
 [lib]
 name = "wut"
 crate-type = ["lib"]
 
+[profile]
+dev.panic = "abort"
+release.panic = "abort"
 
 [dependencies]
-sys = { path = "./sys", version = "0.1.0" }
+wut-sys = { path = "./sys", version = "0.1.0" }
 wut-macros = { path = "./macros", version = "0.1.0" }
-math = { path = "./math", version = "0.1.0" }
-flagset = { version = "0.4.6", default-features = false }
-thiserror = { version = "2.0.3", default-features = false }
-hashbrown = { version = "0.15.2", optional = true }
+wut-math = { path = "./math", version = "0.1.0" }
+wut-core = { path = "./core", version = "0.1.0" }

@@ -144,7 +144,7 @@ pub fn gx2_attributes(input: TokenStream) -> TokenStream {
 
     let output = quote! {
         impl ::wut::gx2::shader::attribute::Attributes for #struct_name {
-            fn new(group: &mut ::wut::bindings::WHBGfxShaderGroup) -> Result<Self, ()> {
+            fn new(group: &mut ::wut::sys::WHBGfxShaderGroup) -> Result<Self, ()> {
                 Ok(Self {
                     #(#attribute_impl)*
                 })

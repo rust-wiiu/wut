@@ -2,9 +2,8 @@
 
 mod bindings;
 
+use bindings as sys;
 use core::{f32, f64};
-
-use bindings as C;
 
 pub trait FloatingMathExt {
     /// Computes the arccosine of a number. Return value is in radians in the range [0, pi] or NaN if the number is outside the range [-1, 1].
@@ -131,119 +130,119 @@ pub trait FloatingMathExt {
 
 impl FloatingMathExt for f32 {
     fn acos(self) -> Self {
-        unsafe { C::acosf(self) }
+        unsafe { sys::acosf(self) }
     }
 
     fn acosh(self) -> Self {
-        unsafe { C::acoshf(self) }
+        unsafe { sys::acoshf(self) }
     }
 
     fn asin(self) -> Self {
-        unsafe { C::asinf(self) }
+        unsafe { sys::asinf(self) }
     }
 
     fn asinh(self) -> Self {
-        unsafe { C::asinhf(self) }
+        unsafe { sys::asinhf(self) }
     }
 
     fn atan(self) -> Self {
-        unsafe { C::atanf(self) }
+        unsafe { sys::atanf(self) }
     }
 
     fn atan2(self, other: Self) -> Self {
-        unsafe { C::atan2f(self, other) }
+        unsafe { sys::atan2f(self, other) }
     }
 
     fn atanh(self) -> Self {
-        unsafe { C::atanhf(self) }
+        unsafe { sys::atanhf(self) }
     }
 
     fn cbrt(self) -> Self {
-        unsafe { C::cbrtf(self) }
+        unsafe { sys::cbrtf(self) }
     }
 
     fn ceil(self) -> Self {
-        unsafe { C::ceilf(self) }
+        unsafe { sys::ceilf(self) }
     }
 
     fn cos(self) -> Self {
-        unsafe { C::cosf(self) }
+        unsafe { sys::cosf(self) }
     }
 
     fn cosh(self) -> Self {
-        unsafe { C::coshf(self) }
+        unsafe { sys::coshf(self) }
     }
 
     fn exp(self) -> Self {
-        unsafe { C::expf(self) }
+        unsafe { sys::expf(self) }
     }
 
     fn exp2(self) -> Self {
-        unsafe { C::exp2f(self) }
+        unsafe { sys::exp2f(self) }
     }
 
     fn exp_m1(self) -> Self {
-        unsafe { C::expm1f(self) }
+        unsafe { sys::expm1f(self) }
     }
 
     fn abs_sub(self, other: Self) -> Self {
-        unsafe { C::fdimf(self, other) }
+        unsafe { sys::fdimf(self, other) }
     }
 
     fn floor(self) -> Self {
-        unsafe { C::floorf(self) }
+        unsafe { sys::floorf(self) }
     }
 
     fn mul_add(self, a: Self, b: Self) -> Self {
-        unsafe { C::fmaf(self, a, b) }
+        unsafe { sys::fmaf(self, a, b) }
     }
 
     fn fmod(self, other: Self) -> Self {
-        unsafe { C::fmodf(self, other) }
+        unsafe { sys::fmodf(self, other) }
     }
 
     fn hypot(self, other: Self) -> Self {
-        unsafe { C::hypotf(self, other) }
+        unsafe { sys::hypotf(self, other) }
     }
 
     fn log(self) -> Self {
-        unsafe { C::logf(self) }
+        unsafe { sys::logf(self) }
     }
 
     fn log10(self) -> Self {
-        unsafe { C::log10f(self) }
+        unsafe { sys::log10f(self) }
     }
 
     fn log2(self) -> Self {
-        unsafe { C::log2f(self) }
+        unsafe { sys::log2f(self) }
     }
 
     fn powf(self, n: Self) -> Self {
-        unsafe { C::powf(self, n) }
+        unsafe { sys::powf(self, n) }
     }
 
     fn sin(self) -> Self {
-        unsafe { C::sinf(self) }
+        unsafe { sys::sinf(self) }
     }
 
     fn sinh(self) -> Self {
-        unsafe { C::sinhf(self) }
+        unsafe { sys::sinhf(self) }
     }
 
     fn sqrt(self) -> Self {
-        unsafe { C::sqrtf(self) }
+        unsafe { sys::sqrtf(self) }
     }
 
     fn tan(self) -> Self {
-        unsafe { C::tanf(self) }
+        unsafe { sys::tanf(self) }
     }
 
     fn tanh(self) -> Self {
-        unsafe { C::tanhf(self) }
+        unsafe { sys::tanhf(self) }
     }
 
     fn gamma(self) -> Self {
-        unsafe { C::tgammaf(self) }
+        unsafe { sys::tgammaf(self) }
     }
 
     fn to_degrees(self) -> Self {
@@ -261,119 +260,119 @@ impl FloatingMathExt for f32 {
 
 impl FloatingMathExt for f64 {
     fn acos(self) -> Self {
-        unsafe { C::acos(self) }
+        unsafe { sys::acos(self) }
     }
 
     fn acosh(self) -> Self {
-        unsafe { C::acosh(self) }
+        unsafe { sys::acosh(self) }
     }
 
     fn asin(self) -> Self {
-        unsafe { C::asin(self) }
+        unsafe { sys::asin(self) }
     }
 
     fn asinh(self) -> Self {
-        unsafe { C::asinh(self) }
+        unsafe { sys::asinh(self) }
     }
 
     fn atan(self) -> Self {
-        unsafe { C::atan(self) }
+        unsafe { sys::atan(self) }
     }
 
     fn atan2(self, other: Self) -> Self {
-        unsafe { C::atan2(self, other) }
+        unsafe { sys::atan2(self, other) }
     }
 
     fn atanh(self) -> Self {
-        unsafe { C::atanh(self) }
+        unsafe { sys::atanh(self) }
     }
 
     fn cbrt(self) -> Self {
-        unsafe { C::cbrt(self) }
+        unsafe { sys::cbrt(self) }
     }
 
     fn ceil(self) -> Self {
-        unsafe { C::ceil(self) }
+        unsafe { sys::ceil(self) }
     }
 
     fn cos(self) -> Self {
-        unsafe { C::cos(self) }
+        unsafe { sys::cos(self) }
     }
 
     fn cosh(self) -> Self {
-        unsafe { C::cosh(self) }
+        unsafe { sys::cosh(self) }
     }
 
     fn exp(self) -> Self {
-        unsafe { C::exp(self) }
+        unsafe { sys::exp(self) }
     }
 
     fn exp2(self) -> Self {
-        unsafe { C::exp2(self) }
+        unsafe { sys::exp2(self) }
     }
 
     fn exp_m1(self) -> Self {
-        unsafe { C::expm1(self) }
+        unsafe { sys::expm1(self) }
     }
 
     fn abs_sub(self, other: Self) -> Self {
-        unsafe { C::fdim(self, other) }
+        unsafe { sys::fdim(self, other) }
     }
 
     fn floor(self) -> Self {
-        unsafe { C::floor(self) }
+        unsafe { sys::floor(self) }
     }
 
     fn mul_add(self, a: Self, b: Self) -> Self {
-        unsafe { C::fma(self, a, b) }
+        unsafe { sys::fma(self, a, b) }
     }
 
     fn fmod(self, y: Self) -> Self {
-        unsafe { C::fmod(self, y) }
+        unsafe { sys::fmod(self, y) }
     }
 
     fn hypot(self, other: Self) -> Self {
-        unsafe { C::hypot(self, other) }
+        unsafe { sys::hypot(self, other) }
     }
 
     fn log(self) -> Self {
-        unsafe { C::log(self) }
+        unsafe { sys::log(self) }
     }
 
     fn log10(self) -> Self {
-        unsafe { C::log10(self) }
+        unsafe { sys::log10(self) }
     }
 
     fn log2(self) -> Self {
-        unsafe { C::log2(self) }
+        unsafe { sys::log2(self) }
     }
 
     fn powf(self, n: Self) -> Self {
-        unsafe { C::pow(self, n) }
+        unsafe { sys::pow(self, n) }
     }
 
     fn sin(self) -> Self {
-        unsafe { C::sin(self) }
+        unsafe { sys::sin(self) }
     }
 
     fn sinh(self) -> Self {
-        unsafe { C::sinh(self) }
+        unsafe { sys::sinh(self) }
     }
 
     fn sqrt(self) -> Self {
-        unsafe { C::sqrt(self) }
+        unsafe { sys::sqrt(self) }
     }
 
     fn tan(self) -> Self {
-        unsafe { C::tan(self) }
+        unsafe { sys::tan(self) }
     }
 
     fn tanh(self) -> Self {
-        unsafe { C::tanh(self) }
+        unsafe { sys::tanh(self) }
     }
 
     fn gamma(self) -> Self {
-        unsafe { C::tgamma(self) }
+        unsafe { sys::tgamma(self) }
     }
 
     fn to_degrees(self) -> Self {

@@ -1,32 +1,35 @@
 #![no_std]
 
-pub extern crate alloc;
+extern crate alloc;
 
-pub mod bindings;
+mod bindings;
+pub use bindings::*;
 
 #[cfg(feature = "panic_handler")]
 #[panic_handler]
 fn panic_handler(info: &core::panic::PanicInfo) -> ! {
-    use alloc::{format, alloc::GlobalAlloc};
+    use alloc::{alloc::GlobalAlloc, format};
 
     let (file, line, column, msg) = if let Some(location) = info.location() {
-        (location.file(), location.line(), location.column(), info.message())
+        (
+            location.file(),
+            location.line(),
+            location.column(),
+            info.message(),
+        )
     } else {
         ("<unknown>", 0, 0, info.message())
     };
 
     let file = alloc::ffi::CString::new(format!("File: {file} - {line}:{column}")).unwrap();
     let msg = alloc::ffi::CString::new(format!("Reason: {}", msg.as_str().unwrap_or(""))).unwrap();
-    
 
     unsafe {
-        use bindings::{OSScreenInit, OSScreenGetBufferSizeEx, OSScreenID, OSScreenSetBufferEx, OSScreenEnableEx, OSScreenClearBufferEx, OSScreenPutFontEx, DCFlushRange, OSScreenFlipBuffersEx, OSGetSystemInfo, OSSleepTicks, OSScreenShutdown};
-
         OSScreenInit();
 
         let tv_buffer_size = OSScreenGetBufferSizeEx(OSScreenID::SCREEN_TV) as usize;
         let drc_buffer_size = OSScreenGetBufferSizeEx(OSScreenID::SCREEN_DRC) as usize;
-        
+
         let tv_layout = alloc::alloc::Layout::from_size_align(tv_buffer_size, 0x100).unwrap();
         let tv_buffer = GLOBAL_ALLOCATOR.alloc(tv_layout);
         let drc_layout = alloc::alloc::Layout::from_size_align(drc_buffer_size, 0x100).unwrap();
@@ -41,21 +44,22 @@ fn panic_handler(info: &core::panic::PanicInfo) -> ! {
         OSScreenClearBufferEx(OSScreenID::SCREEN_TV, 0x00000000);
         OSScreenClearBufferEx(OSScreenID::SCREEN_DRC, 0x00000000);
 
-        OSScreenPutFontEx(OSScreenID::SCREEN_TV, 0, 0, c"Panic!".as_ptr()); 
+        OSScreenPutFontEx(OSScreenID::SCREEN_TV, 0, 0, c"Panic!".as_ptr());
         OSScreenPutFontEx(OSScreenID::SCREEN_TV, 0, 1, file.as_ptr());
         OSScreenPutFontEx(OSScreenID::SCREEN_TV, 0, 2, msg.as_ptr());
 
-        OSScreenPutFontEx(OSScreenID::SCREEN_DRC, 0, 0, c"Panic!".as_ptr()); 
+        OSScreenPutFontEx(OSScreenID::SCREEN_DRC, 0, 0, c"Panic!".as_ptr());
         OSScreenPutFontEx(OSScreenID::SCREEN_DRC, 0, 1, file.as_ptr());
         OSScreenPutFontEx(OSScreenID::SCREEN_DRC, 0, 2, msg.as_ptr());
 
-        DCFlushRange(tv_buffer as *mut _, tv_buffer_size as u32);OSScreenFlipBuffersEx(OSScreenID::SCREEN_TV);
-        DCFlushRange(tv_buffer as *mut _, tv_buffer_size as u32);OSScreenFlipBuffersEx(OSScreenID::SCREEN_DRC);
+        DCFlushRange(tv_buffer as *mut _, tv_buffer_size as u32);
+        OSScreenFlipBuffersEx(OSScreenID::SCREEN_TV);
+        DCFlushRange(tv_buffer as *mut _, tv_buffer_size as u32);
+        OSScreenFlipBuffersEx(OSScreenID::SCREEN_DRC);
 
         // Sleep 5 seconds
         let ticks_per_second = (*OSGetSystemInfo()).busClockSpeed as i64 / 4;
         for _ in 1..=5 {
-
             OSSleepTicks(ticks_per_second);
         }
 
@@ -66,7 +70,9 @@ fn panic_handler(info: &core::panic::PanicInfo) -> ! {
 
     // reboot
     unsafe {
-        use bindings::{OSForceFullRelaunch, SYSLaunchMenu, ProcUIIsRunning, WHBProcIsRunning, _Exit};
+        use bindings::{
+            OSForceFullRelaunch, ProcUIIsRunning, SYSLaunchMenu, WHBProcIsRunning, _Exit,
+        };
 
         OSForceFullRelaunch();
         SYSLaunchMenu();

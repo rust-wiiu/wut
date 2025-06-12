@@ -1,20 +1,10 @@
 [package]
-name = "math"
+name = "wut-math"
 version = "0.1.0"
 edition = "2021"
 build = "build.rs"
 links = "m"
 
-[lib]
-name = "math"
-crate-type = ["lib"]
-
 [build-dependencies]
-bindgen = "0.71.1"
+bindgen = "0.72.0"
 semver = "1.0.26"
-
-[profile]
-dev.panic = "abort"
-release.panic = "abort"
-
-[dev-dependencies]
