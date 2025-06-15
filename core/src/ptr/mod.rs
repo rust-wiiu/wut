@@ -15,6 +15,8 @@
 
 use wut_sys as sys;
 
+pub use core::ptr::*;
+
 /// Check if pointer is inside virtual memory bounds.
 ///
 /// Useful when loading a pointer from memory.

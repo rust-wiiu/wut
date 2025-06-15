@@ -1,5 +1,7 @@
 //! Useful synchronization primitives.
 
+pub use core::sync::*;
+
 mod event;
 mod lazy_lock;
 pub mod mpmc;
@@ -16,4 +18,5 @@ pub use once_lock::OnceLock;
 // pub use rwlock::RwLock;
 pub use semaphore::Semaphore;
 
+/// Trickery for constant mutex
 pub type ConstMutex<T> = LazyLock<Mutex<T>>;
