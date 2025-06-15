@@ -1,0 +1,4 @@
+pre-release-replacements = [
+    { file = "Cargo.toml", search = "wut-core = { path = \"./core\", version = \".*\" }", replace = "wut-core = { path = \"./core\", version = \"{{version}}\" }" },
+    { file = "core/Cargo.toml", search = "version = \".*\"", replace = "version = \"{{version}}\"" }
+]
