@@ -1,7 +1,7 @@
 [package]
 name = "wut"
 description = "Wii U Toolchain for Rust"
-version = "0.4.1"
+version = "0.4.2"
 edition = "2024"
 license-file = "LICENSE"
 repository = "https://github.com/rust-wiiu/wut"
@@ -25,7 +25,7 @@ release.panic = "abort"
 wut-sys = { path = "./sys", version = "0.1.0" }
 wut-macros = { path = "./macros", version = "0.1.0" }
 wut-math = { path = "./math", version = "0.1.0" }
-wut-core = { path = "./core", version = "0.1.0" }
+wut-core = { path = "./core", version = "0.4.2" }
 
 [package.metadata.release]
 pre-release-replacements = [
