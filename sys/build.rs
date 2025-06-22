@@ -1,8 +1,7 @@
-extern crate bindgen;
-extern crate semver;
-
 use semver::Version;
+use std::path::Path;
 use std::{env, fs};
+use walkdir::WalkDir;
 
 const MIN_VERSION: Version = Version::new(14, 2, 0);
 
@@ -45,13 +44,33 @@ fn main() {
     println!("{link_lib}=sysbase");
     println!("{link_lib}=stdc++");
 
+    let blocked = vec!["nsysnet"];
+
+    let headers: Vec<String> = WalkDir::new(Path::new(&format!("{}/wut/include", dkp)))
+        .into_iter()
+        .filter_map(|e| e.ok())
+        .filter(|entry| entry.path().is_file())
+        .filter(|entry| {
+            entry
+                .path()
+                .extension()
+                .map_or(false, |ext| ext.to_str() == Some("h"))
+        })
+        .filter(|entry| {
+            // Check if the path is NOT blocked
+            let s = entry.path().display().to_string();
+            !blocked.iter().any(|p| s.contains(p))
+        })
+        .map(|entry| entry.path().display().to_string())
+        .collect();
+
     /*
      * These bindings will create many errors since the target cpu is a 32bit system and the host (the compilation PC) is likely a 64bit system.
      * There are alignment and size checks which will fail, because pointers have different sizes.
      */
     let bindings = bindgen::Builder::default()
         .use_core()
-        .header("./src/wrapper.h")
+        .headers(headers)
         .emit_builtins()
         .generate_cstr(true)
         .generate_comments(false)

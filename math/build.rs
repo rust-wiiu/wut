@@ -36,13 +36,15 @@ fn main() {
 
     println!("{link_lib}=m");
 
+    let headers: Vec<String> = vec![format!("{}/powerpc-eabi/include/fastmath.h", ppc)];
+
     /*
      * These bindings will create many errors since the target cpu is a 32bit system and the host (the compilation PC) is likely a 64bit system.
      * There are alignment and size checks which will fail, because pointers have different sizes.
      */
     let bindings = bindgen::Builder::default()
         .use_core()
-        .header("src/wrapper.h")
+        .headers(headers)
         .emit_builtins()
         .generate_cstr(true)
         .generate_comments(false)

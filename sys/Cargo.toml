@@ -8,6 +8,7 @@ links = "wut"
 [build-dependencies]
 bindgen = "0.72.0"
 semver = "1.0.26"
+walkdir = "2.5.0"
 
 [features]
 panic_handler = []
