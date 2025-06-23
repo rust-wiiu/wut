@@ -6,7 +6,6 @@ use walkdir::WalkDir;
 const MIN_VERSION: Version = Version::new(14, 2, 0);
 
 fn main() {
-    println!("cargo:rerun-if-changed=src/wrapper.h");
     println!("cargo:rerun-if-changed=src/lib.rs");
     println!("cargo:rerun-if-changed=build.rs");
 
